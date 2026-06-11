@@ -1,0 +1,75 @@
+name: Episode Sync
+
+on:
+  schedule:
+    - cron: "5 11 * * *"
+    - cron: "5 12 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Evaluate cadence gate (8:00am ET, every 21 days from 2026-06-11)
+        id: cadence
+        run: |
+          python3 - <<'PY'
+          import os
+          from datetime import date, datetime
+          from zoneinfo import ZoneInfo
+
+          event_name = os.environ.get("GITHUB_EVENT_NAME", "")
+          if event_name != "schedule":
+              should_run = True
+              reason = "manual dispatch"
+          else:
+              now_et = datetime.now(ZoneInfo("America/New_York"))
+              anchor = date(2026, 6, 11)
+              days_since = (now_et.date() - anchor).days
+              is_eight_am = now_et.hour == 8
+              is_three_week_mark = days_since >= 0 and days_since % 21 == 0
+              should_run = is_eight_am and is_three_week_mark
+              reason = f"et_time={now_et.isoformat()} days_since_anchor={days_since}"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
+              f.write(f"should_run={'true' if should_run else 'false'}\n")
+              f.write(f"reason={reason}\n")
+          print(f"Cadence decision: should_run={should_run} ({reason})")
+          PY
+
+      - name: Setup Python
+        if: steps.cadence.outputs.should_run == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Sync latest episode into episodes.js
+        if: steps.cadence.outputs.should_run == 'true'
+        run: python3 sync_latest_episode.py
+
+      - name: Regenerate share cards and episode pages
+        if: steps.cadence.outputs.should_run == 'true'
+        run: |
+          python3 generate_share_cards.py
+          python3 generate_episode_pages.py
+
+      - name: Commit and push if changed
+        if: steps.cadence.outputs.should_run == 'true'
+        run: |
+          if git diff --quiet; then
+            echo "No repo changes detected."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add episodes.js episodes/*.html share-cards/*.png
+          git commit -m $'chore: sync latest episode assets\n\nCo-Authored-By: Oz <oz-agent@warp.dev>'
+          git push
