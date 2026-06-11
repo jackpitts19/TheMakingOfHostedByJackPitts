@@ -1844,7 +1844,10 @@
       if (!episodes || !episodes.length) return;
 
       // Figure out total count for issue numbering relative to the catalog.
-      var total = (window.EPISODES && window.EPISODES.length) || episodes.length;
+      var total = Math.max(
+        (window.EPISODES && window.EPISODES.length) || 0,
+        episodes.length
+      );
       // When live data overrides, we only have the most recent entries.
       // Map them onto descending issue numbers starting from total.
       episodes.forEach(function(ep, i) { ep._issue = total - i; });
