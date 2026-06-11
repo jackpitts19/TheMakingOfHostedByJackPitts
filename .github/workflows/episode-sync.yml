@@ -1,0 +1,43 @@
+name: Episode Sync
+
+on:
+  schedule:
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Sync latest episode into episodes.js
+        run: python3 sync_latest_episode.py
+
+      - name: Regenerate share cards and episode pages
+        run: |
+          python3 generate_share_cards.py
+          python3 generate_episode_pages.py
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet; then
+            echo "No repo changes detected."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add episodes.js episodes/*.html share-cards/*.png
+          git commit -m $'chore: sync latest episode assets\n\nCo-Authored-By: Oz <oz-agent@warp.dev>'
+          git push

@@ -1,6 +1,6 @@
 # Wire up autonomous deploy to Cloudflare Pages
 
-One-time setup. After this, the scheduled task pushes new episodes to live automatically.
+One-time setup. After this, GitHub Actions deploys every push (including recurring episode-sync commits) automatically.
 
 ## What you need before you start
 
@@ -32,38 +32,30 @@ This token lets the scheduled task push deployments without you in the loop.
 
 Workers & Pages → click your `themakingofhostedbyjackpitts` project → look at the right sidebar. **Account ID** is there. Copy it.
 
-## Step 4. Save the secrets locally
+## Step 4. Save the secrets in GitHub
 
-In this folder there's already a file called `.env.example`. Make a copy named `.env` and fill in real values:
+In your GitHub repo, go to **Settings → Secrets and variables → Actions → New repository secret** and add:
 
-```
-CLOUDFLARE_API_TOKEN=your_actual_token_here
-CLOUDFLARE_ACCOUNT_ID=your_account_id_here
-CLOUDFLARE_PAGES_PROJECT=themakingofhostedbyjackpitts
-```
+- `CLOUDFLARE_API_TOKEN` = your token
+- `CLOUDFLARE_ACCOUNT_ID` = your account ID
+- `CLOUDFLARE_PAGES_PROJECT` = `themakingofhostedbyjackpitts` (optional but recommended)
 
-`.env` is in `.gitignore` and never gets uploaded to Cloudflare. It only lives on your machine.
+## Step 5. Verify Actions workflows are enabled
 
-## Step 5. Test the deploy once, manually
+The repo includes two workflows:
 
-From a terminal in this folder:
+- `.github/workflows/episode-sync.yml` (weekly sync + regeneration + commit)
+- `.github/workflows/deploy-cloudflare.yml` (deploy to Cloudflare on every push to `main`)
 
-```bash
-bash deploy.sh
-```
-
-You'll see Wrangler upload files, then "Deploy complete." Visit the site. The redesign with per-episode pages should be live.
-
-If you see an authentication error, the token's missing a permission. Recreate the token with `Cloudflare Pages: Edit` for your account.
+Open **Actions** in GitHub and run `Deploy Cloudflare Pages` manually once to verify setup.
 
 ## Step 6. You're done
 
-The scheduled task `update-tmo-episodes` already runs `bash deploy.sh` at the end of its workflow. So the next time an episode drops:
+From now on:
 
-1. 8am, the task wakes up, sees the new episode on Spotify.
-2. It updates `episodes.js`, bumps the masthead, regenerates the share card, regenerates the episode page.
-3. It runs `deploy.sh`, which pushes everything to Cloudflare Pages.
-4. The site is live within a minute or two.
-5. You get a notification telling you what shipped.
+1. Weekly sync checks for a new episode.
+2. If new, it updates `episodes.js` and regenerates assets.
+3. It commits to `main`.
+4. Push to `main` auto-deploys to Cloudflare Pages and Vercel.
 
-No manual steps. Forever.
+No manual deploy loop required.

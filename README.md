@@ -12,20 +12,29 @@ Live site: https://themakingofhostedbyjackpitts.com
 - `share-cards/` — branded 1200x630 PNG share cards, one per episode, plus a `latest.png` for OG.
 - `generate_share_cards.py` — regenerates the share cards from `episodes.js`.
 - `generate_episode_pages.py` — regenerates the per-episode HTML pages from `episodes.js`.
+- `sync_latest_episode.py` — checks Apple Podcasts for a new episode and prepends it to `episodes.js` when found.
 - `logo.png`, `headshot.jpg` — show artwork.
 
 ## How updates work
 
-A scheduled task (`update-tmo-episodes`, defined in Cowork) runs every morning at 8am. It:
+Updates are integrated through GitHub Actions so each new episode can flow through the same pipeline:
 
-1. Checks Spotify for the newest episode.
-2. If it's not already in `episodes.js`, prepends a new entry, bumps the masthead Issue No. on `index.html`.
-3. Runs `python3 generate_share_cards.py` to produce a branded card for the new guest.
-4. Runs `python3 generate_episode_pages.py` to produce the new episode page and refresh the related-episode strips on every other page.
-5. Commits the changes and pushes to this GitHub repo. Cloudflare Pages auto-deploys.
-6. Sends a completion notification.
+1. `.github/workflows/episode-sync.yml` runs weekly (and on manual dispatch).
+2. It checks Apple Podcasts for the newest episode and updates `episodes.js` only when new content exists.
+3. It regenerates share cards and episode pages.
+4. It commits and pushes to `main`.
+5. Vercel auto-deploys from GitHub on push.
+6. `.github/workflows/deploy-cloudflare.yml` deploys that same commit to Cloudflare Pages.
 
-So new episodes appear on the live site the morning after they drop, with no manual work.
+This supports recurring updates (every ~3 weeks) without rebuilding the process each time.
+
+## Required GitHub Secrets
+
+For Cloudflare deploys from Actions, configure repo secrets:
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_PAGES_PROJECT` (optional, defaults to `themakingofhostedbyjackpitts`)
 
 ## Manual regenerate
 
@@ -35,6 +44,11 @@ If you change `episodes.js` by hand and want to refresh everything:
 python3 generate_share_cards.py
 python3 generate_episode_pages.py
 ```
+
+To force an immediate sync/deploy, run these workflows manually in GitHub Actions:
+
+- `Episode Sync`
+- `Deploy Cloudflare Pages`
 
 ## House style rules (the show)
 
