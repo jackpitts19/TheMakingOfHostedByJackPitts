@@ -19,7 +19,7 @@ Live site: https://themakingofhostedbyjackpitts.com
 
 Updates are integrated through GitHub Actions so each new episode can flow through the same pipeline:
 
-1. `.github/workflows/episode-sync.yml` runs weekly (and on manual dispatch).
+1. `.github/workflows/episode-sync.yml` runs at 7:00am Eastern on a 21-day cadence anchored to June 11, 2026 (and on manual dispatch).
 2. It checks Apple Podcasts for the newest episode and updates `episodes.js` only when new content exists.
 3. It regenerates share cards and episode pages.
 4. It commits and pushes to `main`.
