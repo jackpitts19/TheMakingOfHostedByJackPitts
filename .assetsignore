@@ -1,0 +1,8 @@
+.git
+.github
+README.md
+SETUP-CLOUDFLARE.md
+deploy.sh
+wrangler.toml
+.assetsignore
+.DS_Store
