@@ -23,7 +23,7 @@
 <meta property="og:image" content="https://themakingofhostedbyjackpitts.com/share-cards/latest.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:alt" content="The Making Of Hosted By Jack Pitts — latest episode" />
+<meta property="og:image:alt" content="The Making Of Hosted By Jack Pitts, latest episode" />
 
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
@@ -1284,8 +1284,89 @@
   .book-card .btn-line:hover { background: rgba(255,255,255,0.06); }
   .book-card small { color: rgba(243,232,207,0.6); font-size: 12px; text-align: center; margin-top: 4px; }
 
+  /* ---------- GUEST FIT GUIDE ---------- */
+  .guest-fit { margin: 44px 0 8px; }
+  .gf-eyebrow {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--orange-dark); margin-bottom: 18px;
+  }
+  .gf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .gf-card {
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 22px 24px; background: rgba(255,255,255,0.35);
+  }
+  .gf-card h3 {
+    font-family: 'Fraunces', serif; font-weight: 800; font-size: 19px;
+    letter-spacing: -0.01em; margin: 0 0 10px; color: var(--ink);
+  }
+  .gf-card p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+
+  /* ---------- HOME ARTICLES ---------- */
+  .home-articles { margin: 20px 0 0; }
+  .ha-intro {
+    font-family: 'Fraunces', serif; font-size: 20px; line-height: 1.5;
+    color: var(--ink-soft); max-width: 720px; margin: 0 0 26px;
+  }
+  .ha-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .ha-card {
+    display: block; border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px 24px 22px; background: rgba(255,255,255,0.35);
+    text-decoration: none; color: var(--ink);
+    transition: transform .15s, border-color .15s, background .15s;
+  }
+  .ha-card:hover { transform: translateY(-3px); border-color: var(--orange); background: rgba(255,255,255,0.6); }
+  .ha-kicker {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--orange-dark); margin-bottom: 10px;
+  }
+  .ha-card h3 {
+    font-family: 'Fraunces', serif; font-weight: 800; font-size: 22px;
+    line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 10px; color: var(--ink);
+  }
+  .ha-card p { margin: 0 0 16px; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+  .ha-read, .ha-all a {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--orange-dark);
+  }
+  .ha-all { margin: 22px 0 0; }
+  .ha-all a { text-decoration: none; }
+  .ha-all a:hover { color: var(--ink); }
+
+  /* ---------- PRESS KIT ---------- */
+  .press-kit { margin: 20px 0 0; }
+  .pk-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
+  .pk-block { margin-bottom: 22px; }
+  .pk-block:last-child { margin-bottom: 0; }
+  .pk-label {
+    font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 8px;
+  }
+  .pk-block p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--ink); }
+  .pk-link { color: var(--orange-dark); font-weight: 600; text-decoration: underline; }
+  .pk-aside {
+    border: 1px solid var(--line); border-radius: 14px;
+    padding: 24px; background: rgba(236, 217, 168, 0.4);
+  }
+  .pk-list { list-style: none; margin: 10px 0 20px; padding: 0; }
+  .pk-list li { margin: 0 0 10px; }
+  .pk-list a { color: var(--ink); font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid var(--line); }
+  .pk-list a:hover { color: var(--orange-dark); border-color: var(--orange); }
+  .pk-cta .btn { width: 100%; text-align: center; justify-content: center; background: var(--orange); color: var(--ink); font-weight: 700; }
+  .pk-cta .btn:hover { background: var(--orange-dark); color: var(--cream); transform: translateY(-1px); }
+
+  /* ---------- FOOTER LINKS ---------- */
+  footer .footer-links { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 20px; padding-top: 6px; }
+  footer .footer-links a {
+    color: rgba(243,232,207,0.75); font-size: 13px; font-weight: 500;
+    letter-spacing: 0.02em; text-decoration: none;
+  }
+  footer .footer-links a:hover { color: var(--orange); }
+
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 860px) {
+    .gf-grid { grid-template-columns: 1fr; }
+    .ha-grid { grid-template-columns: 1fr; }
+    .pk-grid { grid-template-columns: 1fr; }
     header.hero { grid-template-columns: 1fr; gap: 40px; padding: 20px 0 40px; }
     .listen { grid-template-columns: 1fr; padding: 24px; }
     .eps { grid-template-columns: 1fr; }
@@ -1508,14 +1589,14 @@
             <span class="bars" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
             <span>The Latest</span>
           </span>
-          <span data-fe-date>Loading...</span>
+          <span data-fe-date>June 11, 2026</span>
           <span class="dot"></span>
-          <span data-fe-duration>--</span>
+          <span data-fe-duration>1h 3m</span>
           <span class="dot"></span>
-          <span data-fe-source>Static fallback</span>
+          <span data-fe-source>From the show feed</span>
         </div>
-        <h2 class="fe-title" data-fe-title>Loading the latest episode...</h2>
-        <p class="fe-desc" data-fe-desc>Fresh from the feed, the most recent conversation on The Making Of Hosted By Jack Pitts.</p>
+        <h2 class="fe-title" data-fe-title>In The Making Of: Nishank Gite</h2>
+        <p class="fe-desc" data-fe-desc>In this episode of The Making Of Hosted By Jack Pitts, host Jack Pitts sits down with Nishank Gite, Co-Founder &amp; CTO of Nirvana Robotics, to explore Nishank’s journey from physics and AI research into building a robotics company. The conversation covers Nishank’s background in collider physics, machine learning, neural networks, and robotics, along with the realities of building a hard-tech startu</p>
         <div class="fe-cta-row">
           <a class="btn-orange magnetic" data-fe-link-spotify href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">
             <span class="bars" aria-hidden="true" style="color: var(--ink);"><span></span><span></span><span></span><span></span></span>
@@ -1531,11 +1612,11 @@
           </a>
         </div>
         <div class="fe-embed" data-fe-spotify-embed aria-label="Play the latest episode"></div>
-        <a class="fe-read" data-fe-read-link href="#" aria-label="Read the full issue">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="fe-read" data-fe-read-link href="episodes/nishank-gite.html" aria-label="Read the full issue">Read the full issue <span aria-hidden="true">&rarr;</span></a>
       </div>
       <aside class="fe-aside">
         <div class="fe-tag">Issue No.</div>
-        <div class="fe-num"><span data-fe-issue>--</span></div>
+        <div class="fe-num"><span data-fe-issue>14</span></div>
         <div class="fe-runtime">
           <span class="bars"><span></span><span></span><span></span><span></span></span>
           On Air Now
@@ -1551,7 +1632,36 @@
       <span class="meta">Curated picks &amp; show history</span>
     </div>
     <div class="catalog-grid" id="catalog-grid">
-      <article class="pin"><div class="pin-tag">Loading...</div></article>
+      <!-- FALLBACK:CATALOG:START (auto-generated by update_home_fallback.py; do not hand-edit) -->
+      <article class="pin">
+        <span class="pin-corner" aria-hidden="true">II</span>
+        <div class="pin-tag">Press Pick, Riverside-Brookfield Landmark</div>
+        <div class="pin-date">January 8, 2026</div>
+        <h3><a class="ep-title-link" href="episodes/doug-taylor.html">The Making of Doug Taylor: Taylor's Candy</a></h3>
+        <p>Doug Taylor, the Candyman, on building Taylor's Candy from a family operation into a distribution and manufacturing business. Featured in the Riverside-Brookfield Landmark.</p>
+        <div class="ep-platforms">
+          <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
+          <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener">Apple</a>
+          <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
+          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/doug-taylor-21a73917/" target="_blank" rel="noopener">Connect</a>
+        </div>
+        <a class="ep-read" href="episodes/doug-taylor.html">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+      </article>
+      <article class="pin">
+        <span class="pin-corner" aria-hidden="true">01</span>
+        <div class="pin-tag">Episode 01, The Origin Story</div>
+        <div class="pin-date">November 18, 2025</div>
+        <h3><a class="ep-title-link" href="episodes/gary-dennis.html">The Making of Mammoth Holdings with Gary Dennis</a></h3>
+        <p>Gary Dennis, co-founder and former CEO of Mammoth Holdings, on building a leading car wash platform from humble Georgia beginnings through Georgia Tech, investment banking, and 20+ years of operations. The first episode of the show.</p>
+        <div class="ep-platforms">
+          <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
+          <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener">Apple</a>
+          <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
+          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/gary-dennis-000010b/" target="_blank" rel="noopener">Connect</a>
+        </div>
+        <a class="ep-read" href="episodes/gary-dennis.html">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+      </article>
+      <!-- FALLBACK:CATALOG:END -->
     </div>
   </section>
 
@@ -1563,7 +1673,53 @@
     </div>
 
     <div class="eps" id="eps-container">
-      <article class="ep"><div class="ep-num">Loading episodes...</div></article>
+      <!-- FALLBACK:RECENT:START (auto-generated by update_home_fallback.py; do not hand-edit) -->
+      <article class="ep fade-up is-in">
+        <span class="ep-numeral" aria-hidden="true">13</span>
+        <div class="ep-issue">Issue No. 13</div>
+        <div class="ep-num">May 21, 2026</div>
+        <h3><a class="ep-title-link" href="episodes/alex-dixon.html">The Making Of Alex Dixon: From Goldman Sachs to CEO of Resorts World Las Vegas</a></h3>
+        <p>Alex Dixon, former CEO of Resorts World Las Vegas, on growing up a third-generation casino kid in Vegas, advising on Disney's acquisition of Pixar at Goldman Sachs, and leading billion-dollar gaming operations at MGM, Caesars, and Resorts World.</p>
+        <div class="ep-meta"><span>50 min</span><span>Full episode</span></div>
+        <div class="ep-platforms">
+          <a class="ep-platform is-spotify" href="https://open.spotify.com/episode/58DPxKdLPZjdwvoVm6xdrr" target="_blank" rel="noopener">Spotify</a>
+          <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener">Apple</a>
+          <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
+          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/alexfdixon" target="_blank" rel="noopener">Connect</a>
+        </div>
+        <a class="ep-read" href="episodes/alex-dixon.html">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+      </article>
+      <article class="ep fade-up is-in">
+        <span class="ep-numeral" aria-hidden="true">12</span>
+        <div class="ep-issue">Issue No. 12</div>
+        <div class="ep-num">May 7, 2026</div>
+        <h3><a class="ep-title-link" href="episodes/david-sauers.html">The Making Of David Sauers: Building Royal Restrooms Into a Nationwide Franchise</a></h3>
+        <p>David Sauers, co-founder of Royal Restrooms, on his path from Savannah through golf and banking to building a luxury portable restroom franchise over 20+ years.</p>
+        <div class="ep-meta"><span>1h 8m</span><span>Full episode</span></div>
+        <div class="ep-platforms">
+          <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
+          <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener">Apple</a>
+          <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
+          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/davidsauers/" target="_blank" rel="noopener">Connect</a>
+        </div>
+        <a class="ep-read" href="episodes/david-sauers.html">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+      </article>
+      <article class="ep fade-up is-in" style="grid-column: 1 / -1;">
+        <span class="ep-numeral" aria-hidden="true">11</span>
+        <div class="ep-issue">Issue No. 11</div>
+        <div class="ep-num">April 30, 2026</div>
+        <h3><a class="ep-title-link" href="episodes/jesse-choe.html">In The Making Of: Jesse Choe</a></h3>
+        <p>Jesse Choe, CEO and co-founder of Bidflow, on raising $1M at 19, Y Combinator, and finding product-market fit through customer validation.</p>
+        <div class="ep-meta"><span>54 min</span><span>Full episode</span></div>
+        <div class="ep-platforms">
+          <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
+          <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener">Apple</a>
+          <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
+          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/jc10/" target="_blank" rel="noopener">Connect</a>
+        </div>
+        <a class="ep-read" href="episodes/jesse-choe.html">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+      </article>
+      <!-- FALLBACK:RECENT:END -->
     </div>
   </section>
 
@@ -1612,6 +1768,32 @@
       </ol>
     </div>
 
+    <div class="guest-fit" aria-label="Is the show a fit for you">
+      <div class="gf-eyebrow">Before you book</div>
+      <div class="gf-grid">
+        <div class="gf-card">
+          <h3>Who is a good fit</h3>
+          <p>Founders, operators, and family-business owners who have actually built something over years and can talk about it honestly. If you have run the thing, made payroll, and lived the boring middle, you will feel at home here.</p>
+        </div>
+        <div class="gf-card">
+          <h3>Who is probably not a fit</h3>
+          <p>If you are after a launch announcement, a fundraising lap, or a scripted promo, this is not the show. I am here for the real story, not a press release. Pure pitch decks and thought-leadership monologues usually land better somewhere else.</p>
+        </div>
+        <div class="gf-card">
+          <h3>What we usually talk about</h3>
+          <p>The origin, the false starts, the unsexy middle, and the decisions that compounded. Money, mistakes, the years no one writes about, and what you would tell someone standing where you started.</p>
+        </div>
+        <div class="gf-card">
+          <h3>How to prepare</h3>
+          <p>Almost nothing. No deck, no homework binder, no script. Bring a few stories you actually remember and are willing to tell straight. We can trade a couple of notes on angle beforehand if you want, but most guests skip it.</p>
+        </div>
+        <div class="gf-card">
+          <h3>What happens after recording</h3>
+          <p>I edit lightly and publish to Spotify, Apple Podcasts, and YouTube. You get the links and a share card for your own channels, and I push the episode on LinkedIn so your story keeps reaching the right people.</p>
+        </div>
+      </div>
+    </div>
+
     <p class="past-line">Past guests include</p>
     <div class="past-guests">
       <span>Dave Menz</span>
@@ -1643,7 +1825,7 @@
     </div>
     <div>
       <p>
-        Jack Pitts is the founder of Salt Creek Advisory, an AI-native deal sourcing and investment banking practice based in New York City. Chicago-raised and Vanderbilt-educated, Jack spends his days around founders, operators, and investors, and started <em>The Making Of Hosted By Jack Pitts</em> to capture the stories he's always wanted to hear.
+        Jack Pitts is the founder of Salt Creek Advisory, an AI-native deal sourcing and investment banking practice. Chicago-raised and Vanderbilt-educated, Jack is based in the Chicago area and spends his days around founders, operators, and investors. He started <em>The Making Of Hosted By Jack Pitts</em> to capture the stories he's always wanted to hear.
       </p>
       <p>
         The show takes its inspiration from NPR's <em>How I Built This</em>, with a sharper focus on the operators and family-business builders behind companies most people walk past every day. Each episode unpacks what it actually takes to build something. The false starts, the unsexy middle, and the moments that compound into a real company.
@@ -1652,6 +1834,80 @@
         <a class="btn btn-primary" href="https://calendar.app.google/8s9JEAriAqG2qS7MA" target="_blank" rel="noopener">Book a Call</a>
         <a class="btn btn-secondary" href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Connect on LinkedIn</a>
       </div>
+    </div>
+  </section>
+
+  <!-- ARTICLES -->
+  <section class="home-articles fade-up" id="articles">
+    <div class="section-head">
+      <h2>Articles</h2>
+      <span class="meta">Plain-English guides for founders</span>
+    </div>
+    <p class="ha-intro">Short, honest guides on going on a podcast as a founder. How to decide if it is worth your time, how to choose the right show, and how to be a guest people actually remember. No filler.</p>
+    <div class="ha-grid">
+      <a class="ha-card" href="articles/best-entrepreneurship-podcasts-for-founders-2026.html">
+        <div class="ha-kicker">Evaluation guide</div>
+        <h3>Best Entrepreneurship Podcasts for Founders in 2026: What to Look For</h3>
+        <p>How to judge a founder podcast on its merits instead of a ranking, and the signals that separate a real conversation from a promo reel.</p>
+        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="ha-card" href="articles/when-should-a-founder-go-on-a-podcast.html">
+        <div class="ha-kicker">Timing</div>
+        <h3>When Should a Founder Go on a Podcast?</h3>
+        <p>The moments when a podcast actually helps, the moments it does not, and how to tell the difference before you say yes.</p>
+        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="ha-card" href="articles/how-to-choose-the-right-podcast-to-tell-your-founder-story.html">
+        <div class="ha-kicker">Choosing a show</div>
+        <h3>How to Choose the Right Podcast to Tell Your Founder Story</h3>
+        <p>A simple way to match your story to the right format, host, and audience so the episode does something for you.</p>
+        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
+      </a>
+      <a class="ha-card" href="articles/how-to-be-a-great-podcast-guest-as-a-founder.html">
+        <div class="ha-kicker">Being a guest</div>
+        <h3>How to Be a Great Podcast Guest as a Founder</h3>
+        <p>What great guests do differently, from the stories they bring to the way they answer, and how to prepare without over-preparing.</p>
+        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
+      </a>
+    </div>
+    <p class="ha-all"><a href="articles.html">See all articles <span aria-hidden="true">&rarr;</span></a></p>
+  </section>
+
+  <!-- PRESS KIT -->
+  <section class="press-kit fade-up" id="press-kit">
+    <div class="section-head">
+      <h2>Press Kit</h2>
+      <span class="meta">Everything a booker or writer needs</span>
+    </div>
+    <div class="pk-grid">
+      <div class="pk-main">
+        <div class="pk-block">
+          <div class="pk-label">The show, in one line</div>
+          <p>The Making Of Hosted By Jack Pitts is an interview show about founders, operators, and family-business builders behind companies most people walk past. A new conversation goes up roughly every three weeks on Spotify, Apple Podcasts, and YouTube.</p>
+        </div>
+        <div class="pk-block">
+          <div class="pk-label">About the host</div>
+          <p>Jack Pitts is the founder of Salt Creek Advisory, an AI-native deal sourcing and investment banking practice. Chicago-raised and Vanderbilt-educated, he spends his days around founders, operators, and investors, and started the show to capture the stories he always wanted to hear. The show takes its inspiration from NPR's <em>How I Built This</em>, with a sharper focus on overlooked builders.</p>
+        </div>
+        <div class="pk-block">
+          <div class="pk-label">Featured in</div>
+          <p><a class="pk-link" href="https://www.rblandmark.com/2026/01/13/brookfield-businessman-podcast/" target="_blank" rel="noopener">Riverside-Brookfield Landmark, "Brookfield businessman featured on podcast"</a>, January 13, 2026, by Stella Brown.</p>
+        </div>
+      </div>
+      <aside class="pk-aside">
+        <div class="pk-label">Assets and links</div>
+        <ul class="pk-list">
+          <li><a href="logo.png" target="_blank" rel="noopener">Show logo (PNG)</a></li>
+          <li><a href="headshot.jpg" target="_blank" rel="noopener">Host headshot (JPG)</a></li>
+          <li><a href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Listen on Spotify</a></li>
+          <li><a href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener">Listen on Apple Podcasts</a></li>
+          <li><a href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">Watch on YouTube</a></li>
+          <li><a href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Jack Pitts on LinkedIn</a></li>
+        </ul>
+        <div class="pk-cta">
+          <a class="btn btn-orange" href="https://calendar.app.google/8s9JEAriAqG2qS7MA" target="_blank" rel="noopener">Book or request an interview</a>
+        </div>
+      </aside>
     </div>
   </section>
 
@@ -1675,6 +1931,14 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM0 8h5v16H0V8zm7.5 0H12v2.2h.07c.63-1.18 2.17-2.43 4.47-2.43C21.4 7.77 24 10.1 24 14.73V24h-5v-8.2c0-1.96-.04-4.48-2.73-4.48-2.74 0-3.16 2.13-3.16 4.34V24h-5V8z"/></svg>
       </a>
     </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="#episodes">Episodes</a>
+      <a href="#press">Press</a>
+      <a href="articles.html">Articles</a>
+      <a href="#guests">Be a Guest</a>
+      <a href="#press-kit">Press Kit</a>
+      <a href="#about">About</a>
+    </nav>
     <small>© 2026 The Making Of Hosted By Jack Pitts</small>
   </div>
 </footer>
@@ -2102,12 +2366,22 @@
       // isn't in episodes.js yet, prepend it. Never replace, never reorder.
       tryLiveFetch().then(function(live) {
         if (!live || !live.length) return;
+        // Normalize titles before comparing so the feed's smart quotes,
+        // accents, and punctuation don't read as a "new" episode and create a
+        // duplicate. Straight vs curly quotes on "Laundromat Millionaire" was
+        // doing exactly that.
+        function normTitle(s) {
+          return String(s || "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, " ")
+            .trim();
+        }
         var have = {};
         local.forEach(function(ep){
-          if (ep && ep.title) have[ep.title.trim().toLowerCase()] = true;
+          if (ep && ep.title) have[normTitle(ep.title)] = true;
         });
         var additions = live.filter(function(ep){
-          return ep && ep.title && !have[ep.title.trim().toLowerCase()];
+          return ep && ep.title && !have[normTitle(ep.title)];
         });
         if (!additions.length) return;
         var merged = additions.concat(local);

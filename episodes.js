@@ -21,6 +21,20 @@
 
 window.EPISODES = [
   {
+    "date": "2026-06-11",
+    "dateLabel": "June 11, 2026",
+    "title": "In The Making Of: Nishank Gite",
+    "guest": "Nishank Gite",
+    "description": "In this episode of The Making Of Hosted By Jack Pitts, host Jack Pitts sits down with Nishank Gite, Co-Founder & CTO of Nirvana Robotics, to explore Nishank’s journey from physics and AI research into building a robotics company. The conversation covers Nishank’s background in collider physics, machine learning, neural networks, and robotics, along with the realities of building a hard-tech startu",
+    "duration": "1h 3m",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144",
+      "youtube": "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+    }
+  },
+  {
     "date": "2026-05-21",
     "dateLabel": "May 21, 2026",
     "title": "The Making Of Alex Dixon: From Goldman Sachs to CEO of Resorts World Las Vegas",
