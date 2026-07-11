@@ -25,6 +25,7 @@ SITE = "The Making Of Hosted By Jack Pitts"
 SITE_URL = "https://themakingofhostedbyjackpitts.com"
 SHOW_SPOTIFY = "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH"
 SHOW_APPLE = "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144"
+APPLE_PODCAST_ID = "1853933144"
 SHOW_YT = "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
 JACK_LI = "https://www.linkedin.com/in/jack-pitts"
 BOOK_CAL = "https://calendar.app.google/8s9JEAriAqG2qS7MA"
@@ -431,7 +432,25 @@ PAGE_TMPL = """<!doctype html>
 
 
 def build_player(ep):
-    embed = spotify_embed_src((ep.get("links") or {}).get("spotify") or SHOW_SPOTIFY)
+    spotify_url = (ep.get("links") or {}).get("spotify") or SHOW_SPOTIFY
+    embed = spotify_embed_src(spotify_url)
+
+    # Prefer a player that plays THIS episode. A Spotify *episode* URL wins;
+    # otherwise Apple's per-episode player (resolved by resolve_episode_links.py).
+    # The show-level Spotify player surfaces the latest episode, not this one,
+    # so it is only a last resort.
+    is_episode_embed = bool(embed and "/embed/episode/" in embed)
+    apple_id = str(ep.get("appleEpisodeId") or "").strip()
+    if not is_episode_embed and apple_id:
+        return (
+            f'<iframe title="Play this episode on Apple Podcasts" '
+            f'src="https://embed.podcasts.apple.com/us/podcast/id{APPLE_PODCAST_ID}?i={apple_id}&amp;theme=auto" '
+            f'height="175" frameBorder="0" '
+            f'allow="autoplay *; encrypted-media *; clipboard-write" '
+            f'sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-top-navigation-by-user-activation" '
+            f'loading="lazy"></iframe>'
+        )
+
     if not embed:
         return ""
     return (
@@ -514,7 +533,16 @@ def json_ld_for(ep, issue_no, slug):
         },
         "author": {"@type": "Person", "name": "Jack Pitts", "url": JACK_LI},
     }
-    return json.dumps(obj)
+    breadcrumbs = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": SITE, "item": f"{SITE_URL}/"},
+            {"@type": "ListItem", "position": 2, "name": "Episodes", "item": f"{SITE_URL}/#episodes"},
+            {"@type": "ListItem", "position": 3, "name": ep.get("title", ""), "item": canonical},
+        ],
+    }
+    return json.dumps([obj, breadcrumbs])
 
 
 def long_description_for(ep):

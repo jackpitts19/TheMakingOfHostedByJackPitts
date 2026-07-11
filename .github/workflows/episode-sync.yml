@@ -40,6 +40,11 @@ jobs:
       - name: Sync latest episode into episodes.js
         run: python3 sync_latest_episode.py
 
+      - name: Resolve per-episode Apple links and full descriptions
+        # Fills appleEpisodeId + per-episode links.apple + full descriptions from
+        # Apple's public lookup API so every episode page embeds ITS OWN player.
+        run: python3 resolve_episode_links.py
+
       - name: Regenerate assets and homepage fallback if episodes changed
         run: |
           if git diff --quiet episodes.js; then
@@ -49,6 +54,7 @@ jobs:
           python3 generate_share_cards.py
           python3 generate_episode_pages.py
           python3 update_home_fallback.py
+          python3 generate_sitemap.py
 
       - name: Commit and push if changed
         run: |
@@ -58,6 +64,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html episodes.js episodes/*.html share-cards/*.png
+          git add index.html episodes.js sitemap.xml episodes/*.html share-cards/*.png
           git commit -m $'chore: sync latest episode assets\n\nCo-Authored-By: Oz <oz-agent@warp.dev>'
           git push
