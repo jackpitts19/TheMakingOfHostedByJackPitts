@@ -7,6 +7,64 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from sync_latest_episode import truncate_at_word, extract_guest_name, normalize_duration
+from resolve_episode_links import norm_title, apply_apple_data
+
+
+class NormTitleTests(unittest.TestCase):
+    def test_curly_vs_straight_quotes_match(self):
+        self.assertEqual(
+            norm_title('The Making Of Dave “Laundromat Millionaire” Menz'),
+            norm_title('The Making Of Dave "Laundromat Millionaire" Menz'),
+        )
+
+    def test_case_insensitive(self):
+        self.assertEqual(
+            norm_title("The Making of Kris Carlson: From Sales to Seafood"),
+            norm_title("The Making Of Kris Carlson: From Sales to Seafood"),
+        )
+
+
+class ApplyAppleDataTests(unittest.TestCase):
+    def _apple_item(self):
+        return {
+            "trackId": 1000000000001,
+            "trackName": "In The Making Of: Test Guest",
+            "trackViewUrl": "https://podcasts.apple.com/us/podcast/test/id123?i=1000000000001",
+            "description": "A full, untruncated description of the conversation.",
+        }
+
+    def test_fills_apple_id_url_and_full_description(self):
+        ep = {
+            "title": "In The Making Of: Test Guest",
+            "description": "A full, untruncated…",
+            "links": {"apple": "https://podcasts.apple.com/us/podcast/show/id123"},
+        }
+        changed = apply_apple_data(ep, self._apple_item())
+        self.assertTrue(changed)
+        self.assertEqual(ep["appleEpisodeId"], "1000000000001")
+        self.assertIn("?i=1000000000001", ep["links"]["apple"])
+        self.assertEqual(
+            ep["description"], "A full, untruncated description of the conversation."
+        )
+
+    def test_keeps_longer_handwritten_description(self):
+        ep = {
+            "title": "In The Making Of: Test Guest",
+            "description": "A carefully hand-written description that is longer than "
+            "the Apple one and should therefore be preserved as-is by the resolver.",
+            "links": {},
+        }
+        apply_apple_data(ep, self._apple_item())
+        self.assertTrue(ep["description"].startswith("A carefully hand-written"))
+
+    def test_idempotent(self):
+        ep = {
+            "title": "In The Making Of: Test Guest",
+            "description": "short…",
+            "links": {},
+        }
+        apply_apple_data(ep, self._apple_item())
+        self.assertFalse(apply_apple_data(ep, self._apple_item()))
 
 
 class TruncateAtWordTests(unittest.TestCase):

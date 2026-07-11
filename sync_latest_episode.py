@@ -146,8 +146,8 @@ def fetch_latest_from_feed() -> dict:
     if dt.tzinfo is not None:
         dt = dt.astimezone(tz=None).replace(tzinfo=None)
 
+    # Store the FULL description; card renderers truncate at display time.
     clean_desc = strip_tags(itunes_summary or description) or "Latest episode from the show."
-    clean_desc = truncate_at_word(clean_desc)
 
     return {
         "date": dt.strftime("%Y-%m-%d"),
