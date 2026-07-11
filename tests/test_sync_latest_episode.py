@@ -95,6 +95,24 @@ class TruncateAtWordTests(unittest.TestCase):
         result = truncate_at_word(text, 400)
         self.assertFalse(result[:-1].endswith(","))
 
+    def test_prefers_complete_sentence_over_mid_sentence_cut(self):
+        sentence = "This is one complete sentence about the guest and the company. "
+        text = sentence * 20
+        result = truncate_at_word(text, 400)
+        self.assertTrue(result.endswith("."))
+        self.assertFalse(result.endswith("…"))
+        self.assertLessEqual(len(result), 400)
+
+    def test_ignores_sentence_end_when_it_is_too_early(self):
+        text = "Short. " + ("word " * 200)
+        result = truncate_at_word(text, 400)
+        self.assertTrue(result.endswith("…"))
+
+    def test_sentence_boundary_not_triggered_by_decimal_points(self):
+        text = "Raised $5.1 million and " + ("word " * 200)
+        result = truncate_at_word(text, 400)
+        self.assertTrue(result.endswith("…"))
+
 
 class ExtractGuestNameTests(unittest.TestCase):
     def test_in_the_making_of_prefix(self):

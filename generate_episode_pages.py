@@ -16,6 +16,8 @@ import re
 from pathlib import Path
 from html import escape
 
+from sync_latest_episode import truncate_at_word
+
 ROOT = Path(__file__).parent
 EPISODES_JS = ROOT / "episodes.js"
 OUT_DIR = ROOT / "episodes"
@@ -148,15 +150,6 @@ body > * { position: relative; z-index: 2; }
   margin: 0 0 36px;
   max-width: 660px;
 }
-.hero-lede {
-  font-family: 'Fraunces', serif; font-weight: 400;
-  font-size: clamp(19px, 2vw, 24px);
-  line-height: 1.45; color: var(--ink);
-  margin: 0 0 40px;
-  padding-left: 18px;
-  border-left: 3px solid var(--orange);
-}
-
 /* Spotify player */
 .player {
   margin: 0 0 28px;
@@ -225,21 +218,6 @@ body > * { position: relative; z-index: 2; }
 }
 .guest-card .gc-cta:hover { transform: translateY(-2px); }
 .guest-card .gc-cta svg { width: 16px; height: 16px; }
-
-/* Share card figure */
-.share-fig {
-  margin: 60px 0 24px;
-  border-radius: 16px; overflow: hidden;
-  box-shadow: 0 30px 60px -30px rgba(20,19,15,0.5);
-  border: 1px solid var(--line);
-}
-.share-fig figcaption {
-  font-family: 'Inter', sans-serif; font-size: 11.5px;
-  text-transform: uppercase; letter-spacing: 0.14em;
-  color: var(--ink-soft); padding: 12px 16px;
-  background: rgba(255,255,255,0.4);
-  border-top: 1px solid var(--line);
-}
 
 /* More from the show */
 .related {
@@ -369,8 +347,6 @@ PAGE_TMPL = """<!doctype html>
   <h1 class="hero-title">{headline_html}</h1>
   {subhead_block}
 
-  <p class="hero-lede">{lede}</p>
-
   <div class="player" aria-label="Spotify player">
     {player_html}
   </div>
@@ -397,11 +373,6 @@ PAGE_TMPL = """<!doctype html>
   </div>
 
   {guest_block}
-
-  <figure class="share-fig">
-    <img src="../share-cards/{slug}.png" alt="Cover card for {guest_safe} on The Making Of Hosted By Jack Pitts" />
-    <figcaption>The cover card for this issue. Right-click to save and share.</figcaption>
-  </figure>
 
   <section class="related" aria-label="More from the show">
     <h2>More from the show</h2>
@@ -566,10 +537,6 @@ def render_page(idx, ep, all_eps, total):
         headline_html = escape(head).replace(escape(guest), f"<em>{escape(guest)}</em>")
     subhead_block = f'<p class="hero-sub">{escape(sub)}</p>' if sub else ""
 
-    lede = ep.get("description", "") or ""
-    # Lede is the short standfirst from episodes.js
-    lede = escape(lede)
-
     description_long = escape(long_description_for(ep))
 
     links = ep.get("links") or {}
@@ -577,7 +544,7 @@ def render_page(idx, ep, all_eps, total):
 
     page = PAGE_TMPL.format(
         title_full=escape(title),
-        meta_desc=escape(ep.get("description", "")[:200]),
+        meta_desc=escape(truncate_at_word(ep.get("description", ""), 160)),
         canonical=canonical,
         share_card_url=f"{SITE_URL}/share-cards/{slug}.png",
         json_ld=json_ld_for(ep, issue_no, slug),
@@ -587,7 +554,6 @@ def render_page(idx, ep, all_eps, total):
         duration=escape(ep.get("duration", "")),
         headline_html=headline_html,
         subhead_block=subhead_block,
-        lede=lede,
         player_html=build_player(ep),
         spotify=links.get("spotify", SHOW_SPOTIFY),
         apple=links.get("apple", SHOW_APPLE),
@@ -595,7 +561,6 @@ def render_page(idx, ep, all_eps, total):
         description_long=description_long,
         guest_block=build_guest_block(ep),
         slug=slug,
-        guest_safe=escape(guest or title),
         related_cards=build_related_cards(all_eps, idx, total),
         book_cal=BOOK_CAL,
     )

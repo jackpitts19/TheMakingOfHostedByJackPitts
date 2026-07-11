@@ -52,11 +52,19 @@ DESCRIPTION_LIMIT = 400
 
 
 def truncate_at_word(text: str, limit: int = DESCRIPTION_LIMIT) -> str:
-    """Truncate to at most `limit` chars without cutting mid-word; add an ellipsis."""
+    """Truncate to at most `limit` chars, preferring to end on a complete
+    sentence so cards never read as cut off mid-thought. Falls back to a
+    word-boundary cut with an ellipsis when no sentence ends late enough."""
     text = (text or "").strip()
     if len(text) <= limit:
         return text
     cut = text[:limit]
+    # A sentence end is . ! or ? followed by whitespace (or the cut edge),
+    # so decimals like "$5.1 million" don't count. Only use it when it isn't
+    # absurdly early, otherwise a one-word opener would swallow the card.
+    sentence_ends = [m.end() for m in re.finditer(r"[.!?](?=\s|$)", cut)]
+    if sentence_ends and sentence_ends[-1] >= limit // 3:
+        return cut[: sentence_ends[-1]]
     if " " in cut:
         cut = cut[: cut.rfind(" ")]
     return cut.rstrip(" ,;:.-") + "…"
