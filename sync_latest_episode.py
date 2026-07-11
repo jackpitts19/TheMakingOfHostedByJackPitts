@@ -48,6 +48,20 @@ def fmt_date_label(dt: datetime) -> str:
     return f"{dt.strftime('%B')} {dt.day}, {dt.year}"
 
 
+DESCRIPTION_LIMIT = 400
+
+
+def truncate_at_word(text: str, limit: int = DESCRIPTION_LIMIT) -> str:
+    """Truncate to at most `limit` chars without cutting mid-word; add an ellipsis."""
+    text = (text or "").strip()
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    if " " in cut:
+        cut = cut[: cut.rfind(" ")]
+    return cut.rstrip(" ,;:.-") + "…"
+
+
 def normalize_duration(raw: str) -> str:
     raw = (raw or "").strip()
     if not raw:
@@ -63,7 +77,9 @@ def normalize_duration(raw: str) -> str:
         parts = [int(p) if p.isdigit() else 0 for p in raw.split(":")]
         if len(parts) == 3:
             h, m, _ = parts
-            return f"{h}h {m}m"
+            if h > 0:
+                return f"{h}h {m}m"
+            return f"{m} min"
         if len(parts) == 2:
             m, _ = parts
             return f"{m} min"
@@ -131,7 +147,7 @@ def fetch_latest_from_feed() -> dict:
         dt = dt.astimezone(tz=None).replace(tzinfo=None)
 
     clean_desc = strip_tags(itunes_summary or description) or "Latest episode from the show."
-    clean_desc = clean_desc[:400].rstrip()
+    clean_desc = truncate_at_word(clean_desc)
 
     return {
         "date": dt.strftime("%Y-%m-%d"),

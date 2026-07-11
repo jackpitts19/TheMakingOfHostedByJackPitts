@@ -21,11 +21,25 @@
 
 window.EPISODES = [
   {
+    "date": "2026-07-09",
+    "dateLabel": "July 9, 2026",
+    "title": "Concentrate AI: The LLM Gateway for Fast-Growing Teams",
+    "guest": "Concentrate AI",
+    "description": "In this episode of The Making Of Hosted By Jack Pitts, I sat down with Ari Jacoby, Co-Founder & CEO of Concentrate AI, and Zach Moskow, Founding GTM & Ops at Concentrate AI. Concentrate recently launched out of stealth after raising $5.1 million and is building an LLM gateway that gives teams one API to access leading AI models, manage token spend, improve reliability, and add security and…",
+    "duration": "31 min",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144",
+      "youtube": "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+    }
+  },
+  {
     "date": "2026-06-11",
     "dateLabel": "June 11, 2026",
     "title": "In The Making Of: Nishank Gite",
     "guest": "Nishank Gite",
-    "description": "In this episode of The Making Of Hosted By Jack Pitts, host Jack Pitts sits down with Nishank Gite, Co-Founder & CTO of Nirvana Robotics, to explore Nishank’s journey from physics and AI research into building a robotics company. The conversation covers Nishank’s background in collider physics, machine learning, neural networks, and robotics, along with the realities of building a hard-tech startu",
+    "description": "In this episode of The Making Of Hosted By Jack Pitts, host Jack Pitts sits down with Nishank Gite, Co-Founder & CTO of Nirvana Robotics, to explore Nishank’s journey from physics and AI research into building a robotics company. The conversation covers Nishank’s background in collider physics, machine learning, neural networks, and robotics, along with the realities of building a hard-tech…",
     "duration": "1h 3m",
     "guestLinkedIn": "",
     "links": {

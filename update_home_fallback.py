@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -185,6 +186,14 @@ def main() -> int:
     featured = episodes[0]
 
     html = INDEX_HTML.read_text(encoding="utf-8")
+
+    # Masthead: issue number tracks episode count, month tracks the newest episode.
+    html = set_text(html, "<strong data-mast-issue>", "</strong>", f"ISSUE NO. {pad(total)}")
+    try:
+        mast_month = datetime.strptime(featured.get("date", ""), "%Y-%m-%d").strftime("%B %Y").upper()
+        html = set_text(html, "<span data-mast-date>", "</span>", mast_month)
+    except ValueError:
+        print(f"WARNING: could not parse featured date {featured.get('date')!r}; masthead month left as-is")
 
     # Featured (newest episode) fields.
     html = set_text(html, "<span data-fe-date>", "</span>", esc(featured.get("dateLabel", "")))

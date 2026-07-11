@@ -28,6 +28,15 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Install dependencies
+        # Pillow is required by generate_share_cards.py. Without it, the regenerate
+        # step crashes exactly when a new episode lands, freezing the site on the
+        # previous episode until someone fixes it by hand.
+        run: pip install pillow
+
+      - name: Run unit tests
+        run: python3 -m unittest discover tests
+
       - name: Sync latest episode into episodes.js
         run: python3 sync_latest_episode.py
 
