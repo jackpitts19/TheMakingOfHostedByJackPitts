@@ -21,6 +21,21 @@
 
 window.EPISODES = [
   {
+    "date": "2026-07-30",
+    "dateLabel": "July 30, 2026",
+    "title": "Davies Hood of Induron Protective Coatings: Building an 80-Year Family Business",
+    "guest": "Davies Hood of Induron Protective Coatings",
+    "description": "In this episode of The Making Of Hosted By Jack Pitts, Jack sits down with Davies Hood, President of Induron Protective Coatings, a third-generation family business founded in Birmingham in 1947. Davies shares how he went from working difficult summer jobs in the plant to becoming a regional salesperson, company president, and eventually owner. He explains how Induron protects critical water, wastewater, and power infrastructure, why relationships matter so much in industrial sales, and how learning to put the right people in the right roles changed the trajectory of the company. The conversation also covers family-business succession, buying the company from his father, leading through uncertainty, building a strong team, and Davies’ hope of eventually passing Induron to a fourth generation. A great episode for business owners, entrepreneurs, operators, and anyone interested in leadership, legacy, and building a company that lasts.",
+    "duration": "45 min",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/davies-hood-of-induron-protective-coatings-building/id1853933144?i=1000779100503&uo=4",
+      "youtube": "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+    },
+    "appleEpisodeId": "1000779100503"
+  },
+  {
     "date": "2026-07-09",
     "dateLabel": "July 9, 2026",
     "title": "Concentrate AI: The LLM Gateway for Fast-Growing Teams",
