@@ -113,6 +113,26 @@ def check_robots(errors: list[str]) -> None:
         errors.append(f"robots.txt: missing `Sitemap: {BASE_URL}/sitemap.xml`")
 
 
+def check_error_page(errors: list[str]) -> None:
+    """The 404 must exist, be noindex, and stay out of the sitemap.
+
+    Cloudflare Pages serves /404.html for unmatched routes. If it were
+    indexable it would land in Search Console as a soft 404; if it were listed
+    in the sitemap it would be a URL that never returns 200.
+    """
+    file = ROOT / "404.html"
+    if not file.is_file():
+        errors.append("404.html is missing (Cloudflare Pages serves it for unmatched routes)")
+        return
+
+    html = read(file)
+    robots = ROBOTS_META_RE.search(html)
+    if not robots or "noindex" not in robots.group(1).lower():
+        errors.append("404.html: must be noindex, or it becomes a soft 404 in Search Console")
+    if SITEMAP_XML.is_file() and "/404" in read(SITEMAP_XML):
+        errors.append("404.html must not be listed in sitemap.xml")
+
+
 def resolve_link(href: str, from_path: str) -> str | None:
     """Site-root-relative target of an internal link, or None if external."""
     href = href.split("#", 1)[0].strip()
@@ -200,6 +220,7 @@ def run_checks() -> list[str]:
 
     check_robots(errors)
     check_sitemap(errors, paths)
+    check_error_page(errors)
 
     titles: dict[str, list[str]] = {}
     descs: dict[str, list[str]] = {}

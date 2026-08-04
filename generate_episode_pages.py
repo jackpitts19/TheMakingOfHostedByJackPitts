@@ -413,7 +413,7 @@ PAGE_TMPL = """<!doctype html>
     </div>
   </section>
 
-  <section class="related reading" aria-label="Related reading">
+  <section class="related" aria-label="Related reading">
     <h2>Related reading</h2>
     <div class="read-list">
       {related_reading}

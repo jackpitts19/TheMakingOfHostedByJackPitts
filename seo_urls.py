@@ -105,6 +105,21 @@ def article_pages() -> list[tuple[str, str]]:
     return pages
 
 
+def article_lastmod(path: str) -> str | None:
+    """An article's dateModified, read from its own JSON-LD.
+
+    Lets the sitemap carry a real <lastmod> for articles instead of leaving
+    them undated, without keeping a second copy of the date anywhere.
+    """
+    file = source_file_for(path)
+    if not file.is_file():
+        return None
+    match = re.search(
+        r'"dateModified"\s*:\s*"(\d{4}-\d{2}-\d{2})', file.read_text(encoding="utf-8")
+    )
+    return match.group(1) if match else None
+
+
 def to_url(path: str) -> str:
     """Site-root-relative path -> absolute canonical URL."""
     if not path.startswith("/"):

@@ -22,7 +22,15 @@ import json
 import re
 import sys
 
-from seo_urls import ROOT, episode_path, public_paths, source_file_for, to_url
+from seo_urls import (
+    ROOT,
+    article_lastmod,
+    article_paths,
+    episode_path,
+    public_paths,
+    source_file_for,
+    to_url,
+)
 
 EPISODES_JS = ROOT / "episodes.js"
 SITEMAP_XML = ROOT / "sitemap.xml"
@@ -51,6 +59,18 @@ def build_lastmods(episodes: list[dict]) -> dict[str, str]:
         date = ep.get("date")
         if date:
             lastmods[episode_path(ep)] = date
+
+    # Articles carry their own dateModified in JSON-LD; the archive inherits
+    # the most recent of them.
+    article_dates = []
+    for path in article_paths():
+        date = article_lastmod(path)
+        if date:
+            lastmods[path] = date
+            article_dates.append(date)
+    if article_dates:
+        lastmods["/articles"] = max(article_dates)
+
     return lastmods
 
 
