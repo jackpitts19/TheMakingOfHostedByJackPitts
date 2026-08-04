@@ -3,3 +3,8 @@ compatibility_date = "2026-07-01"
 
 [assets]
 directory = "."
+# Without this, Workers static assets answer an unmatched route with an empty
+# body and no page. 404.html is deployed either way, but only this setting
+# makes it the response for a not-found URL (still a 404 status, which is what
+# search engines need to see).
+not_found_handling = "404-page"
