@@ -170,12 +170,26 @@ def replace_between(html: str, name: str, inner: str) -> str:
 
 
 def set_text(html: str, open_tag: str, close_tag: str, value: str) -> str:
+    """Replace the text between two literal tags.
+
+    Raises when the pattern is absent: a silent no-op here would leave a stale
+    value on the homepage while still reporting success, which is how the
+    Featured block could freeze after an unrelated index.html edit.
+
+    The replacement goes through a lambda because re.sub treats the replacement
+    as a template: an episode title containing a backslash (e.g. "AC\\DC") or
+    "\\g<0>" would otherwise raise "bad escape" or be silently expanded.
+    """
     pat = re.compile(re.escape(open_tag) + r".*?" + re.escape(close_tag))
-    return pat.sub(open_tag + value + close_tag, html, count=1)
+    if not pat.search(html):
+        raise RuntimeError(f"index.html: no match for {open_tag!r}...{close_tag!r}")
+    return pat.sub(lambda _: open_tag + value + close_tag, html, count=1)
 
 
 def set_attr_href(html: str, marker: str, url: str) -> str:
     pat = re.compile("(" + re.escape(marker) + r'\s+href=")[^"]*(")')
+    if not pat.search(html):
+        raise RuntimeError(f"index.html: no href to set for marker {marker!r}")
     return pat.sub(lambda m: m.group(1) + url + m.group(2), html, count=1)
 
 

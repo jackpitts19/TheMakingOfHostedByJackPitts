@@ -16,6 +16,8 @@ import os
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
+from seo_urls import episode_slug
+
 ROOT = Path(__file__).parent
 EPISODES_JS = ROOT / "episodes.js"
 OUT_DIR = ROOT / "share-cards"
@@ -194,17 +196,18 @@ def render_card(ep, out_path):
     return out_path
 
 
-def slugify(name):
-    s = re.sub(r"[^A-Za-z0-9]+", "-", name.lower()).strip("-")
-    return s or "episode"
-
-
 def main():
     episodes = load_episodes()
     print(f"Loaded {len(episodes)} episodes")
 
     for ep in episodes:
-        slug = slugify(ep.get("guest", "") or ep.get("title", ""))
+        # Must be seo_urls.episode_slug, not a local copy. The local version
+        # fell back to the raw title while the page generator falls back to the
+        # extracted guest name, so an entry with no `guest` key wrote
+        # share-cards/in-the-making-of-jesse-choe.png while the page pointed
+        # og:image at share-cards/jesse-choe.png. One source of truth prevents
+        # that drift.
+        slug = episode_slug(ep)
         out = OUT_DIR / f"{slug}.png"
         render_card(ep, out)
         print(f"Wrote {out.name}")

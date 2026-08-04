@@ -51,12 +51,14 @@ jobs:
         # Apple's public lookup API so every episode page embeds ITS OWN player.
         run: python3 resolve_episode_links.py
 
-      - name: Regenerate episode assets and homepage fallback if episodes changed
+      - name: Regenerate episode assets and homepage fallback
+        # Always runs. The old `git diff --quiet episodes.js` gate compared the
+        # worktree to the index, which is empty on a push trigger because the
+        # change is already committed. So a hand-added episode skipped page
+        # generation entirely, and the sitemap step then hard-failed on the
+        # missing page. The generators are idempotent -- a full re-run on
+        # unchanged input produces zero diff -- so there is nothing to gate.
         run: |
-          if git diff --quiet episodes.js; then
-            echo "No new episode. Skipping per-episode regeneration."
-            exit 0
-          fi
           python3 generate_share_cards.py
           python3 generate_episode_pages.py
           python3 update_home_fallback.py

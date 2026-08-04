@@ -24,8 +24,10 @@ from seo_urls import (
     to_url,
 )
 from sync_latest_episode import strip_tags
+from resolve_episode_links import apply_apple_data
 from validate_seo import (
     check_duplicates,
+    check_episode_slugs,
     check_page_html,
     check_robots_text,
     run_checks,
@@ -212,6 +214,38 @@ class HouseStyleTests(unittest.TestCase):
         self.assertIn("2008–2009", strip_tags("the 2008–2009 downturn"))
 
 
+class DescriptionProvenanceTests(unittest.TestCase):
+    """A hand-edited description must survive the twice-daily sync."""
+
+    APPLE = {"description": "The long original text straight from the feed.",
+             "trackViewUrl": "https://podcasts.apple.com/x", "trackId": 1}
+
+    def test_untouched_description_is_refreshed_from_the_feed(self):
+        ep = {"description": "Old feed text.", "appleDescription": "Old feed text."}
+        apply_apple_data(ep, self.APPLE)
+        self.assertEqual(ep["description"], self.APPLE["description"])
+
+    def test_hand_edited_description_is_preserved(self):
+        # The old rule overwrote this because Apple's text was longer.
+        ep = {"description": "Jane on building, failing, and starting again.",
+              "appleDescription": "Old feed text."}
+        apply_apple_data(ep, self.APPLE)
+        self.assertEqual(ep["description"],
+                         "Jane on building, failing, and starting again.")
+
+    def test_hand_edit_survives_repeated_syncs(self):
+        ep = {"description": "Short hand-written line.",
+              "appleDescription": "Old feed text."}
+        for _ in range(3):
+            apply_apple_data(ep, self.APPLE)
+        self.assertEqual(ep["description"], "Short hand-written line.")
+
+    def test_empty_description_is_filled(self):
+        ep = {"description": ""}
+        apply_apple_data(ep, self.APPLE)
+        self.assertEqual(ep["description"], self.APPLE["description"])
+
+
 class IndexabilityTests(unittest.TestCase):
     def test_no_indexing_problems(self):
         problems = run_checks()
@@ -315,6 +349,29 @@ class ValidatorFiresTests(unittest.TestCase):
         errors = []
         check_robots_text(errors, "User-agent: *\nAllow: /\n")
         self.assertTrue(any("missing `Sitemap:" in e for e in errors))
+
+    def test_reports_colliding_episode_slugs(self):
+        # Two guests whose names share a slug would silently overwrite each
+        # other's page and lose one episode from the sitemap.
+        errors = []
+        check_episode_slugs(errors, [
+            {"guest": "Jane Doe", "title": "A"},
+            {"guest": "jane  doe", "title": "B"},
+        ])
+        self.assertTrue(any("both slugify to" in e for e in errors), errors)
+
+    def test_reports_slug_with_no_usable_ascii(self):
+        errors = []
+        check_episode_slugs(errors, [{"guest": "李明", "title": "A"}])
+        self.assertTrue(any("fallback slug 'episode'" in e for e in errors), errors)
+
+    def test_distinct_slugs_report_nothing(self):
+        errors = []
+        check_episode_slugs(errors, [
+            {"guest": "Jane Doe", "title": "A"},
+            {"guest": "John Roe", "title": "B"},
+        ])
+        self.assertEqual(errors, [])
 
     def test_clean_robots_reports_nothing(self):
         errors = []

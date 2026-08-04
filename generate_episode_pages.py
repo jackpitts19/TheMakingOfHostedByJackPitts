@@ -472,7 +472,7 @@ def build_player(ep):
 
 
 def build_guest_block(ep):
-    name = ep.get("guest", "").strip()
+    name = (ep.get("guest") or "").strip()
     li = (ep.get("guestLinkedIn") or "").strip()
     if not name:
         return ""
@@ -611,7 +611,7 @@ def render_page(idx, ep, all_eps, total):
     issue_no = total - idx
     title = ep.get("title", "")
     head, sub = split_title(title)
-    guest = ep.get("guest", "")
+    guest = ep.get("guest") or ""
     headline_html = escape(head)
     # If it's a "The Making Of NAME" pattern, italicize the name for visual rhythm
     if guest and guest in head:

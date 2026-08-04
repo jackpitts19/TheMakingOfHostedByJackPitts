@@ -45,6 +45,22 @@ def fetch_apple_episodes() -> dict[str, dict]:
     return {norm_title(it.get("trackName", "")): it for it in items}
 
 
+def is_truncation_of(stored: str, full: str) -> bool:
+    """Is `stored` just a shortened form of `full`?
+
+    sync_latest_episode.py stores a description truncated at ~400 chars, and
+    upgrading those to Apple's full text is the reason this script exists. A
+    truncation is a prefix of the full text once the trailing ellipsis and any
+    punctuation trimmed before it are removed. A hand-written description is
+    not a prefix, which is how the two are told apart.
+
+    Known limit: deleting the tail of a description by hand looks exactly like
+    a truncation and would be refreshed. Rewriting any part of it is safe.
+    """
+    core = stored.rstrip("…").rstrip(" .,;:!?-")
+    return bool(core) and full.startswith(core)
+
+
 def apply_apple_data(ep: dict, apple: dict) -> bool:
     """Fill one episode entry from its Apple lookup item. Returns True if changed."""
     changed = False
@@ -63,11 +79,34 @@ def apply_apple_data(ep: dict, apple: dict) -> bool:
 
     full_desc = strip_tags(apple.get("description") or "")
     stored = (ep.get("description") or "").strip()
-    # Upgrade only when Apple's text is a strict improvement: never overwrite a
-    # longer hand-written description with a shorter feed one.
-    if full_desc and len(full_desc) > len(stored):
-        ep["description"] = full_desc
-        changed = True
+
+    # Overwrite by PROVENANCE, not by length.
+    #
+    # The old rule was `len(full_desc) > len(stored)`, which silently destroyed
+    # editorial work: tighten a rambling description by hand and the next
+    # scheduled run decided Apple's longer text must be better and put it back.
+    # It also meant the em-dash normalisation in strip_tags could never repair
+    # an already-stored description, because removing an em dash makes the text
+    # shorter and so never cleared the gate.
+    #
+    # `appleDescription` records exactly what the feed last said. If the stored
+    # description still matches it, nobody has touched it and it is safe to
+    # refresh. If it differs, a human edited it, so we leave it alone while
+    # still tracking what Apple currently says.
+    if full_desc:
+        previous_apple = (ep.get("appleDescription") or "").strip()
+        untouched = (
+            not stored                       # nothing to lose
+            or stored == full_desc           # already current
+            or stored == previous_apple      # unchanged since the last sync
+            or is_truncation_of(stored, full_desc)  # the case this script exists for
+        )
+        if untouched and stored != full_desc:
+            ep["description"] = full_desc
+            changed = True
+        if previous_apple != full_desc:
+            ep["appleDescription"] = full_desc
+            changed = True
 
     return changed
 

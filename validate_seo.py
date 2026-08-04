@@ -29,7 +29,14 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from generate_sitemap import load_episodes
-from seo_urls import BASE_URL, ROOT, public_paths, source_file_for, to_url
+from seo_urls import (
+    BASE_URL,
+    ROOT,
+    episode_slug,
+    public_paths,
+    source_file_for,
+    to_url,
+)
 
 SITEMAP_XML = ROOT / "sitemap.xml"
 ROBOTS_TXT = ROOT / "robots.txt"
@@ -118,6 +125,33 @@ def check_robots_text(errors: list[str], text: str) -> None:
         errors.append("robots.txt: `Disallow: /` blocks the whole site")
     if f"Sitemap: {BASE_URL}/sitemap.xml" not in text:
         errors.append(f"robots.txt: missing `Sitemap: {BASE_URL}/sitemap.xml`")
+
+
+def check_episode_slugs(errors: list[str], episodes: list[dict]) -> None:
+    """Every episode must own a distinct URL.
+
+    slugify() strips everything outside [a-z0-9], so two guests with the same
+    name, or names in a non-Latin script, collapse to the same slug (or to the
+    bare "episode" fallback). public_paths() then de-duplicates, one page
+    overwrites the other, and the newest episode silently vanishes from both
+    the site and the sitemap on an otherwise green build. Fail loudly instead.
+    """
+    seen: dict[str, str] = {}
+    for ep in episodes:
+        slug = episode_slug(ep)
+        title = ep.get("title", "<untitled>")
+        if slug in seen:
+            errors.append(
+                f"episodes.js: '{title}' and '{seen[slug]}' both slugify to "
+                f"'{slug}' — one would overwrite the other"
+            )
+        else:
+            seen[slug] = title
+        if slug == "episode":
+            errors.append(
+                f"episodes.js: '{title}' produced the fallback slug 'episode' "
+                f"(no usable ASCII in the guest name); set a `guest` value"
+            )
 
 
 def check_error_page(errors: list[str]) -> None:
@@ -289,10 +323,12 @@ def check_duplicates(errors: list[str], titles: dict, descs: dict) -> None:
 def run_checks() -> list[str]:
     """Every problem found, as human-readable strings. Empty means healthy."""
     errors: list[str] = []
-    paths = public_paths(load_episodes())
+    episodes = load_episodes()
+    paths = public_paths(episodes)
 
     check_robots(errors)
     check_sitemap(errors, paths)
+    check_episode_slugs(errors, episodes)
     check_error_page(errors)
 
     titles: dict[str, list[str]] = {}
