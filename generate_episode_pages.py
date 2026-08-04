@@ -16,7 +16,7 @@ import re
 from html import escape
 
 from seo_urls import BASE_URL as SITE_URL
-from seo_urls import ROOT, episode_path, episode_slug, to_url
+from seo_urls import ROOT, article_pages, episode_path, episode_slug, to_url
 from sync_latest_episode import truncate_at_word
 
 EPISODES_JS = ROOT / "episodes.js"
@@ -24,6 +24,9 @@ OUT_DIR = ROOT / "episodes"
 OUT_DIR.mkdir(exist_ok=True)
 
 SITE = "The Making Of Hosted By Jack Pitts"
+# Longest episode title that can still take the " | <show name>" suffix and
+# leave the <title> tag inside Google's ~60-character display budget.
+SUFFIX_BUDGET_CHARS = 24
 SHOW_SPOTIFY = "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH"
 SHOW_APPLE = "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144"
 APPLE_PODCAST_ID = "1853933144"
@@ -38,6 +41,28 @@ def load_episodes():
     if not m:
         raise RuntimeError("Could not parse episodes.js")
     return json.loads(m.group(1))
+
+
+def page_title(episode_title):
+    """The <title> tag for an episode page.
+
+    Google truncates around 60 characters, and the " | <show name>" suffix is
+    36 of them. Appending it unconditionally pushed all sixteen pages past 60
+    (up to 117) and repeated the brand twice whenever the episode title already
+    opened with "The Making Of ...".
+
+    So the suffix is added only when it earns its place: the title does not
+    already carry the show name, and it is short enough that the result still
+    fits. The show name is never abbreviated, per house style. Titles that run
+    long on their own are left alone rather than rewritten, since they are the
+    episode titles as published.
+    """
+    title = episode_title or ""
+    if re.match(r"^(In\s+)?The\s+Making\s+Of\b", title, re.I):
+        return title
+    if len(title) > SUFFIX_BUDGET_CHARS:
+        return title
+    return f"{title} | {SITE}"
 
 
 def split_title(title):
@@ -248,6 +273,19 @@ body > * { position: relative; z-index: 2; }
   font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
 }
 
+/* Related reading: links out to the guides */
+.read-list { display: flex; flex-direction: column; gap: 2px; }
+.read-list a {
+  display: block; text-decoration: none; color: var(--ink);
+  font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px;
+  line-height: 1.35; letter-spacing: -0.01em;
+  padding: 15px 0; border-bottom: 1px solid var(--line);
+  transition: color .15s, padding-left .15s;
+}
+.read-list a:first-child { border-top: 1px solid var(--line); }
+.read-list a:hover { color: var(--orange-dark); padding-left: 8px; }
+.read-list a .read-arrow { color: var(--orange-dark); }
+
 /* CTA strip to book */
 .book-strip {
   margin: 70px 0 50px;
@@ -296,7 +334,7 @@ PAGE_TMPL = """<!doctype html>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#f3e8cf" />
-<title>{title_full} | The Making Of Hosted By Jack Pitts</title>
+<title>{page_title}</title>
 <meta name="description" content="{meta_desc}" />
 <link rel="canonical" href="{canonical}" />
 <meta property="og:type" content="article" />
@@ -372,6 +410,13 @@ PAGE_TMPL = """<!doctype html>
     <h2>More from the show</h2>
     <div class="related-grid">
       {related_cards}
+    </div>
+  </section>
+
+  <section class="related reading" aria-label="Related reading">
+    <h2>Related reading</h2>
+    <div class="read-list">
+      {related_reading}
     </div>
   </section>
 
@@ -476,6 +521,31 @@ def build_related_cards(all_eps, current_idx, total):
     return "\n".join(out) or '<p style="color: var(--ink-soft);">More episodes coming soon.</p>'
 
 
+def build_related_reading(idx):
+    """Links from an episode page to the guides, plus the article archive.
+
+    Articles are read from disk, so a new articles/*.html file appears here on
+    the next regeneration with no code change. The three shown rotate by
+    episode index rather than being identical on all sixteen pages, which
+    spreads internal links across the whole article set.
+    """
+    pages = article_pages()
+    if not pages:
+        return '<a href="/articles">Read the guides for founders <span class="read-arrow" aria-hidden="true">&rarr;</span></a>'
+
+    picks = [pages[(idx + offset) % len(pages)] for offset in range(min(3, len(pages)))]
+    out = [
+        f'<a href="{path}">{escape(title)} '
+        f'<span class="read-arrow" aria-hidden="true">&rarr;</span></a>'
+        for path, title in picks
+    ]
+    out.append(
+        '<a href="/articles">All articles for founders '
+        '<span class="read-arrow" aria-hidden="true">&rarr;</span></a>'
+    )
+    return "\n      ".join(out)
+
+
 def json_ld_for(ep, issue_no, slug):
     canonical = to_url(episode_path(ep))
     description = (ep.get("description") or "")[:500]
@@ -536,6 +606,7 @@ def render_page(idx, ep, all_eps, total):
     canonical = to_url(episode_path(ep))
 
     page = PAGE_TMPL.format(
+        page_title=escape(page_title(title)),
         title_full=escape(title),
         meta_desc=escape(truncate_at_word(ep.get("description", ""), 160)),
         canonical=canonical,
@@ -555,6 +626,7 @@ def render_page(idx, ep, all_eps, total):
         guest_block=build_guest_block(ep),
         slug=slug,
         related_cards=build_related_cards(all_eps, idx, total),
+        related_reading=build_related_reading(idx),
         book_cal=BOOK_CAL,
     )
 

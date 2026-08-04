@@ -1477,8 +1477,12 @@
       </span>
       <!-- Real logo if dropped in as logo.png, otherwise CSS-built card -->
       <picture>
+        <!-- WebP first: 47 KB vs 1749 KB. logo.png stays full-res as the
+             fallback and as the press-kit download; only the hero shrinks. -->
+        <source srcset="logo.webp" type="image/webp" />
         <source srcset="logo.png" type="image/png" />
         <img class="logo-img" src="logo.png" alt="The Making Of Hosted By Jack Pitts"
+             width="880" height="880" fetchpriority="high" decoding="async"
              onerror="this.style.display='none'; document.getElementById('logo-card').style.display='block';" />
       </picture>
       <div id="logo-card" class="logo-card" style="display:none;">

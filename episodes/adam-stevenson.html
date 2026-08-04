@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#f3e8cf" />
-<title>The Making of Adam Stevenson: From Flipping Burgers to Building Businesses | The Making Of Hosted By Jack Pitts</title>
+<title>The Making of Adam Stevenson: From Flipping Burgers to Building Businesses</title>
 <meta name="description" content="In this conversation, Adam Stevenson shares his inspiring journey from a low-income upbringing in Detroit to becoming a successful entrepreneur." />
 <link rel="canonical" href="https://themakingofhostedbyjackpitts.com/episodes/adam-stevenson" />
 <meta property="og:type" content="article" />
@@ -208,6 +208,19 @@ body > * { position: relative; z-index: 2; }
   font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
 }
 
+/* Related reading: links out to the guides */
+.read-list { display: flex; flex-direction: column; gap: 2px; }
+.read-list a {
+  display: block; text-decoration: none; color: var(--ink);
+  font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px;
+  line-height: 1.35; letter-spacing: -0.01em;
+  padding: 15px 0; border-bottom: 1px solid var(--line);
+  transition: color .15s, padding-left .15s;
+}
+.read-list a:first-child { border-top: 1px solid var(--line); }
+.read-list a:hover { color: var(--orange-dark); padding-left: 8px; }
+.read-list a .read-arrow { color: var(--orange-dark); }
+
 /* CTA strip to book */
 .book-strip {
   margin: 70px 0 50px;
@@ -305,6 +318,16 @@ footer small { color: rgba(243,232,207,0.55); font-size: 12px; }
       <a class="r-card" href="/episodes/gary-dennis"><div class="r-issue">ISSUE No. 01</div><div class="r-title">The Making of Mammoth Holdings with Gary Dennis</div><div class="r-dur">1h 22m</div></a>
 <a class="r-card" href="/episodes/doug-taylor"><div class="r-issue">ISSUE No. 03</div><div class="r-title">The Making of Doug Taylor: Taylor&#x27;s Candy</div><div class="r-dur">1h 5m</div></a>
 <a class="r-card" href="/episodes/robbie-ferman"><div class="r-issue">ISSUE No. 04</div><div class="r-title">The Making of Robbie Ferman: From Brokerage to Building Sollevare Group</div><div class="r-dur">46 min</div></a>
+    </div>
+  </section>
+
+  <section class="related reading" aria-label="Related reading">
+    <h2>Related reading</h2>
+    <div class="read-list">
+      <a href="/articles/how-to-choose-the-right-podcast-to-tell-your-founder-story">How to Choose the Right Podcast to Tell Your Founder Story <span class="read-arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/articles/when-should-a-founder-go-on-a-podcast">When Should a Founder Go on a Podcast? <span class="read-arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/articles/best-entrepreneurship-podcasts-for-founders-2026">Best Entrepreneurship Podcasts for Founders in 2026: What to Look For <span class="read-arrow" aria-hidden="true">&rarr;</span></a>
+      <a href="/articles">All articles for founders <span class="read-arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </section>
 

@@ -23,6 +23,7 @@ links cannot drift apart. Add a public page in one place: `STATIC_PATHS`.
 from __future__ import annotations
 
 import re
+from html import unescape
 from pathlib import Path
 
 ROOT = Path(__file__).parent
@@ -81,6 +82,27 @@ def article_paths() -> list[str]:
         for p in ARTICLES_DIR.glob("*.html")
         if p.stem != "index"
     )
+
+
+def article_pages() -> list[tuple[str, str]]:
+    """Every article as (path, title), title read from the file's own <title>.
+
+    Read from disk rather than listed here so a new articles/*.html file shows
+    up in episode pages' related-reading strip with no code change.
+    """
+    pages: list[tuple[str, str]] = []
+    for path in article_paths():
+        html = source_file_for(path).read_text(encoding="utf-8")
+        match = re.search(r"<title>(.*?)</title>", html, re.S | re.I)
+        if not match:
+            continue
+        # Titles are "<article title> | <site name>"; keep the article half.
+        # Unescape so callers get plain text and escape once for their own
+        # context. Returning the raw tag content would double-encode any title
+        # containing an entity, e.g. "&amp;" rendering as "&amp;amp;".
+        title = unescape(match.group(1).split("|")[0].strip())
+        pages.append((path, title))
+    return pages
 
 
 def to_url(path: str) -> str:

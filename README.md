@@ -20,7 +20,10 @@ Live site: https://themakingofhostedbyjackpitts.com
 - `update_home_fallback.py` — refreshes the homepage's no-JS fallback markup.
 - `generate_sitemap.py` — regenerates `sitemap.xml` from `episodes.js` + `articles/`.
 - `validate_seo.py` — fails the build on any indexing defect. Run it before pushing.
-- `logo.png`, `headshot.jpg` — show artwork.
+- `generate_logo_webp.py` — rebuilds `logo.webp` from `logo.png`. Run if the logo changes.
+- `logo.png`, `headshot.jpg` — show artwork. **`logo.png` stays full-resolution**
+  because the Press Kit offers it as a download; the homepage hero serves
+  `logo.webp` (47 KB vs 1749 KB) via `<picture>`, with `logo.png` as fallback.
 
 ## URLs: no `.html`, ever
 

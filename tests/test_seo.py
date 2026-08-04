@@ -12,9 +12,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from generate_episode_pages import build_related_reading, page_title
 from generate_sitemap import build_sitemap, load_episodes
 from seo_urls import (
     BASE_URL,
+    article_pages,
     episode_path,
     episode_slug,
     public_paths,
@@ -97,6 +99,67 @@ class SitemapTests(unittest.TestCase):
         self.assertTrue(
             on_disk <= set(sitemap_locs()), "an article file is missing from the sitemap"
         )
+
+
+class PageTitleTests(unittest.TestCase):
+    def test_suffix_dropped_when_title_already_carries_the_show_name(self):
+        # Otherwise the brand appears twice in one <title>.
+        self.assertEqual(
+            page_title("The Making Of Jane Doe: Building Something"),
+            "The Making Of Jane Doe: Building Something",
+        )
+
+    def test_suffix_dropped_for_long_titles(self):
+        long_title = "Concentrate AI: The LLM Gateway for Fast-Growing Teams"
+        self.assertEqual(page_title(long_title), long_title)
+
+    def test_short_title_keeps_the_full_show_name(self):
+        self.assertEqual(
+            page_title("Jane Doe"),
+            "Jane Doe | The Making Of Hosted By Jack Pitts",
+        )
+
+    def test_show_name_is_never_abbreviated(self):
+        # House style: the full name or nothing.
+        result = page_title("Jane Doe")
+        self.assertIn("The Making Of Hosted By Jack Pitts", result)
+
+
+class CrossLinkingTests(unittest.TestCase):
+    def test_article_pages_reads_titles_from_disk(self):
+        pages = article_pages()
+        self.assertTrue(pages, "no articles discovered")
+        for path, title in pages:
+            self.assertTrue(path.startswith("/articles/"))
+            self.assertTrue(title)
+            self.assertNotIn("|", title, "site name should be stripped from title")
+
+    def test_related_reading_links_to_articles_and_the_archive(self):
+        html = build_related_reading(0)
+        self.assertIn('href="/articles"', html)
+        self.assertIn('href="/articles/', html)
+
+    def test_related_reading_rotates_across_episodes(self):
+        # Identical blocks on all 16 pages would concentrate links on one
+        # article; rotation spreads them across the set.
+        first_of = lambda i: build_related_reading(i).split('href="')[1]
+        self.assertNotEqual(first_of(0), first_of(1))
+
+    def test_every_episode_page_links_to_an_article(self):
+        episodes_dir = Path(__file__).parent.parent / "episodes"
+        orphans = [
+            p.name for p in episodes_dir.glob("*.html")
+            if "/articles" not in p.read_text(encoding="utf-8")
+        ]
+        self.assertEqual(orphans, [])
+
+    def test_every_article_links_to_an_episode(self):
+        articles_dir = Path(__file__).parent.parent / "articles"
+        orphans = [
+            p.name for p in articles_dir.glob("*.html")
+            if "/episodes/" not in p.read_text(encoding="utf-8")
+        ]
+        self.assertEqual(orphans, [])
 
 
 class IndexabilityTests(unittest.TestCase):

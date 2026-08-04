@@ -208,6 +208,19 @@ body > * { position: relative; z-index: 2; }
   font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
 }
 
+/* Related reading: links out to the guides */
+.read-list { display: flex; flex-direction: column; gap: 2px; }
+.read-list a {
+  display: block; text-decoration: none; color: var(--ink);
+  font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px;
+  line-height: 1.35; letter-spacing: -0.01em;
+  padding: 15px 0; border-bottom: 1px solid var(--line);
+  transition: color .15s, padding-left .15s;
+}
+.read-list a:first-child { border-top: 1px solid var(--line); }
+.read-list a:hover { color: var(--orange-dark); padding-left: 8px; }
+.read-list a .read-arrow { color: var(--orange-dark); }
+
 /* CTA strip to book */
 .book-strip {
   margin: 70px 0 50px;
