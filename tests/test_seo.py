@@ -23,6 +23,7 @@ from seo_urls import (
     source_file_for,
     to_url,
 )
+from sync_latest_episode import strip_tags
 from validate_seo import run_checks, sitemap_locs
 
 SYNTHETIC_EPISODE = {
@@ -160,6 +161,49 @@ class CrossLinkingTests(unittest.TestCase):
             if "/episodes/" not in p.read_text(encoding="utf-8")
         ]
         self.assertEqual(orphans, [])
+
+
+class HouseStyleTests(unittest.TestCase):
+    """The show name is never abbreviated and em dashes are never used."""
+
+    SHOW = "The Making Of Hosted By Jack Pitts"
+
+    def _shipped_pages(self):
+        root = Path(__file__).parent.parent
+        return (
+            [root / n for n in ("index.html", "episodes.html", "articles.html", "404.html")]
+            + sorted((root / "articles").glob("*.html"))
+            + sorted((root / "episodes").glob("*.html"))
+        )
+
+    def test_no_em_dashes_in_shipped_pages(self):
+        offenders = [
+            p.name for p in self._shipped_pages()
+            if "—" in p.read_text(encoding="utf-8")
+        ]
+        self.assertEqual(offenders, [], "em dashes are banned by house style")
+
+    def test_no_em_dashes_in_episode_data(self):
+        # episodes.js feeds every generated page, so an em dash here spreads.
+        # strip_tags() normalises them at ingestion; this guards the result.
+        data = (Path(__file__).parent.parent / "episodes.js").read_text(encoding="utf-8")
+        self.assertNotIn("—", data)
+
+    def test_strip_tags_removes_em_dashes_from_feed_text(self):
+        # Arrange: the shape Apple actually returns.
+        raw = "<p>from humble beginnings — with a dad who was a mechanic — to Georgia Tech</p>"
+
+        # Act
+        cleaned = strip_tags(raw)
+
+        # Assert
+        self.assertEqual(
+            cleaned,
+            "from humble beginnings, with a dad who was a mechanic, to Georgia Tech",
+        )
+
+    def test_strip_tags_keeps_en_dashes_in_ranges(self):
+        self.assertIn("2008–2009", strip_tags("the 2008–2009 downturn"))
 
 
 class IndexabilityTests(unittest.TestCase):

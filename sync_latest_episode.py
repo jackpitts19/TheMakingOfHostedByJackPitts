@@ -40,6 +40,13 @@ def fetch_text(url: str) -> str:
 def strip_tags(text: str) -> str:
     text = re.sub(r"<[^>]+>", " ", text or "")
     text = unescape(text)
+    # House style bans em dashes. This is the single funnel every Apple
+    # description passes through on its way into episodes.js, so normalising
+    # here is the only fix that survives: editing episodes.js by hand gets
+    # reverted the next time resolve_episode_links.py upgrades a description
+    # from the feed. En dashes are left alone because they carry meaning in
+    # numeric ranges like "2008-2009".
+    text = re.sub(r"\s*—\s*", ", ", text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
 
