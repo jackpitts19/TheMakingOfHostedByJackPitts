@@ -24,7 +24,13 @@ from seo_urls import (
     to_url,
 )
 from sync_latest_episode import strip_tags
-from validate_seo import run_checks, sitemap_locs
+from validate_seo import (
+    check_duplicates,
+    check_page_html,
+    check_robots_text,
+    run_checks,
+    sitemap_locs,
+)
 
 SYNTHETIC_EPISODE = {
     "date": "2099-01-15",
@@ -210,6 +216,113 @@ class IndexabilityTests(unittest.TestCase):
     def test_no_indexing_problems(self):
         problems = run_checks()
         self.assertEqual(problems, [], "\n".join(["", *problems]))
+
+
+def _page(canonical="https://themakingofhostedbyjackpitts.com/episodes",
+          title="A Title", desc="A description.", robots="", body="", ld=""):
+    """Minimal well-formed page, with one field swappable per test."""
+    robots_tag = f'<meta name="robots" content="{robots}" />' if robots else ""
+    ld_tag = f'<script type="application/ld+json">{ld}</script>' if ld else ""
+    canonical_tag = f'<link rel="canonical" href="{canonical}" />' if canonical else ""
+    title_tag = f"<title>{title}</title>" if title else ""
+    desc_tag = f'<meta name="description" content="{desc}" />' if desc else ""
+    return f"<html><head>{title_tag}{desc_tag}{canonical_tag}{robots_tag}{ld_tag}</head><body>{body}</body></html>"
+
+
+class ValidatorFiresTests(unittest.TestCase):
+    """Negative fixtures: prove each rule actually reports.
+
+    Asserting run_checks() == [] on the real site is not a test of the
+    validator. A validator that returns [] unconditionally passes it just as
+    happily. Deleting every check body was verified to leave the rest of this
+    suite green, which is why these exist: each test below breaks exactly one
+    thing and asserts the matching error appears.
+    """
+
+    PATH = "/episodes"
+
+    def _check(self, html, exists=lambda t: True):
+        errors, titles, descs = [], {}, {}
+        check_page_html(errors, self.PATH, html, titles, descs,
+                        label="fixture.html", exists=exists)
+        return errors
+
+    def test_reports_missing_title(self):
+        self.assertTrue(any("missing <title>" in e for e in self._check(_page(title=""))))
+
+    def test_reports_missing_description(self):
+        self.assertTrue(any("missing meta description" in e for e in self._check(_page(desc=""))))
+
+    def test_reports_missing_canonical(self):
+        self.assertTrue(any("missing canonical" in e for e in self._check(_page(canonical=""))))
+
+    def test_reports_canonical_pointing_elsewhere(self):
+        errors = self._check(_page(canonical="https://themakingofhostedbyjackpitts.com/wrong"))
+        self.assertTrue(any("canonical is" in e for e in errors))
+
+    def test_reports_noindex(self):
+        self.assertTrue(any("noindex" in e for e in self._check(_page(robots="noindex"))))
+
+    def test_reports_nofollow(self):
+        self.assertTrue(any("nofollow" in e for e in self._check(_page(robots="nofollow"))))
+
+    def test_reports_internal_link_with_html_suffix(self):
+        errors = self._check(_page(body='<a href="/articles.html">x</a>'))
+        self.assertTrue(any("307-redirects" in e for e in errors))
+
+    def test_reports_broken_internal_link(self):
+        errors = self._check(_page(body='<a href="/nope">x</a>'), exists=lambda t: False)
+        self.assertTrue(any("broken internal link" in e for e in errors))
+
+    def test_ignores_external_links(self):
+        # Even with every internal target missing, an off-site href must not be
+        # reported. (The page's own canonical is link-checked too, which is why
+        # this asserts on the external URL rather than on an empty list.)
+        errors = self._check(_page(body='<a href="https://spotify.com/x">x</a>'),
+                             exists=lambda t: False)
+        self.assertFalse(any("spotify.com" in e for e in errors), errors)
+
+    def test_reports_unparseable_json_ld(self):
+        errors = self._check(_page(ld="{not valid json"))
+        self.assertTrue(any("JSON-LD does not parse" in e for e in errors))
+
+    def test_reports_json_ld_url_with_html_suffix(self):
+        # The bug that shipped: the link checker only read href attributes, so
+        # a .html URL inside structured data went unnoticed.
+        ld = '{"@type":"Article","url":"https://themakingofhostedbyjackpitts.com/articles/x.html"}'
+        errors = self._check(_page(ld=ld))
+        self.assertTrue(any("JSON-LD URL 307-redirects" in e for e in errors))
+
+    def test_clean_page_reports_nothing(self):
+        self.assertEqual(self._check(_page()), [])
+
+    def test_reports_duplicate_titles(self):
+        errors = []
+        check_duplicates(errors, {"Same": ["/a", "/b"]}, {})
+        self.assertTrue(any("duplicate <title>" in e for e in errors))
+
+    def test_reports_duplicate_descriptions(self):
+        errors = []
+        check_duplicates(errors, {}, {"Same": ["/a", "/b"]})
+        self.assertTrue(any("duplicate description" in e for e in errors))
+
+    def test_reports_robots_blocking_the_site(self):
+        errors = []
+        check_robots_text(errors, "User-agent: *\nDisallow: /\n")
+        self.assertTrue(any("blocks the whole site" in e for e in errors))
+
+    def test_reports_robots_missing_sitemap(self):
+        errors = []
+        check_robots_text(errors, "User-agent: *\nAllow: /\n")
+        self.assertTrue(any("missing `Sitemap:" in e for e in errors))
+
+    def test_clean_robots_reports_nothing(self):
+        errors = []
+        check_robots_text(
+            errors,
+            f"User-agent: *\nAllow: /\n\nSitemap: {BASE_URL}/sitemap.xml\n",
+        )
+        self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":

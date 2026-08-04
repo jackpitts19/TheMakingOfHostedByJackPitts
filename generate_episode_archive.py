@@ -23,7 +23,7 @@ import json
 import sys
 from html import escape
 
-from generate_episode_pages import CSS, load_episodes
+from generate_episode_pages import CSS, json_ld_script, load_episodes
 from seo_urls import BASE_URL, ROOT, episode_path, to_url
 from sync_latest_episode import truncate_at_word
 
@@ -199,7 +199,9 @@ def build_json_ld(episodes: list[dict]) -> str:
             {"@type": "ListItem", "position": 2, "name": "Episodes", "item": canonical},
         ],
     }
-    return json.dumps([collection, breadcrumbs])
+    # Same escaping as the episode pages: an unescaped "<" in a title would
+    # close the <script> early and take the whole entity with it.
+    return json_ld_script([collection, breadcrumbs])
 
 
 def build_page(episodes: list[dict]) -> str:

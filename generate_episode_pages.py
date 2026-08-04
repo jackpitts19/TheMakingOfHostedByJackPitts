@@ -94,7 +94,7 @@ CSS = r"""
   --cream: #f3e8cf;
   --cream-deep: #ecd9a8;
   --orange: #d87a2c;
-  --orange-dark: #b85f18;
+  --orange-dark: #934c13;
   --ink: #14130f;
   --ink-soft: #3a352b;
   --line: rgba(20,19,15,0.12);
@@ -546,9 +546,27 @@ def build_related_reading(idx):
     return "\n      ".join(out)
 
 
+def json_ld_script(payload):
+    """Serialise JSON-LD safely for embedding in a <script> block.
+
+    json.dumps does not escape `<`, so a title containing `</script` would end
+    the script element early: the rest of the JSON becomes live HTML and Google
+    drops every entity on the page. Escaping the three HTML-significant
+    characters as \\u sequences keeps the JSON valid and inert.
+    """
+    return (
+        json.dumps(payload)
+        .replace("<", "\\u003c")
+        .replace(">", "\\u003e")
+        .replace("&", "\\u0026")
+    )
+
+
 def json_ld_for(ep, issue_no, slug):
     canonical = to_url(episode_path(ep))
-    description = (ep.get("description") or "")[:500]
+    # Word-safe, not a raw slice: a hard [:500] cut 15 of 16 pages mid-word, so
+    # the structured data contradicted the full text rendered on the same page.
+    description = truncate_at_word(ep.get("description") or "", 500)
     obj = {
         "@context": "https://schema.org",
         "@type": "PodcastEpisode",
@@ -576,7 +594,7 @@ def json_ld_for(ep, issue_no, slug):
             {"@type": "ListItem", "position": 3, "name": ep.get("title", ""), "item": canonical},
         ],
     }
-    return json.dumps([obj, breadcrumbs])
+    return json_ld_script([obj, breadcrumbs])
 
 
 def long_description_for(ep):
@@ -619,12 +637,16 @@ def render_page(idx, ep, all_eps, total):
         headline_html=headline_html,
         subhead_block=subhead_block,
         player_html=build_player(ep),
-        spotify=links.get("spotify", SHOW_SPOTIFY),
-        apple=links.get("apple", SHOW_APPLE),
-        youtube=links.get("youtube", SHOW_YT),
+        spotify=escape(links.get("spotify") or SHOW_SPOTIFY),
+        apple=escape(links.get("apple") or SHOW_APPLE),
+        youtube=escape(links.get("youtube") or SHOW_YT),
         description_long=description_long,
         guest_block=build_guest_block(ep),
         slug=slug,
+        # `or` not dict.get(k, default): an empty-string or null link is present
+        # as a key, so get()'s default never fires and the page ships href=""
+        # or href="None". escape() because links.apple comes from Apple's API,
+        # and a quote in a URL would inject an arbitrary attribute.
         related_cards=build_related_cards(all_eps, idx, total),
         related_reading=build_related_reading(idx),
         book_cal=BOOK_CAL,

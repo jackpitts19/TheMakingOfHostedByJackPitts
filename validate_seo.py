@@ -21,6 +21,7 @@ Run: python3 validate_seo.py
 
 from __future__ import annotations
 
+import json
 import posixpath
 import re
 import sys
@@ -48,6 +49,9 @@ HREF_RE = re.compile(r'href="([^"]+)"')
 # stripped before link checking -- otherwise every JS template reads as a
 # broken link. The no-JS fallback markup they mirror is still checked.
 SCRIPT_STYLE_RE = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.S | re.I)
+JSON_LD_RE = re.compile(
+    r'<script type="application/ld\+json">(.*?)</script>', re.S | re.I
+)
 
 
 def read(path: Path) -> str:
@@ -101,8 +105,11 @@ def check_robots(errors: list[str]) -> None:
     if not ROBOTS_TXT.is_file():
         errors.append("robots.txt is missing")
         return
+    check_robots_text(errors, read(ROBOTS_TXT))
 
-    text = read(ROBOTS_TXT)
+
+def check_robots_text(errors: list[str], text: str) -> None:
+    """Pure: the robots.txt rules, so a fixture can prove each one fires."""
     if not re.search(r"^User-agent:\s*\*", text, re.M | re.I):
         errors.append("robots.txt: no `User-agent: *` group")
     if not re.search(r"^Allow:\s*/\s*$", text, re.M | re.I):
@@ -154,8 +161,41 @@ def resolve_link(href: str, from_path: str) -> str | None:
 
 def check_page(errors: list[str], path: str, titles: dict, descs: dict) -> None:
     file = source_file_for(path)
-    html = read(file)
-    rel = file.relative_to(ROOT)
+    check_page_html(
+        errors,
+        path,
+        read(file),
+        titles,
+        descs,
+        label=str(file.relative_to(ROOT)),
+        exists=_repo_target_exists,
+    )
+
+
+def _repo_target_exists(target: str) -> bool:
+    """Does a site-root-relative link target resolve to a real file?"""
+    if posixpath.splitext(target)[1].lower() in ASSET_SUFFIXES:
+        return (ROOT / target.lstrip("/")).is_file()
+    return source_file_for(target).is_file()
+
+
+def check_page_html(
+    errors: list[str],
+    path: str,
+    html: str,
+    titles: dict,
+    descs: dict,
+    label: str | None = None,
+    exists=_repo_target_exists,
+) -> None:
+    """Pure: every per-page rule, driven by supplied HTML.
+
+    Taking the HTML and an `exists` callable as arguments is what makes these
+    rules testable against deliberately broken fixtures. Without that, a test
+    can only assert "no errors on the real site", which passes just as happily
+    when the checks do nothing at all.
+    """
+    rel = label if label is not None else path
 
     title_m = TITLE_RE.search(html)
     title = title_m.group(1).strip() if title_m else ""
@@ -194,14 +234,47 @@ def check_page(errors: list[str], path: str, titles: dict, descs: dict) -> None:
         if target.endswith(".html"):
             errors.append(f"{rel}: internal link 307-redirects (drop `.html`): {href}")
             continue
-        suffix = posixpath.splitext(target)[1].lower()
-        exists = (
-            (ROOT / target.lstrip("/")).is_file()
-            if suffix in ASSET_SUFFIXES
-            else source_file_for(target).is_file()
-        )
-        if not exists:
+        if not exists(target):
             errors.append(f"{rel}: broken internal link {href} -> {target}")
+
+    check_structured_data(errors, rel, html)
+
+
+def check_structured_data(errors: list[str], rel: str, html: str) -> None:
+    """JSON-LD must parse, and its URLs obey the same rules as markup links.
+
+    The extensionless migration missed articles.html's JSON-LD precisely
+    because the link checker only ever looked at href attributes. Structured
+    data that points at redirecting URLs contradicts the page's own canonical.
+    """
+    for block in JSON_LD_RE.findall(html):
+        try:
+            data = json.loads(block)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{rel}: JSON-LD does not parse: {exc}")
+            continue
+
+        for url in _walk_urls(data):
+            if not url.startswith(BASE_URL):
+                continue  # external entity reference, not ours to police
+            if url.endswith(".html"):
+                errors.append(f"{rel}: JSON-LD URL 307-redirects (drop `.html`): {url}")
+
+
+def _walk_urls(node) -> list[str]:
+    """Every URL-bearing value in a JSON-LD tree."""
+    keys = {"url", "item", "contentUrl", "@id", "image", "sameAs"}
+    found: list[str] = []
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in keys and isinstance(value, str):
+                found.append(value)
+            else:
+                found.extend(_walk_urls(value))
+    elif isinstance(node, list):
+        for item in node:
+            found.extend(_walk_urls(item))
+    return found
 
 
 def check_duplicates(errors: list[str], titles: dict, descs: dict) -> None:

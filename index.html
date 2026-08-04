@@ -70,7 +70,7 @@
     --cream: #f3e8cf;
     --cream-deep: #ecd9a8;
     --orange: #d87a2c;
-    --orange-dark: #b85f18;
+    --orange-dark: #934c13;
     --ink: #14130f;
     --ink-soft: #3a352b;
     --line: rgba(20,19,15,0.12);
@@ -88,11 +88,13 @@
     z-index: 200; text-decoration: none;
     transition: top .15s ease;
   }
-  .skip-link:focus, .skip-link:focus-visible { top: 0; outline: 2px solid #d87a2c; outline-offset: 2px; }
+  .skip-link:focus, .skip-link:focus-visible { top: 0; outline: 2px solid var(--orange); outline-offset: 2px; }
 
   /* Visible orange ring for keyboard navigation, suppressed for mouse users. */
   *:focus-visible {
-    outline: 2px solid #d87a2c;
+    /* Was #d87a2c: 2.56:1 on cream, below the 3:1 that WCAG 1.4.11 requires of
+       a focus indicator. --orange-dark clears 3:1 on cream, cream-deep and ink. */
+    outline: 2px solid var(--orange-dark);
     outline-offset: 3px;
     border-radius: 4px;
   }
