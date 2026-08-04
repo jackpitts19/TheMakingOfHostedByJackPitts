@@ -819,6 +819,10 @@
   /* If a real logo.png exists, show it instead of the CSS card */
   .logo-img {
     width: 100%; max-width: 440px; border-radius: 18px;
+    /* Required. The <img> carries width/height attributes so the browser can
+       reserve space and avoid layout shift; without height:auto those
+       attributes win and stretch the square logo to 440x880. */
+    height: auto;
     transform: rotate(-1.5deg);
     box-shadow: 0 30px 60px -30px rgba(20,19,15,0.3);
   }
