@@ -6,3 +6,12 @@ deploy.sh
 wrangler.toml
 .assetsignore
 .DS_Store
+
+# Build sources must not ship as crawlable assets. Before this, every generator
+# was publicly served -- /generate_sitemap.py returned HTTP 200 -- putting source
+# files on the indexable surface for no benefit. Mirrors deploy.sh's rsync list.
+*.py
+__pycache__
+tests
+episodes.json
+tmo-podcast.skill

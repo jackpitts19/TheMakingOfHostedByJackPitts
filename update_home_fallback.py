@@ -25,11 +25,10 @@ import json
 import re
 import sys
 from datetime import datetime
-from pathlib import Path
 
+from seo_urls import ROOT, episode_path
 from sync_latest_episode import truncate_at_word
 
-ROOT = Path(__file__).parent
 EPISODES_JS = ROOT / "episodes.js"
 INDEX_HTML = ROOT / "index.html"
 
@@ -61,24 +60,13 @@ def pad(n: int) -> str:
     return f"0{n}" if n < 10 else str(n)
 
 
-def slugify(name: str) -> str:
-    s = re.sub(r"[^a-z0-9]+", "-", str(name or "").lower())
-    s = re.sub(r"^-+|-+$", "", s)
-    return s or "episode"
-
-
-def extract_guest_name(title: str) -> str:
-    t = title or ""
-    t = re.sub(r"^In\s+The\s+Making\s+Of:\s*", "", t, flags=re.I)
-    t = re.sub(r"^The\s+Making\s+(Of|of)\s+", "", t, flags=re.I)
-    t = re.split(r":|\s+with\s+|\s+from\s+", t, maxsplit=1, flags=re.I)[0]
-    t = re.sub(r"^[\"“”'\s]+|[\"“”'\s]+$", "", t)
-    return t or (title or "")
-
-
 def page_href(ep: dict) -> str:
-    guest = ep.get("guest") or extract_guest_name(ep.get("title", ""))
-    return "episodes/" + slugify(guest) + ".html"
+    """Root-absolute, extensionless episode link.
+
+    Root-absolute so the same string is correct from any page, and extensionless
+    because Cloudflare Pages 307-redirects the `.html` form (see seo_urls.py).
+    """
+    return episode_path(ep)
 
 
 def load_episodes() -> list[dict]:

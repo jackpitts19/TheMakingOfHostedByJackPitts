@@ -13,18 +13,17 @@ URL (../share-cards/<slug>.png) always matches.
 
 import json
 import re
-from pathlib import Path
 from html import escape
 
+from seo_urls import BASE_URL as SITE_URL
+from seo_urls import ROOT, episode_path, episode_slug, to_url
 from sync_latest_episode import truncate_at_word
 
-ROOT = Path(__file__).parent
 EPISODES_JS = ROOT / "episodes.js"
 OUT_DIR = ROOT / "episodes"
 OUT_DIR.mkdir(exist_ok=True)
 
 SITE = "The Making Of Hosted By Jack Pitts"
-SITE_URL = "https://themakingofhostedbyjackpitts.com"
 SHOW_SPOTIFY = "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH"
 SHOW_APPLE = "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144"
 APPLE_PODCAST_ID = "1853933144"
@@ -39,11 +38,6 @@ def load_episodes():
     if not m:
         raise RuntimeError("Could not parse episodes.js")
     return json.loads(m.group(1))
-
-
-def slugify(name):
-    s = re.sub(r"[^A-Za-z0-9]+", "-", name.lower()).strip("-")
-    return s or "episode"
 
 
 def split_title(title):
@@ -328,8 +322,8 @@ PAGE_TMPL = """<!doctype html>
 
 <nav class="topnav">
   <div class="wrap">
-    <a class="mark" href="../index.html">The Making <span>Of</span> Hosted By Jack Pitts</a>
-    <a class="back" href="../index.html#episodes">All episodes</a>
+    <a class="mark" href="/">The Making <span>Of</span> Hosted By Jack Pitts</a>
+    <a class="back" href="/episodes">All episodes</a>
   </div>
 </nav>
 
@@ -470,11 +464,10 @@ def build_related_cards(all_eps, current_idx, total):
             break
     for i, ep in pool:
         ep_issue = total - i
-        slug = slugify(ep.get("guest", "") or ep.get("title", ""))
         title = escape(ep.get("title", "") or "")
         dur = escape(ep.get("duration", "") or "")
         out.append(
-            f'<a class="r-card" href="{slug}.html">'
+            f'<a class="r-card" href="{episode_path(ep)}">'
             f'<div class="r-issue">ISSUE {issue_label(ep_issue)}</div>'
             f'<div class="r-title">{title}</div>'
             f'<div class="r-dur">{dur}</div>'
@@ -484,7 +477,7 @@ def build_related_cards(all_eps, current_idx, total):
 
 
 def json_ld_for(ep, issue_no, slug):
-    canonical = f"{SITE_URL}/episodes/{slug}.html"
+    canonical = to_url(episode_path(ep))
     description = (ep.get("description") or "")[:500]
     obj = {
         "@context": "https://schema.org",
@@ -500,7 +493,7 @@ def json_ld_for(ep, issue_no, slug):
         "partOfSeries": {
             "@type": "PodcastSeries",
             "name": SITE,
-            "url": SITE_URL,
+            "url": to_url("/"),
         },
         "author": {"@type": "Person", "name": "Jack Pitts", "url": JACK_LI},
     }
@@ -508,8 +501,8 @@ def json_ld_for(ep, issue_no, slug):
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": SITE, "item": f"{SITE_URL}/"},
-            {"@type": "ListItem", "position": 2, "name": "Episodes", "item": f"{SITE_URL}/#episodes"},
+            {"@type": "ListItem", "position": 1, "name": SITE, "item": to_url("/")},
+            {"@type": "ListItem", "position": 2, "name": "Episodes", "item": to_url("/episodes")},
             {"@type": "ListItem", "position": 3, "name": ep.get("title", ""), "item": canonical},
         ],
     }
@@ -526,7 +519,7 @@ def long_description_for(ep):
 
 
 def render_page(idx, ep, all_eps, total):
-    slug = slugify(ep.get("guest", "") or ep.get("title", ""))
+    slug = episode_slug(ep)
     issue_no = total - idx
     title = ep.get("title", "")
     head, sub = split_title(title)
@@ -540,7 +533,7 @@ def render_page(idx, ep, all_eps, total):
     description_long = escape(long_description_for(ep))
 
     links = ep.get("links") or {}
-    canonical = f"{SITE_URL}/episodes/{slug}.html"
+    canonical = to_url(episode_path(ep))
 
     page = PAGE_TMPL.format(
         title_full=escape(title),

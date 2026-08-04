@@ -2,10 +2,16 @@
 """
 Generate sitemap.xml from episodes.js and the articles/ directory.
 
-The sitemap lists every public page on the site: the homepage, the articles
-index, each article, and one page per episode. It reads episodes.js (the
-source of truth for the episode list) so it stays correct when the daily
-episode sync adds a new episode. Run it after generate_episode_pages.py.
+The sitemap lists every public, canonical, indexable page: the homepage, the
+episode archive, the article archive, each article, and one page per episode.
+Routes come from seo_urls.public_paths(), which derives episode URLs from
+episodes.js (the source of truth) and discovers articles by globbing
+articles/*.html -- nothing here is hard-coded, so a new episode or a new
+article file lands in the sitemap automatically.
+
+URLs are extensionless because Cloudflare Pages 307-redirects the `.html`
+form; see seo_urls.py for the verification. Run after generate_episode_pages.py
+and generate_episode_archive.py.
 
 Safe to run repeatedly; output is deterministic for a given episodes.js.
 """
@@ -15,29 +21,11 @@ from __future__ import annotations
 import json
 import re
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).parent
+from seo_urls import ROOT, episode_path, public_paths, source_file_for, to_url
+
 EPISODES_JS = ROOT / "episodes.js"
-ARTICLES_DIR = ROOT / "articles"
 SITEMAP_XML = ROOT / "sitemap.xml"
-
-BASE_URL = "https://themakingofhostedbyjackpitts.com"
-
-
-def slugify(name: str) -> str:
-    s = re.sub(r"[^a-z0-9]+", "-", str(name or "").lower())
-    s = re.sub(r"^-+|-+$", "", s)
-    return s or "episode"
-
-
-def extract_guest_name(title: str) -> str:
-    t = title or ""
-    t = re.sub(r"^In\s+The\s+Making\s+Of:\s*", "", t, flags=re.I)
-    t = re.sub(r"^The\s+Making\s+(Of|of)\s+", "", t, flags=re.I)
-    t = re.split(r":|\s+with\s+|\s+from\s+", t, maxsplit=1, flags=re.I)[0]
-    t = re.sub(r"^[\"“”'\s]+|[\"“”'\s]+$", "", t)
-    return t or (title or "")
 
 
 def load_episodes() -> list[dict]:
@@ -48,9 +36,22 @@ def load_episodes() -> list[dict]:
     return json.loads(m.group(1))
 
 
-def episode_url(ep: dict) -> str:
-    guest = ep.get("guest") or extract_guest_name(ep.get("title", ""))
-    return f"{BASE_URL}/episodes/{slugify(guest)}.html"
+def build_lastmods(episodes: list[dict]) -> dict[str, str]:
+    """Map path -> lastmod. Only pages with a real publication date get one.
+
+    The homepage and the episode archive both change whenever a new episode
+    lands, so they inherit the newest episode's date.
+    """
+    newest = episodes[0].get("date") or ""
+    lastmods: dict[str, str] = {}
+    if newest:
+        lastmods["/"] = newest
+        lastmods["/episodes"] = newest
+    for ep in episodes:
+        date = ep.get("date")
+        if date:
+            lastmods[episode_path(ep)] = date
+    return lastmods
 
 
 def url_entry(loc: str, lastmod: str | None = None) -> str:
@@ -61,33 +62,36 @@ def url_entry(loc: str, lastmod: str | None = None) -> str:
     return "\n".join(lines)
 
 
-def main() -> int:
-    episodes = load_episodes()
-    if not episodes:
-        raise RuntimeError("episodes.js has no episodes")
-
-    newest_date = episodes[0].get("date") or None
-
-    entries = [
-        url_entry(f"{BASE_URL}/", newest_date),
-        url_entry(f"{BASE_URL}/articles.html"),
-    ]
-
-    for article in sorted(ARTICLES_DIR.glob("*.html")):
-        entries.append(url_entry(f"{BASE_URL}/articles/{article.name}"))
-
-    for ep in episodes:
-        entries.append(url_entry(episode_url(ep), ep.get("date") or None))
-
-    body = "\n".join(entries)
-    xml = (
+def build_sitemap(episodes: list[dict]) -> str:
+    paths = public_paths(episodes)
+    lastmods = build_lastmods(episodes)
+    body = "\n".join(url_entry(to_url(p), lastmods.get(p)) for p in paths)
+    return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
         f"{body}\n"
         "</urlset>\n"
     )
-    SITEMAP_XML.write_text(xml, encoding="utf-8")
-    print(f"Wrote sitemap.xml with {len(entries)} URLs.")
+
+
+def main() -> int:
+    episodes = load_episodes()
+    if not episodes:
+        raise RuntimeError("episodes.js has no episodes")
+
+    paths = public_paths(episodes)
+
+    # A sitemap URL with no file behind it 404s for Googlebot. Fail loudly here
+    # rather than shipping a sitemap full of dead links.
+    missing = [p for p in paths if not source_file_for(p).is_file()]
+    if missing:
+        raise RuntimeError(
+            "No source file for: " + ", ".join(missing)
+            + " (run generate_episode_pages.py and generate_episode_archive.py first)"
+        )
+
+    SITEMAP_XML.write_text(build_sitemap(episodes), encoding="utf-8")
+    print(f"Wrote sitemap.xml with {len(paths)} URLs.")
     return 0
 
 

@@ -1,6 +1,12 @@
 name: Episode Sync
 
 on:
+  push:
+    # Articles are added by hand as files in articles/. Running on push means a
+    # new article reaches sitemap.xml immediately instead of waiting for the next
+    # cron, and every push is checked by validate_seo.py. Pushes made with the
+    # default GITHUB_TOKEN do not re-trigger workflows, so this cannot loop.
+    branches: [main]
   schedule:
     # Check the feed twice daily. sync_latest_episode.py is idempotent: it only
     # changes episodes.js when a genuinely new episode appears, so a daily check
@@ -45,16 +51,30 @@ jobs:
         # Apple's public lookup API so every episode page embeds ITS OWN player.
         run: python3 resolve_episode_links.py
 
-      - name: Regenerate assets and homepage fallback if episodes changed
+      - name: Regenerate episode assets and homepage fallback if episodes changed
         run: |
           if git diff --quiet episodes.js; then
-            echo "No new episode. Nothing to regenerate."
+            echo "No new episode. Skipping per-episode regeneration."
             exit 0
           fi
           python3 generate_share_cards.py
           python3 generate_episode_pages.py
           python3 update_home_fallback.py
+
+      - name: Regenerate episode archive and sitemap
+        # Always runs, not just when episodes.js changes. Articles are added by
+        # hand as files in articles/, and generate_sitemap.py discovers them by
+        # globbing that directory -- gating this on episodes.js meant a new
+        # article never reached the sitemap. Both scripts are idempotent, so a
+        # no-op run leaves the tree clean and the commit step below exits early.
+        run: |
+          python3 generate_episode_archive.py
           python3 generate_sitemap.py
+
+      - name: Validate indexable surface
+        # Fails the run if any sitemap URL would 404 or redirect, a canonical is
+        # wrong, a title/description is missing, or an internal link is broken.
+        run: python3 validate_seo.py
 
       - name: Commit and push if changed
         run: |
@@ -64,6 +84,6 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html episodes.js sitemap.xml episodes/*.html share-cards/*.png
+          git add index.html episodes.js sitemap.xml episodes.html episodes/*.html share-cards/*.png
           git commit -m $'chore: sync latest episode assets\n\nCo-Authored-By: Oz <oz-agent@warp.dev>'
           git push
