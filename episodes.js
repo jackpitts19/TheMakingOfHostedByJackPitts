@@ -21,6 +21,22 @@
 
 window.EPISODES = [
   {
+    "date": "2026-08-20",
+    "dateLabel": "August 20, 2026",
+    "title": "Dave Moorman: Building an MSP, Scaling Through M&A & Exiting Twice",
+    "guest": "Dave Moorman",
+    "description": "In this episode of The Making Of, Hosted by Jack Pitts , I sit down with Dave Moorman, who spent more than 30 years in the IT and MSP world building, scaling, acquiring, and selling businesses. Dave shares how he went from working at 10 years old and discovering computers through a heavy metal band to building DynaSis for 26 years. He later sold the business to Novatech, became President and CISO, helped complete more than 10 acquisitions, and eventually went through a second exit. We talk about building a great company, culture, leadership, private equity, M&A, AI, selling a business, and how much success comes down to hard work versus luck. A great conversation for founders, operators, and anyone interested in building something that lasts.",
+    "duration": "56 min",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/dave-moorman-building-an-msp-scaling-through-m/id1853933144?i=1000784580073&uo=4",
+      "youtube": "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+    },
+    "appleEpisodeId": "1000784580073",
+    "appleDescription": "In this episode of The Making Of, Hosted by Jack Pitts, I sit down with Dave Moorman, who spent more than 30 years in the IT and MSP world building, scaling, acquiring, and selling businesses. Dave shares how he went from working at 10 years old and discovering computers through a heavy metal band to building DynaSis for 26 years. He later sold the business to Novatech, became President and CISO, helped complete more than 10 acquisitions, and eventually went through a second exit. We talk about building a great company, culture, leadership, private equity, M&A, AI, selling a business, and how much success comes down to hard work versus luck. A great conversation for founders, operators, and anyone interested in building something that lasts."
+  },
+  {
     "date": "2026-07-30",
     "dateLabel": "July 30, 2026",
     "title": "Davies Hood of Induron Protective Coatings: Building an 80-Year Family Business",
