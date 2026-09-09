@@ -32,6 +32,7 @@ SHOW_APPLE = "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack
 APPLE_PODCAST_ID = "1853933144"
 SHOW_YT = "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
 JACK_LI = "https://www.linkedin.com/in/jack-pitts"
+JACK_SITE = "https://thejackpitts.com/"  # the person's canonical page; LinkedIn is a sameAs
 BOOK_CAL = "https://calendar.app.google/8s9JEAriAqG2qS7MA"
 
 
@@ -432,7 +433,7 @@ PAGE_TMPL = """<!doctype html>
 <footer>
   <div class="wrap">
     <div class="mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
-    <small>&copy; 2026 Jack Pitts. Every conversation is a long one. Have a story? <a href="{book_cal}" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: underline;">Come on the show.</a></small>
+    <small>&copy; 2026 <a href="{jack_site}" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: underline;">Jack Pitts</a>. Every conversation is a long one. Have a story? <a href="{book_cal}" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: underline;">Come on the show.</a></small>
   </div>
 </footer>
 
@@ -583,7 +584,7 @@ def json_ld_for(ep, issue_no, slug):
             "name": SITE,
             "url": to_url("/"),
         },
-        "author": {"@type": "Person", "name": "Jack Pitts", "url": JACK_LI},
+        "author": {"@type": "Person", "name": "Jack Pitts", "url": JACK_SITE, "sameAs": [JACK_LI]},
     }
     breadcrumbs = {
         "@context": "https://schema.org",
@@ -650,6 +651,7 @@ def render_page(idx, ep, all_eps, total):
         related_cards=build_related_cards(all_eps, idx, total),
         related_reading=build_related_reading(idx),
         book_cal=BOOK_CAL,
+        jack_site=JACK_SITE,
     )
 
     out = OUT_DIR / f"{slug}.html"
