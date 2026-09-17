@@ -21,6 +21,22 @@
 
 window.EPISODES = [
   {
+    "date": "2026-09-17",
+    "dateLabel": "September 17, 2026",
+    "title": "How Four Veterans Built Four Branches Bourbon | Rick Franco & Mike Trott",
+    "guest": "How Four Veterans Built Four Branches Bourbon | Rick Franco & Mike Trott",
+    "description": "In this episode of The Making Of, Hosted by Jack Pitts, I sit down with Rick Franco and Mike Trott, co-founders of Four Branches Bourbon. Four Branches didn’t start as a business. It started as an honor barrel created by four veterans who wanted to remember friends they lost and give back to the military community. Rick and Mike share how that idea turned into an award-winning bourbon brand, what it takes to compete in the crowded spirits industry, and why their message of “Serve Honorably. Drink Honorably. Sip to Remember.” is at the center of everything they do. We also talk about building a premium product, getting onto shelves, mental health, entrepreneurship, and what they hope Four Branches becomes over the next 40 years. If you like stories about service, business, and building something with a real mission behind it, this one is worth a listen. Check out Four Branches Bourbon: https://www.fourbranches.com/",
+    "duration": "39 min",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/how-four-veterans-built-four-branches-bourbon-rick/id1853933144?i=1000790341270&uo=4",
+      "youtube": "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+    },
+    "appleEpisodeId": "1000790341270",
+    "appleDescription": "In this episode of The Making Of, Hosted by Jack Pitts, I sit down with Rick Franco and Mike Trott, co-founders of Four Branches Bourbon. Four Branches didn’t start as a business. It started as an honor barrel created by four veterans who wanted to remember friends they lost and give back to the military community. Rick and Mike share how that idea turned into an award-winning bourbon brand, what it takes to compete in the crowded spirits industry, and why their message of “Serve Honorably. Drink Honorably. Sip to Remember.” is at the center of everything they do. We also talk about building a premium product, getting onto shelves, mental health, entrepreneurship, and what they hope Four Branches becomes over the next 40 years. If you like stories about service, business, and building something with a real mission behind it, this one is worth a listen. Check out Four Branches Bourbon: https://www.fourbranches.com/"
+  },
+  {
     "date": "2026-08-20",
     "dateLabel": "August 20, 2026",
     "title": "Dave Moorman: Building an MSP, Scaling Through M&A & Exiting Twice",
