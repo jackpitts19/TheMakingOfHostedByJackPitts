@@ -21,6 +21,22 @@
 
 window.EPISODES = [
   {
+    "date": "2026-10-08",
+    "dateLabel": "October 8, 2026",
+    "title": "From Selling Ice to Building a 140-Person Pet Care Business | Scott Burnley",
+    "guest": "From Selling Ice to Building a 140-Person Pet Care Business | Scott Burnley",
+    "description": "Scott Burnley went from delivering bags of ice and working in sales to quitting his job, becoming a dog trainer, and helping build Pet Station Country Club into three locations with around 140 employees. Scott shares what it took to build the business from the ground up, including doing nearly every job himself, surviving a dog flu outbreak that left the company struggling to make payroll, getting through COVID, and learning how to scale a multi-location pet care business. He also talks about building company culture, hiring for attitude over experience, developing leaders, and why his role today is less about taking care of dogs and more about taking care of the people who take care of them. Learn more about Pet Station Country Club: petstationcountryclub.com",
+    "duration": "1h 9m",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/from-selling-ice-to-building-a-140-person-pet-care/id1853933144?i=1000793858044&uo=4",
+      "youtube": "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+    },
+    "appleEpisodeId": "1000793858044",
+    "appleDescription": "Scott Burnley went from delivering bags of ice and working in sales to quitting his job, becoming a dog trainer, and helping build Pet Station Country Club into three locations with around 140 employees. Scott shares what it took to build the business from the ground up, including doing nearly every job himself, surviving a dog flu outbreak that left the company struggling to make payroll, getting through COVID, and learning how to scale a multi-location pet care business. He also talks about building company culture, hiring for attitude over experience, developing leaders, and why his role today is less about taking care of dogs and more about taking care of the people who take care of them. Learn more about Pet Station Country Club: petstationcountryclub.com"
+  },
+  {
     "date": "2026-09-17",
     "dateLabel": "September 17, 2026",
     "title": "How Four Veterans Built Four Branches Bourbon | Rick Franco & Mike Trott",
