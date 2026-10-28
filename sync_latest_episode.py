@@ -146,6 +146,29 @@ def truncate_at_word(text: str, limit: int = DESCRIPTION_LIMIT) -> str:
     return cut.rstrip(" ,;:.-") + "…"
 
 
+# Feed descriptions often open with the same lead-in ("In this episode of The
+# Making Of Hosted By Jack Pitts, I sit down with ..."). Cards drop it at
+# display time so a row of cards does not repeat it; episodes.js keeps the
+# original text. Mirrors cardBlurb() in index.html.
+_LEAD_IN_WITH_VERB = re.compile(
+    r"^(?:in|on) this (?:episode|conversation)(?: of the making of hosted by jack pitts)?,\s*"
+    r"(?:host jack pitts|jack pitts|jack|i)\s+(?:sits down with|sit down with|sat down with|interviews)\s+",
+    re.I,
+)
+_LEAD_IN = re.compile(r"^(?:in|on) this (?:episode|conversation)(?: of the making of hosted by jack pitts)?,\s*", re.I)
+
+
+def card_blurb(text: str, limit: int = DESCRIPTION_LIMIT) -> str:
+    """Strip the stock feed lead-in, then trim like truncate_at_word."""
+    text = (text or "").strip()
+    stripped = _LEAD_IN_WITH_VERB.sub("", text, count=1)
+    if stripped == text:
+        stripped = _LEAD_IN.sub("", text, count=1)
+    if stripped and stripped != text:
+        text = stripped[0].upper() + stripped[1:]
+    return truncate_at_word(text, limit)
+
+
 def normalize_duration(raw: str) -> str:
     raw = (raw or "").strip()
     if not raw:

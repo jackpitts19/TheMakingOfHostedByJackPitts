@@ -65,1440 +65,9 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,800;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<style>
-  :root {
-    --cream: #f3e8cf;
-    --cream-deep: #ecd9a8;
-    --orange: #d87a2c;
-    --orange-dark: #934c13;
-    --ink: #14130f;
-    --ink-soft: #3a352b;
-    --line: rgba(20,19,15,0.12);
-  }
-
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-
-  /* Skip link for keyboard and screen-reader users. Hidden until focused. */
-  .skip-link {
-    position: absolute; top: -50px; left: 12px;
-    padding: 10px 16px; border-radius: 0 0 8px 8px;
-    background: #14130f; color: #f3e8cf;
-    font-weight: 600; font-size: 14px;
-    z-index: 200; text-decoration: none;
-    transition: top .15s ease;
-  }
-  .skip-link:focus, .skip-link:focus-visible { top: 0; outline: 2px solid var(--orange); outline-offset: 2px; }
-
-  /* Visible orange ring for keyboard navigation, suppressed for mouse users. */
-  *:focus-visible {
-    /* Was #d87a2c: 2.56:1 on cream, below the 3:1 that WCAG 1.4.11 requires of
-       a focus indicator. --orange-dark clears 3:1 on cream, cream-deep and ink. */
-    outline: 2px solid var(--orange-dark);
-    outline-offset: 3px;
-    border-radius: 4px;
-  }
-  *:focus:not(:focus-visible) { outline: none; }
-  /* --orange-dark is for cream backgrounds only (2.9:1 on ink). Dark panels
-     switch to --orange, which measures about 6:1 on ink. */
-  .listen :focus-visible, .featured-episode :focus-visible, .book-card :focus-visible,
-  footer :focus-visible, .sticky-listen:focus-visible { outline-color: var(--orange); }
-
-  /* Headlines: balance line lengths so a single word never sits alone. */
-  h1, h2, h3, .marquee-name { text-wrap: balance; }
-  p, blockquote { text-wrap: pretty; }
-
-  /* Respect users who prefer reduced motion. */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.001ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
-      scroll-behavior: auto !important;
-    }
-    .marquee-track { animation: none !important; transform: translateX(0); }
-    .hero-reveal, .fade-up { opacity: 1 !important; transform: none !important; }
-    h1 .word { opacity: 1 !important; transform: none !important; }
-    .wave-path { stroke-dashoffset: 0 !important; }
-    .magnetic, .platform, .ep-platform, .pin { transform: none !important; }
-  }
-  body {
-    background: var(--cream);
-    color: var(--ink);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 17px;
-    line-height: 1.55;
-    -webkit-font-smoothing: antialiased;
-  }
-  a { color: var(--ink); text-decoration: none; }
-  img { max-width: 100%; display: block; }
-
-  /* Subtle grain over the cream for editorial feel */
-  body::before {
-    content: "";
-    position: fixed; inset: 0;
-    pointer-events: none;
-    background-image: radial-gradient(rgba(20,19,15,0.035) 1px, transparent 1px);
-    background-size: 3px 3px;
-    opacity: 0.6;
-    z-index: 0;
-  }
-  /* Soft cream-to-cream-deep gradient at the very top for depth */
-  body::after {
-    content: "";
-    position: fixed; top: 0; left: 0; right: 0; height: 480px;
-    pointer-events: none; z-index: 0;
-    background: linear-gradient(180deg, rgba(236,217,168,0.55) 0%, rgba(243,232,207,0) 100%);
-  }
-
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 28px; position: relative; z-index: 1; }
-
-  /* ---------- EDITORIAL MASTHEAD META ---------- */
-  .masthead-meta {
-    display: flex; align-items: center; gap: 18px;
-    font-family: 'Inter', sans-serif; font-weight: 600;
-    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--ink-soft);
-    padding: 12px 0 8px;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-  }
-  .masthead-meta .dot { width: 4px; height: 4px; background: var(--orange); border-radius: 50%; }
-  .masthead-meta strong { font-weight: 700; color: var(--ink); letter-spacing: 0.18em; }
-
-  /* ---------- NOW-PLAYING BARS (animated audio bars) ---------- */
-  .bars { display: inline-flex; align-items: flex-end; gap: 2.5px; height: 14px; }
-  .bars span {
-    display: block; width: 2.5px; background: currentColor;
-    border-radius: 1px;
-    animation: barPulse 1s ease-in-out infinite;
-  }
-  .bars span:nth-child(1) { height: 50%; animation-delay: 0s; }
-  .bars span:nth-child(2) { height: 100%; animation-delay: 0.18s; }
-  .bars span:nth-child(3) { height: 70%; animation-delay: 0.36s; }
-  .bars span:nth-child(4) { height: 90%; animation-delay: 0.54s; }
-  @keyframes barPulse {
-    0%, 100% { transform: scaleY(0.4); }
-    50%      { transform: scaleY(1); }
-  }
-
-  .now-playing-badge {
-    position: absolute; top: -14px; left: -14px;
-    background: var(--ink); color: var(--cream);
-    padding: 9px 14px 9px 12px; border-radius: 999px;
-    display: inline-flex; align-items: center; gap: 9px;
-    font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
-    box-shadow: 0 16px 30px -16px rgba(20,19,15,0.45);
-    z-index: 4;
-  }
-
-  /* ---------- FEATURE PULL QUOTE ---------- */
-  .feature-quote {
-    padding: 80px 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    margin-top: 50px;
-    position: relative;
-    text-align: center;
-  }
-  .feature-quote::before {
-    content: "\201C";
-    font-family: 'Fraunces', serif; font-weight: 900; font-style: italic;
-    font-size: 220px; line-height: 0.7; color: var(--orange);
-    opacity: 0.18;
-    position: absolute; top: 30px; left: 50%; transform: translateX(-50%);
-    pointer-events: none;
-  }
-  .feature-quote blockquote {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 500;
-    font-size: clamp(28px, 4.4vw, 50px);
-    line-height: 1.18; letter-spacing: -0.01em;
-    color: var(--ink);
-    max-width: 880px; margin: 0 auto;
-    position: relative;
-  }
-  .feature-quote blockquote em { font-style: italic; color: var(--orange-dark); font-weight: 600; }
-  .feature-quote .attr {
-    font-family: 'Inter', sans-serif; font-weight: 600;
-    font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--ink-soft);
-    margin-top: 28px;
-    display: inline-flex; align-items: center; gap: 12px;
-  }
-  .feature-quote .attr::before, .feature-quote .attr::after {
-    content: ""; display: inline-block; width: 36px; height: 1px; background: var(--orange);
-  }
-
-  /* ---------- MARQUEE GUEST BAND ---------- */
-  .marquee {
-    overflow: hidden;
-    padding: 26px 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    margin-top: 60px;
-    position: relative;
-    background: var(--cream-deep);
-  }
-  .marquee::before, .marquee::after {
-    content: ""; position: absolute; top: 0; bottom: 0; width: 90px; z-index: 2;
-    pointer-events: none;
-  }
-  .marquee::before { left: 0;  background: linear-gradient(90deg, var(--cream-deep) 0%, rgba(236,217,168,0) 100%); }
-  .marquee::after  { right: 0; background: linear-gradient(270deg, var(--cream-deep) 0%, rgba(236,217,168,0) 100%); }
-  .marquee-track {
-    display: inline-flex; gap: 0;
-    animation: marqueeScroll 38s linear infinite;
-    white-space: nowrap;
-    will-change: transform;
-  }
-  .marquee-label {
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
-    color: var(--orange-dark); margin-right: 36px; padding-left: 28px;
-    align-self: center;
-  }
-  .marquee-name {
-    font-family: 'Fraunces', serif; font-weight: 700;
-    font-size: clamp(22px, 3vw, 34px);
-    color: var(--ink);
-    padding: 0 28px;
-    letter-spacing: -0.005em;
-    display: inline-flex; align-items: center; gap: 28px;
-    text-decoration: none;
-    transition: color .15s ease;
-    position: relative;
-  }
-  a.marquee-name:hover { color: var(--orange-dark); }
-  a.marquee-name::before {
-    content: ""; position: absolute; left: 28px; right: 28px; bottom: -2px;
-    height: 1.5px; background: var(--orange);
-    transform: scaleX(0); transform-origin: left;
-    transition: transform .25s ease;
-  }
-  a.marquee-name:hover::before { transform: scaleX(1); }
-  .marquee-name::after {
-    content: ""; display: inline-block;
-    width: 8px; height: 8px; border-radius: 50%; background: var(--orange);
-    flex-shrink: 0;
-  }
-  @keyframes marqueeScroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-  .marquee:hover .marquee-track,
-  .marquee:focus-within .marquee-track { animation-play-state: paused; }
-
-  /* ---------- EPISODE CARDS, EDITORIAL UPGRADE ---------- */
-  .ep {
-    overflow: hidden;
-    padding-top: 30px;
-  }
-  .ep-numeral {
-    position: absolute; top: -18px; right: 14px;
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 900;
-    font-size: clamp(96px, 12vw, 150px);
-    color: var(--orange);
-    opacity: 0.16;
-    line-height: 1;
-    pointer-events: none;
-    letter-spacing: -0.04em;
-  }
-  .ep-issue {
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--orange-dark);
-    margin-bottom: 4px;
-  }
-
-  /* ---------- STICKY NOW-PLAYING LISTEN PILL ---------- */
-  .sticky-listen {
-    position: fixed;
-    bottom: 22px; right: 22px; z-index: 50;
-    background: var(--ink); color: var(--cream);
-    border-radius: 999px;
-    padding: 10px 18px 10px 14px;
-    display: inline-flex; align-items: center; gap: 12px;
-    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
-    box-shadow: 0 18px 34px -16px rgba(20,19,15,0.55);
-    opacity: 0; transform: translateY(20px);
-    transition: opacity .28s ease, transform .28s ease, background .15s ease;
-    pointer-events: none;
-  }
-  .sticky-listen.is-visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
-  .sticky-listen:hover { background: var(--orange-dark); }
-  .sticky-listen .label-tag {
-    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--orange); font-weight: 700;
-  }
-  .sticky-listen .label-text { color: var(--cream); }
-  @media (max-width: 700px) {
-    .sticky-listen { display: none; }
-  }
-
-  /* ---------- FADE-UP ON SCROLL ---------- */
-  .fade-up { opacity: 0; transform: translateY(24px); transition: opacity .8s ease, transform .8s ease; }
-  .fade-up.is-in { opacity: 1; transform: translateY(0); }
-
-  /* ---------- HERO ENTRANCE ANIMATION ---------- */
-  .hero-reveal { opacity: 0; transform: translateY(22px); animation: heroReveal 0.95s cubic-bezier(0.2, 0.65, 0.2, 1) forwards; }
-  .hero-reveal-1 { animation-delay: 0.05s; }
-  .hero-reveal-2 { animation-delay: 0.18s; }
-  .hero-reveal-3 { animation-delay: 0.32s; }
-  .hero-reveal-4 { animation-delay: 0.48s; }
-  .hero-reveal-5 { animation-delay: 0.64s; }
-  @keyframes heroReveal { to { opacity: 1; transform: translateY(0); } }
-
-  /* Word-by-word reveal in headline */
-  h1 .word { display: inline-block; opacity: 0; transform: translateY(28px); }
-  h1 .word.is-in { animation: wordReveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
-  @keyframes wordReveal { to { opacity: 1; transform: translateY(0); } }
-
-  /* Magnetic CTAs use a wrapper transform to keep transitions smooth */
-  .btn { will-change: transform; }
-
-  /* ---------- ANIMATED WAVEFORM DIVIDER ---------- */
-  .wave-divider {
-    position: relative;
-    width: 100%; height: 60px;
-    margin: 18px 0;
-    pointer-events: none;
-  }
-  .wave-divider svg { width: 100%; height: 100%; display: block; overflow: visible; }
-  .wave-path {
-    fill: none;
-    stroke: var(--orange);
-    stroke-width: 1.5;
-    stroke-linecap: round;
-    stroke-dasharray: 4200;
-    stroke-dashoffset: 4200;
-    transition: stroke-dashoffset 2.6s cubic-bezier(0.2, 0.6, 0.2, 1);
-    opacity: 0.55;
-  }
-  .wave-path.is-drawn { stroke-dashoffset: 0; }
-  .wave-divider .wave-glow {
-    fill: var(--orange); opacity: 0;
-    transition: opacity .6s ease 1.4s;
-  }
-  .wave-path.is-drawn ~ .wave-glow,
-  .wave-divider.is-drawn .wave-glow { opacity: 0.8; }
-
-  /* ---------- INSIDE THIS ISSUE: editorial archive callout ---------- */
-  .inside-issue {
-    margin: 60px 0 50px;
-    padding: 8px 0 0;
-  }
-  .inside-issue .ii-head {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    gap: 22px;
-    margin-bottom: 36px;
-  }
-  .inside-issue .ii-rule { height: 1px; background: var(--ink); opacity: 0.45; }
-  .inside-issue .ii-eyebrow {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    color: var(--ink); font-size: 20px; letter-spacing: 0.01em;
-    white-space: nowrap;
-  }
-  .inside-issue .ii-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-  }
-  .inside-issue .ii-pull {
-    padding: 4px 32px;
-    border-left: 1px solid rgba(20,19,15,0.18);
-    position: relative;
-  }
-  .inside-issue .ii-pull:first-child { border-left: none; padding-left: 4px; }
-  .inside-issue .ii-pull:last-child { padding-right: 4px; }
-  .inside-issue .ii-no {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--orange-dark); margin-bottom: 14px;
-  }
-  .inside-issue .ii-pull p {
-    margin: 0 0 18px;
-    font-family: 'Fraunces', serif; font-weight: 400;
-    font-size: 21px; line-height: 1.38; color: var(--ink);
-    letter-spacing: -0.005em;
-  }
-  .inside-issue .ii-by {
-    font-family: 'Inter', sans-serif; font-size: 12.5px;
-    text-transform: uppercase; letter-spacing: 0.14em;
-    color: var(--ink-soft);
-  }
-  .inside-issue .ii-by span { color: var(--ink); font-weight: 700; }
-  .inside-issue .ii-footer {
-    margin-top: 38px;
-    text-align: center;
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 500;
-    color: var(--ink-soft); font-size: 16px;
-    border-top: 1px solid var(--line);
-    padding-top: 22px;
-  }
-  @media (max-width: 820px) {
-    .inside-issue .ii-grid { grid-template-columns: 1fr; gap: 8px; }
-    .inside-issue .ii-pull {
-      border-left: none;
-      border-top: 1px solid rgba(20,19,15,0.18);
-      padding: 26px 4px 6px;
-    }
-    .inside-issue .ii-pull:first-child { border-top: none; padding-top: 4px; }
-    .inside-issue .ii-head { gap: 14px; }
-    .inside-issue .ii-eyebrow { font-size: 17px; }
-  }
-
-  /* ---------- STATS RIBBON ---------- */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0;
-    border-top: 1px solid var(--line);
-    border-bottom: 1px solid var(--line);
-    margin: 30px 0 20px;
-    padding: 36px 0;
-  }
-  .stat { padding: 6px 26px; border-right: 1px solid var(--line); position: relative; }
-  .stat:last-child { border-right: none; }
-  .stat-num {
-    font-family: 'Fraunces', serif; font-weight: 900;
-    font-size: clamp(46px, 5.6vw, 72px);
-    line-height: 1; letter-spacing: -0.03em;
-    color: var(--ink);
-    display: inline-flex; align-items: baseline;
-  }
-  .stat-num em {
-    font-style: italic; color: var(--orange-dark); font-weight: 800;
-    margin-left: 2px;
-  }
-  .stat-suffix {
-    font-family: 'Fraunces', serif; font-weight: 800; font-style: italic;
-    font-size: clamp(20px, 2.4vw, 32px);
-    color: var(--orange-dark);
-    margin-left: 4px;
-    align-self: baseline;
-  }
-  /* Text-style stat (when the stat is descriptive, not numeric) */
-  .stat-text {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: clamp(28px, 3.6vw, 44px);
-    line-height: 1.04; letter-spacing: -0.015em;
-    color: var(--ink);
-  }
-  .stat-text em { font-style: italic; color: var(--orange-dark); font-weight: 700; }
-  .stat-label {
-    font-family: 'Inter', sans-serif; font-weight: 600;
-    font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--ink-soft);
-    margin-top: 14px; line-height: 1.4;
-  }
-
-  /* LinkedIn platform pill on episode + pin cards */
-  .ep-platform.is-linkedin:hover { background: #0a66c2; color: var(--cream); border-color: #0a66c2; }
-
-  /* ---------- LINKS TO PER-EPISODE PAGES ---------- */
-  .ep-title-link {
-    color: inherit; text-decoration: none;
-    background-image: linear-gradient(transparent calc(100% - 2px), rgba(216,122,44,0.0) 2px);
-    transition: background-image .2s ease, color .15s ease;
-  }
-  .ep-title-link:hover {
-    color: var(--orange-dark);
-    background-image: linear-gradient(transparent calc(100% - 2px), rgba(216,122,44,0.85) 2px);
-  }
-  .ep-read {
-    display: inline-flex; align-items: center; gap: 6px;
-    margin-top: 14px;
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 12.5px; letter-spacing: 0.12em; text-transform: uppercase;
-    color: var(--orange-dark); text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: color .15s, border-color .15s, transform .15s;
-  }
-  .ep-read:hover { color: var(--ink); border-bottom-color: var(--ink); transform: translateX(2px); }
-  .ep-read span { transition: transform .15s; }
-  .ep-read:hover span { transform: translateX(3px); }
-  .fe-read {
-    display: inline-flex; align-items: center; gap: 8px;
-    margin-top: 24px;
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--orange); text-decoration: none;
-    border-bottom: 1px solid rgba(216, 122, 44, 0.45);
-    padding-bottom: 4px;
-    transition: color .15s, border-color .15s, transform .15s;
-  }
-  .fe-read:hover { color: #ffb361; border-bottom-color: #ffb361; transform: translateX(3px); }
-  .fe-read { position: relative; }
-  .fe-read::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
-
-  /* ---------- FEATURED EPISODE HERO PANEL ---------- */
-  .featured-episode .fe-embed { margin-top: 22px; max-width: 560px; }
-  .featured-episode .fe-embed iframe { border: 0; }
-  @media (max-width: 720px) {
-    .featured-episode .fe-embed { max-width: 100%; }
-  }
-  .featured-episode {
-    position: relative;
-    margin: 70px 0 30px;
-    background: var(--ink);
-    color: var(--cream);
-    border-radius: 24px;
-    padding: 56px 60px 56px 60px;
-    overflow: hidden;
-    box-shadow: 0 40px 80px -40px rgba(20,19,15,0.55);
-  }
-  /* Decorative orange waveform behind text */
-  .featured-episode .fe-bg {
-    position: absolute; inset: 0; opacity: 0.18; pointer-events: none;
-  }
-  .featured-episode .fe-bg svg { width: 100%; height: 100%; }
-  .fe-grid {
-    position: relative; z-index: 1;
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 48px;
-    align-items: center;
-  }
-  .fe-meta {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: rgba(243,232,207,0.75);
-    margin-bottom: 18px;
-  }
-  .fe-meta .latest-pill {
-    background: var(--orange); color: var(--ink);
-    padding: 5px 12px 5px 10px; border-radius: 999px;
-    display: inline-flex; align-items: center; gap: 8px;
-    font-weight: 700;
-  }
-  .fe-meta .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(243,232,207,0.4); }
-  .fe-title {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: clamp(34px, 4.6vw, 58px);
-    line-height: 1.04; letter-spacing: -0.015em;
-    margin: 0 0 18px; color: var(--cream);
-  }
-  .fe-title em { font-style: italic; color: var(--orange); font-weight: 700; }
-  .fe-desc {
-    font-size: 17px; color: rgba(243,232,207,0.82); line-height: 1.6;
-    max-width: 620px; margin: 0 0 28px;
-  }
-  .fe-cta-row {
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
-  }
-  .fe-cta-row .btn-orange {
-    background: var(--orange); color: var(--ink);
-    padding: 14px 22px; border-radius: 999px;
-    font-weight: 700; display: inline-flex; align-items: center; gap: 10px;
-    font-size: 14px; letter-spacing: 0.01em;
-    transition: background .15s ease, transform .15s ease;
-  }
-  .fe-cta-row .btn-orange:hover { background: var(--cream); transform: translateY(-1px); }
-  .fe-cta-row .btn-line {
-    color: var(--cream); border: 1px solid rgba(255,255,255,0.3);
-    padding: 13px 18px; border-radius: 999px;
-    font-weight: 600; font-size: 13px;
-    display: inline-flex; align-items: center; gap: 8px;
-    transition: background .15s ease, border-color .15s ease;
-  }
-  .fe-cta-row .btn-line:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.5); }
-  .fe-cta-row .btn-line svg { width: 14px; height: 14px; }
-  .fe-aside {
-    border-left: 1px solid rgba(243,232,207,0.18);
-    padding-left: 36px;
-  }
-  .fe-aside .fe-tag {
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 10.5px; letter-spacing: 0.24em; text-transform: uppercase;
-    color: var(--orange); margin-bottom: 14px;
-  }
-  .fe-aside .fe-num {
-    font-family: 'Fraunces', serif; font-weight: 900; font-style: italic;
-    font-size: clamp(72px, 9vw, 120px);
-    line-height: 0.9; color: var(--cream);
-    letter-spacing: -0.03em;
-    margin-bottom: 16px;
-  }
-  .fe-aside .fe-num em { color: var(--orange); }
-  .fe-aside .fe-runtime {
-    display: inline-flex; align-items: center; gap: 10px;
-    color: rgba(243,232,207,0.75); font-size: 13px; font-weight: 600;
-    letter-spacing: 0.06em; text-transform: uppercase;
-  }
-  .fe-aside .fe-runtime .bars { color: var(--orange); }
-
-  /* ---------- FROM THE CATALOG (pinned episodes) ---------- */
-  .catalog {
-    margin: 50px 0 30px;
-    padding: 0;
-  }
-  .catalog-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 22px;
-  }
-  .pin {
-    position: relative;
-    background: var(--cream-deep);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 28px 28px 26px;
-    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-    overflow: hidden;
-  }
-  .pin:hover { transform: translateY(-3px); box-shadow: 0 26px 44px -22px rgba(20,19,15,0.32); border-color: var(--orange); }
-  .pin .pin-tag {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: 'Inter', sans-serif; font-weight: 700;
-    font-size: 10.5px; letter-spacing: 0.22em; text-transform: uppercase;
-    color: var(--orange-dark);
-    padding: 6px 12px;
-    background: var(--cream);
-    border: 1px solid var(--line); border-radius: 999px;
-    margin-bottom: 18px;
-  }
-  .pin .pin-tag svg { width: 11px; height: 11px; }
-  .pin .pin-date {
-    font-family: 'Fraunces', serif; font-style: italic;
-    color: var(--ink-soft); font-size: 13px; font-weight: 600;
-    margin-bottom: 8px;
-  }
-  .pin h3 {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: 22px; line-height: 1.2;
-    margin: 0 0 10px; letter-spacing: -0.005em;
-  }
-  .pin p { color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; margin: 0 0 18px; }
-  .pin .ep-platforms { margin-top: 6px; }
-  .pin .pin-corner {
-    position: absolute; top: -20px; right: -10px;
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 900;
-    font-size: 110px; line-height: 1; color: var(--orange);
-    opacity: 0.12; pointer-events: none; letter-spacing: -0.04em;
-  }
-
-  @media (max-width: 860px) {
-    .catalog-grid { grid-template-columns: 1fr; }
-  }
-
-  /* Responsive featured episode */
-  @media (max-width: 860px) {
-    .featured-episode { padding: 36px 26px; border-radius: 18px; }
-    .fe-grid { grid-template-columns: 1fr; gap: 24px; }
-    .fe-aside { border-left: none; border-top: 1px solid rgba(243,232,207,0.18); padding: 22px 0 0; }
-    .stats { grid-template-columns: repeat(2, 1fr); gap: 0; padding: 24px 0; }
-    .stat { padding: 18px 18px; border-right: none; border-bottom: 1px solid var(--line); }
-    .stat:nth-child(2n) { border-right: none; }
-    .stat:nth-last-child(-n+2) { border-bottom: none; }
-    .stat:nth-child(odd) { border-right: 1px solid var(--line); }
-  }
-
-  /* Ornamental section flourish */
-  .flourish {
-    display: flex; align-items: center; justify-content: center;
-    gap: 10px; margin: 20px 0 0;
-    color: var(--orange);
-  }
-  .flourish::before, .flourish::after {
-    content: ""; height: 1px; background: var(--line); flex: 1; max-width: 120px;
-  }
-  .flourish svg { width: 22px; height: 10px; opacity: 0.85; }
-
-  /* ---------- NAV ---------- */
-  nav {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 28px 0 10px;
-  }
-  .nav-mark {
-    font-family: 'Fraunces', serif;
-    font-weight: 800;
-    font-size: 18px;
-    letter-spacing: 0.02em;
-  }
-  .nav-mark span { color: var(--orange); }
-  .nav-links { display: flex; gap: 28px; font-size: 14px; font-weight: 500; }
-  .nav-links a { color: var(--ink-soft); }
-  .nav-links a:hover { color: var(--orange-dark); }
-
-  /* ---------- HERO ---------- */
-  header.hero {
-    padding: 40px 0 60px;
-    display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 56px;
-    align-items: center;
-    position: relative;
-  }
-  /* Concentric sound-wave arcs behind the hero, very subtle */
-  .hero-bg {
-    position: absolute;
-    top: -40px; left: -120px;
-    width: 520px; height: 520px;
-    pointer-events: none; z-index: -1; opacity: 0.55;
-  }
-  .hero-bg svg { width: 100%; height: 100%; }
-  @media (max-width: 860px) { .hero-bg { display: none; } }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 10px;
-    font-size: 12px; font-weight: 600; letter-spacing: 0.18em;
-    text-transform: uppercase; color: var(--orange-dark);
-    margin-bottom: 22px;
-  }
-  .eyebrow::before {
-    content: ""; width: 28px; height: 1px; background: var(--orange-dark);
-  }
-  h1 {
-    font-family: 'Fraunces', serif;
-    font-weight: 900;
-    /* Sized for the three-line headline; was clamp(42px, 6vw, 74px). */
-    font-size: clamp(40px, 4.8vw, 58px);
-    line-height: 0.98;
-    letter-spacing: -0.02em;
-    margin: 0 0 22px;
-  }
-  h1 em { font-style: italic; color: var(--orange-dark); font-weight: 800; }
-  .lede {
-    font-size: 19px;
-    color: var(--ink-soft);
-    max-width: 520px;
-    margin: 0 0 30px;
-  }
-  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-  .btn {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 13px 22px; border-radius: 999px;
-    font-weight: 600; font-size: 14px; letter-spacing: 0.01em;
-    transition: transform .15s ease, background .15s ease, color .15s ease;
-  }
-  .btn-primary { background: var(--ink); color: var(--cream); }
-  .btn-primary:hover { background: var(--orange-dark); transform: translateY(-1px); }
-  .btn-ghost { color: var(--ink); border: 1.5px solid var(--ink); }
-  .btn-ghost:hover { background: var(--ink); color: var(--cream); }
-  .btn-secondary { color: var(--ink); background: transparent; border: 1.5px solid var(--ink-soft); }
-  .btn-secondary:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); transform: translateY(-1px); }
-  .btn-pill { background: var(--orange); color: var(--ink); }
-  .btn-pill:hover { background: var(--orange-dark); color: var(--cream); transform: translateY(-1px); }
-
-  /* Hero art - logo card + headshot */
-  .hero-art { position: relative; display: flex; justify-content: center; }
-  .logo-card {
-    background: var(--cream-deep);
-    border: 6px solid var(--orange);
-    border-radius: 22px;
-    padding: 38px 30px 44px;
-    width: 100%;
-    max-width: 420px;
-    text-align: center;
-    box-shadow: 0 30px 60px -30px rgba(20,19,15,0.25);
-    position: relative;
-    transform: rotate(-1.5deg);
-  }
-  .logo-card .of {
-    font-family: 'Fraunces', serif;
-    font-style: italic; font-weight: 400;
-    font-size: 28px; color: var(--ink);
-    margin: 4px 0 10px;
-  }
-  .logo-card .the-making {
-    font-family: 'Fraunces', serif;
-    font-weight: 900;
-    font-size: clamp(32px, 5vw, 48px);
-    line-height: 0.95;
-    letter-spacing: -0.01em;
-  }
-  .logo-card .hosted {
-    font-family: 'Fraunces', serif;
-    font-style: italic; font-weight: 400;
-    margin-top: 14px;
-    font-size: 18px;
-  }
-  .logo-card .jack {
-    font-family: 'Fraunces', serif;
-    font-weight: 800;
-    font-size: 28px;
-    margin-top: 2px;
-    letter-spacing: 0.02em;
-  }
-  .logo-card .pods {
-    position: absolute; top: 20px; right: 22px;
-    font-size: 20px;
-  }
-  .logo-card .podsL { left: 22px; right: auto; }
-
-  /* If a real logo.png exists, show it instead of the CSS card */
-  .logo-img {
-    width: 100%; max-width: 440px; border-radius: 18px;
-    /* Required. The <img> carries width/height attributes so the browser can
-       reserve space and avoid layout shift; without height:auto those
-       attributes win and stretch the square logo to 440x880. */
-    height: auto;
-    transform: rotate(-1.5deg);
-    box-shadow: 0 30px 60px -30px rgba(20,19,15,0.3);
-  }
-
-  .headshot {
-    position: absolute;
-    bottom: -30px; right: -10px;
-    width: 150px; height: 150px; border-radius: 50%;
-    border: 5px solid var(--cream);
-    background: var(--cream-deep);
-    box-shadow: 0 15px 30px -10px rgba(20,19,15,0.3);
-    overflow: hidden;
-    display: grid; place-items: center;
-    transform: rotate(4deg);
-  }
-  .headshot img { width: 100%; height: 100%; object-fit: cover; }
-  .headshot .fallback {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: 44px; color: var(--orange-dark);
-  }
-
-  /* ---------- PLATFORM STRIP ---------- */
-  .listen {
-    margin: 30px 0 80px;
-    padding: 32px;
-    background: var(--ink);
-    color: var(--cream);
-    border-radius: 20px;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 32px;
-    align-items: center;
-  }
-  .listen h2, .listen h3 {
-    font-family: 'Fraunces', serif;
-    font-weight: 800;
-    font-size: 22px;
-    margin: 0;
-    line-height: 1.15;
-    max-width: 160px;
-  }
-  .listen h2 em, .listen h3 em { color: var(--orange); font-style: italic; }
-  .platforms {
-    display: flex; gap: 12px; flex-wrap: wrap;
-  }
-  .platform {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 14px 20px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 14px;
-    color: var(--cream);
-    font-weight: 600; font-size: 14px;
-    transition: background .18s ease, transform .18s ease, border-color .18s ease, color .18s ease;
-    position: relative;
-  }
-  .platform:hover { background: var(--orange); border-color: var(--orange); transform: translateY(-2px); color: var(--ink); }
-  .platform svg { width: 18px; height: 18px; transition: transform .25s ease; }
-  .platform:hover svg { transform: scale(1.1); }
-  /* Tiny accent dot to give the strip rhythm */
-  .platform::after {
-    content: ""; width: 4px; height: 4px; border-radius: 50%;
-    background: var(--orange); opacity: 0;
-    transition: opacity .18s ease;
-  }
-  .platform:hover::after { opacity: 1; background: var(--ink); }
-
-  /* ---------- SECTION HEADER ---------- */
-  section { padding: 40px 0; }
-  .section-head {
-    display: flex; align-items: end; justify-content: space-between;
-    border-bottom: 1px solid var(--line);
-    padding-bottom: 14px; margin-bottom: 32px; gap: 20px;
-  }
-  .section-head h2 {
-    font-family: 'Fraunces', serif;
-    font-weight: 800;
-    font-size: clamp(30px, 4vw, 44px);
-    margin: 0; letter-spacing: -0.01em;
-  }
-  .section-head .meta {
-    font-size: 13px; color: var(--ink-soft); font-weight: 500;
-    letter-spacing: 0.08em; text-transform: uppercase;
-  }
-
-  /* ---------- EPISODES ---------- */
-  .eps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
-  .ep {
-    background: var(--cream-deep);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 26px 26px 24px;
-    transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
-    display: flex; flex-direction: column; gap: 14px;
-    position: relative;
-  }
-  .ep:hover { transform: translateY(-3px); box-shadow: 0 24px 40px -22px rgba(20,19,15,0.3); }
-  .ep-num {
-    font-family: 'Fraunces', serif; font-style: italic;
-    color: var(--orange-dark);
-    font-size: 14px; font-weight: 600;
-    letter-spacing: 0.05em;
-  }
-  .ep h3 {
-    font-family: 'Fraunces', serif;
-    font-weight: 800;
-    font-size: 22px; line-height: 1.2;
-    margin: 0;
-    letter-spacing: -0.005em;
-  }
-  .ep p { margin: 0; color: var(--ink-soft); font-size: 15px; }
-  .ep-meta {
-    display: flex; gap: 14px; font-size: 13px;
-    color: var(--ink-soft); font-weight: 500;
-    padding-top: 10px; border-top: 1px dashed var(--line);
-    margin-top: auto;
-  }
-  .ep-meta span::before { content: "·"; margin-right: 14px; color: var(--orange); }
-  .ep-meta span:first-child::before { content: ""; margin: 0; }
-  .ep-platforms { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
-  .ep-platform {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 7px 12px; border-radius: 999px;
-    background: var(--cream);
-    border: 1px solid var(--line);
-    color: var(--ink); font-weight: 600; font-size: 12.5px;
-    transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
-  }
-  .ep-platform svg { width: 13px; height: 13px; }
-  /* 44px tap height without changing the pill's look. */
-  .ep-platform { position: relative; }
-  .ep-platform::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
-  .ep-platform:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); transform: translateY(-1px); }
-  .ep-platform.is-spotify:hover { background: #1db954; color: var(--ink); border-color: #1db954; }
-  .ep-platform.is-apple:hover  { background: #872EC4; color: var(--cream); border-color: #872EC4; }
-  .ep-platform.is-youtube:hover{ background: #c4302b; color: var(--cream); border-color: #c4302b; }
-
-  /* ---------- PRESS / FEATURED IN ---------- */
-  .press {
-    padding: 50px 0 30px;
-    border-top: 1px solid var(--line);
-    margin-top: 30px;
-  }
-  .press-head {
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
-  }
-  .press-head .eyebrow { margin: 0; }
-  .press-head h2 {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: clamp(26px, 3.4vw, 38px);
-    margin: 6px 0 0; letter-spacing: -0.01em;
-  }
-  .press-head h2 em { font-style: italic; color: var(--orange-dark); }
-
-  .press-laurel {
-    display: inline-flex; align-items: center; gap: 14px;
-    color: var(--ink-soft); font-size: 13px; font-weight: 500;
-    letter-spacing: 0.06em; text-transform: uppercase;
-  }
-  .press-laurel svg { width: 36px; height: 22px; color: var(--orange); }
-
-  .press-card {
-    display: grid;
-    grid-template-columns: 1.1fr 2fr auto;
-    gap: 28px;
-    align-items: center;
-    background: var(--cream-deep);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 28px 32px;
-    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-  }
-  .press-card:hover { transform: translateY(-2px); box-shadow: 0 24px 40px -22px rgba(20,19,15,0.25); border-color: var(--orange); }
-  .press-pub {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--orange-dark);
-    line-height: 1.3;
-  }
-  .press-pub small {
-    display: block;
-    font-family: 'Inter', sans-serif; font-weight: 500;
-    font-size: 12px; letter-spacing: 0.08em;
-    color: var(--ink-soft); margin-top: 6px;
-  }
-  .press-headline {
-    font-family: 'Fraunces', serif; font-weight: 700;
-    font-size: clamp(18px, 2.2vw, 22px);
-    line-height: 1.25; letter-spacing: -0.005em;
-    color: var(--ink); margin: 0;
-  }
-  .press-byline { color: var(--ink-soft); font-size: 13px; margin-top: 8px; }
-  .press-cta {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-weight: 600; color: var(--orange-dark); font-size: 14px;
-    white-space: nowrap;
-  }
-  .press-cta::after { content: "→"; transition: transform .15s; }
-  .press-card:hover .press-cta::after { transform: translateX(3px); }
-
-  /* ---------- ABOUT ---------- */
-  .about {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 48px;
-    align-items: start;
-    padding: 60px 0;
-    border-top: 1px solid var(--line);
-    margin-top: 40px;
-  }
-  .about h2 {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: clamp(30px, 4vw, 44px);
-    margin: 0 0 18px; letter-spacing: -0.01em;
-  }
-  .about p { font-size: 17px; color: var(--ink-soft); margin: 0 0 14px; }
-  .about .pull {
-    font-family: 'Fraunces', serif; font-style: italic;
-    font-weight: 500; font-size: 22px; color: var(--ink);
-    border-left: 3px solid var(--orange);
-    padding: 4px 0 4px 18px; margin: 0;
-  }
-
-  /* ---------- FOOTER ---------- */
-  footer {
-    background: var(--ink);
-    color: var(--cream);
-    padding: 50px 0 40px;
-    margin-top: 60px;
-  }
-  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; align-items: center; }
-  footer .mark {
-    font-family: 'Fraunces', serif; font-weight: 800; font-size: 20px;
-  }
-  footer .mark span { color: var(--orange); }
-  footer .socials { display: flex; gap: 16px; }
-  footer .socials a {
-    color: var(--cream); width: 38px; height: 38px; border-radius: 50%;
-    background: rgba(255,255,255,0.08);
-    display: grid; place-items: center;
-    transition: background .15s ease, color .15s ease;
-  }
-  footer .socials a:hover { background: var(--orange); color: var(--ink); }
-  footer .socials svg { width: 16px; height: 16px; }
-  footer small { color: rgba(243,232,207,0.55); font-size: 12px; }
-
-  /* ---------- BE A GUEST ---------- */
-  .guests {
-    padding: 70px 0 30px;
-    border-top: 1px solid var(--line);
-    margin-top: 30px;
-  }
-  .guests .eyebrow { margin-bottom: 14px; }
-  .guests h2 {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: clamp(30px, 4vw, 44px);
-    margin: 0 0 16px; letter-spacing: -0.01em;
-    max-width: 720px;
-  }
-  .guests h2 em { font-style: italic; color: var(--orange-dark); }
-  .guests .lede { font-size: 18px; color: var(--ink-soft); max-width: 620px; margin: 0 0 40px; }
-
-  /* New editorial For Guests block */
-  .guests-editorial {
-    display: grid;
-    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
-    gap: 64px;
-    align-items: start;
-    margin: 6px 0 56px;
-  }
-  .guests-body .lede {
-    font-family: 'Fraunces', serif;
-    font-weight: 400;
-    font-size: clamp(20px, 2.1vw, 26px);
-    line-height: 1.4;
-    color: var(--ink);
-    margin: 0 0 22px;
-    max-width: none;
-    letter-spacing: -0.005em;
-  }
-  .guests-body p { font-size: 17px; color: var(--ink-soft); margin: 0 0 18px; line-height: 1.62; }
-  .guests-body .guests-tldr {
-    font-family: 'Fraunces', serif; font-weight: 600; font-style: italic;
-    color: var(--ink); font-size: 19px;
-    border-left: 3px solid var(--orange);
-    padding: 6px 0 6px 18px;
-    margin-top: 26px;
-  }
-  .guests-aside {
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 28px 26px;
-    background: rgba(236, 217, 168, 0.45);
-    position: relative;
-  }
-  .guests-aside .ga-stars { color: var(--orange); font-size: 16px; letter-spacing: 4px; margin-bottom: 12px; }
-  .guests-aside blockquote {
-    font-family: 'Fraunces', serif; font-weight: 500;
-    font-size: 21px; line-height: 1.4; color: var(--ink);
-    margin: 0 0 14px; quotes: "\201C" "\201D";
-  }
-  .guests-aside blockquote::before { content: open-quote; color: var(--orange-dark); margin-right: 2px; }
-  .guests-aside blockquote::after { content: close-quote; color: var(--orange-dark); margin-left: 2px; }
-  .guests-aside .ga-attrib {
-    font-family: 'Inter', sans-serif; font-size: 11.5px;
-    text-transform: uppercase; letter-spacing: 0.14em;
-    color: var(--ink-soft);
-  }
-  .guests-aside .ga-rule {
-    height: 1px; background: rgba(20,19,15,0.18);
-    margin: 22px 0 18px;
-  }
-  .guests-aside .ga-press {
-    font-family: 'Fraunces', serif; font-style: italic;
-    font-size: 17px; color: var(--ink); margin: 0 0 8px;
-  }
-
-  /* Editorial how-it-works list, replaces the 3-step grid */
-  .how-it-works {
-    margin: 12px 0 50px;
-    padding: 32px 0 0;
-    border-top: 1px solid var(--line);
-  }
-  .hiw-eyebrow {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    color: var(--orange-dark);
-    font-size: 18px; margin-bottom: 14px;
-  }
-  .hiw-list {
-    list-style: none; padding: 0; margin: 0;
-    display: grid; gap: 14px;
-    max-width: 760px;
-  }
-  .hiw-list li {
-    display: grid; grid-template-columns: 48px 1fr; gap: 4px;
-    align-items: baseline;
-    font-size: 17px; line-height: 1.55; color: var(--ink-soft);
-  }
-  .hiw-list .hiw-num {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-    color: var(--orange-dark); font-size: 19px;
-  }
-  .hiw-list .hiw-text strong { color: var(--ink); font-weight: 700; }
-
-  @media (max-width: 820px) {
-    .guests-editorial { grid-template-columns: 1fr; gap: 28px; }
-    .guests-aside { padding: 22px 20px; }
-    .hiw-list li { grid-template-columns: 36px 1fr; }
-  }
-
-  /* Subtle paper grain across the whole page, magazine feel */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.045;
-    mix-blend-mode: multiply;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='nf'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23nf)'/%3E%3C/svg%3E");
-  }
-  body > * { position: relative; z-index: 2; }
-
-  /* Kept for backward compat with any leftover refs but no longer used */
-  .guest-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-    margin: 0 0 56px;
-  }
-  .guest-tile {
-    background: var(--cream-deep);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    padding: 24px 22px;
-    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
-    position: relative;
-  }
-  .guest-tile:hover { transform: translateY(-3px); box-shadow: 0 24px 40px -22px rgba(20,19,15,0.25); border-color: var(--orange); }
-  .guest-tile .tile-icon {
-    width: 38px; height: 38px; border-radius: 10px;
-    background: var(--cream); color: var(--orange-dark);
-    display: grid; place-items: center;
-    margin-bottom: 14px;
-    border: 1px solid var(--line);
-    transition: background .18s ease, color .18s ease;
-  }
-  .guest-tile .tile-icon svg { width: 20px; height: 20px; }
-  .guest-tile:hover .tile-icon { background: var(--orange); color: var(--cream); }
-  .guest-tile .tile-num {
-    font-family: 'Fraunces', serif; font-style: italic; font-weight: 700;
-    color: var(--orange-dark); font-size: 13px;
-    letter-spacing: 0.06em; margin-bottom: 10px;
-  }
-  .guest-tile h4 {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: 18px; line-height: 1.2; margin: 0 0 6px;
-  }
-  .guest-tile p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.55; }
-
-  .steps-head { margin: 8px 0 16px; }
-  .steps-head h3 {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: 24px; margin: 0; letter-spacing: -0.005em;
-  }
-  .steps-head p { margin: 4px 0 0; color: var(--ink-soft); font-size: 15px; }
-
-  .steps {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
-    margin: 0 0 48px;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    overflow: hidden;
-    background: var(--cream-deep);
-  }
-  .step { padding: 28px 24px; border-right: 1px solid var(--line); position: relative; }
-  .step:last-child { border-right: none; }
-  /* Connector chevron between steps on desktop */
-  .step:not(:last-child)::after {
-    content: "›";
-    position: absolute; top: 50%; right: -10px;
-    transform: translateY(-50%);
-    font-family: 'Fraunces', serif; font-weight: 700;
-    color: var(--orange); font-size: 24px; line-height: 1;
-    background: var(--cream); width: 20px; height: 20px;
-    display: grid; place-items: center; border-radius: 50%;
-    border: 1px solid var(--line);
-    z-index: 2;
-  }
-  .step-num {
-    font-family: 'Fraunces', serif; font-weight: 900;
-    font-size: 42px; color: var(--orange);
-    line-height: 1; margin-bottom: 10px;
-    display: inline-block;
-  }
-  .step-num::after {
-    content: ""; display: block; width: 28px; height: 2px;
-    background: var(--orange); margin-top: 6px; opacity: 0.5;
-  }
-  .step h4 { font-family: 'Fraunces', serif; font-weight: 800; font-size: 17px; margin: 0 0 4px; }
-  .step p { margin: 0; color: var(--ink-soft); font-size: 14px; line-height: 1.5; }
-
-  .past-line {
-    font-size: 13px; color: var(--ink-soft); font-weight: 500;
-    letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 12px;
-  }
-  .past-guests { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 48px; }
-  .past-guests span {
-    font-size: 13px; padding: 7px 14px; border-radius: 999px;
-    background: var(--cream-deep); border: 1px solid var(--line);
-    color: var(--ink-soft); font-weight: 500;
-  }
-
-  .book-card {
-    background: var(--ink); color: var(--cream);
-    border-radius: 22px;
-    padding: 44px;
-    display: grid; grid-template-columns: 1.4fr 1fr;
-    gap: 36px; align-items: center;
-    margin-bottom: 20px;
-  }
-  .book-card h3 {
-    font-family: 'Fraunces', serif; font-weight: 800;
-    font-size: clamp(26px, 3.4vw, 36px);
-    margin: 0 0 12px; line-height: 1.1; letter-spacing: -0.01em;
-  }
-  .book-card h3 em { color: var(--orange); font-style: italic; }
-  .book-card p { margin: 0; color: rgba(243,232,207,0.78); font-size: 16px; max-width: 480px; }
-  .book-cta { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
-  .book-cta .btn { justify-content: center; }
-  .book-card .btn-orange { background: var(--orange); color: var(--ink); }
-  .book-card .btn-orange:hover { background: var(--cream); transform: translateY(-1px); }
-  .book-card .btn-line { color: var(--cream); border: 1px solid rgba(255,255,255,0.3); }
-  .book-card .btn-line:hover { background: rgba(255,255,255,0.06); }
-  .book-card small { color: rgba(243,232,207,0.6); font-size: 12px; text-align: center; margin-top: 4px; }
-
-  /* ---------- GUEST REQUEST FORM (inside the book card) ---------- */
-  .book-card.has-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: start; scroll-margin-top: 24px; }
-  .book-intro p { margin-bottom: 22px; }
-  .book-alt { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-  .book-alt .btn { min-height: 44px; }
-  .book-alt small { text-align: left; margin-top: 0; }
-  .guest-form { display: flex; flex-direction: column; gap: 16px; }
-  .gr-field { display: flex; flex-direction: column; gap: 6px; }
-  .gr-field label {
-    font-family: 'Fraunces', serif; font-weight: 600; font-size: 16px;
-    color: var(--cream); letter-spacing: -0.005em;
-  }
-  .gr-optional { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 13px; color: rgba(243,232,207,0.6); }
-  .guest-form input, .guest-form textarea {
-    width: 100%; min-height: 48px;
-    font-family: 'Inter', system-ui, sans-serif; font-size: 16px; line-height: 1.4;
-    color: var(--ink); background: var(--cream);
-    border: 1.5px solid transparent; border-radius: 12px;
-    padding: 12px 14px;
-    transition: border-color .15s ease, box-shadow .15s ease;
-  }
-  .guest-form textarea { min-height: 132px; resize: vertical; }
-  .guest-form input::placeholder, .guest-form textarea::placeholder { color: rgba(58,53,43,0.55); }
-  .guest-form input:focus, .guest-form textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(216,122,44,0.45); }
-  .guest-form [aria-invalid="true"] { border-color: var(--orange); box-shadow: 0 0 0 2px rgba(216,122,44,0.35); }
-  .book-card .gr-hint { margin: 0; font-size: 13px; color: rgba(243,232,207,0.62); max-width: none; }
-  .book-card .gr-error { margin: 0; font-size: 13.5px; font-weight: 600; color: var(--orange); max-width: none; }
-  .book-card .gr-error:empty { display: none; }
-  .gr-hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
-  .guest-form .gr-submit { justify-content: center; min-height: 48px; font-size: 15px; border: 0; cursor: pointer; font-family: inherit; }
-  .guest-form .gr-submit[disabled] { opacity: 0.7; cursor: progress; transform: none; }
-  .book-card .gr-privacy { margin: -4px 0 0; font-size: 12.5px; color: rgba(243,232,207,0.6); text-align: center; max-width: none; }
-  .book-card .gr-privacy a { color: inherit; text-decoration: underline; }
-  .book-card .gr-privacy a:hover { color: var(--orange); }
-  .book-card .gr-status { margin: 0; font-size: 14px; color: var(--cream); max-width: none; }
-  .book-card .gr-status:empty { display: none; }
-  .book-card .gr-status.is-error { color: var(--orange); font-weight: 600; }
-  .gr-status a, .gr-noscript a { color: var(--cream); text-decoration: underline; }
-  .book-card .gr-noscript { margin: 0 0 12px; color: var(--cream); font-size: 14px; }
-  .gr-success {
-    border: 1px solid rgba(243,232,207,0.22); border-radius: 16px;
-    padding: 26px 24px; background: rgba(255,255,255,0.04);
-  }
-  .gr-success:focus { outline: none; }
-  .book-card .gr-success p {
-    margin: 0; max-width: none; color: var(--cream);
-    font-family: 'Fraunces', serif; font-size: 20px; line-height: 1.45;
-  }
-  @media (max-width: 860px) {
-    .book-card.has-form { grid-template-columns: 1fr; gap: 28px; }
-  }
-  @media (max-width: 600px) {
-    .book-card.has-form { padding: 28px 20px; border-radius: 18px; }
-  }
-
-  /* ---------- GUEST FIT GUIDE ---------- */
-  .guest-fit { margin: 44px 0 8px; }
-  .gf-eyebrow {
-    font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
-    color: var(--orange-dark); margin-bottom: 18px;
-  }
-  .gf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .gf-card {
-    border: 1px solid var(--line); border-radius: 14px;
-    padding: 22px 22px 24px; background: rgba(255,255,255,0.35);
-  }
-  .gf-card h3 {
-    font-family: 'Fraunces', serif; font-weight: 800; font-size: 19px;
-    letter-spacing: -0.01em; margin: 0 0 10px; color: var(--ink);
-  }
-  .gf-card p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
-  /* Five cards in a three-column grid: let the last one span the empty cell. */
-  @media (min-width: 861px) { .gf-card:last-child:nth-child(3n + 2) { grid-column: span 2; } }
-
-  /* ---------- HOME ARTICLES ---------- */
-  .home-articles { margin: 20px 0 0; }
-  .ha-intro {
-    font-family: 'Fraunces', serif; font-size: 20px; line-height: 1.5;
-    color: var(--ink-soft); max-width: 720px; margin: 0 0 26px;
-  }
-  .ha-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-  .ha-card {
-    display: block; border: 1px solid var(--line); border-radius: 14px;
-    padding: 24px 24px 22px; background: rgba(255,255,255,0.35);
-    text-decoration: none; color: var(--ink);
-    transition: transform .15s, border-color .15s, background .15s;
-  }
-  .ha-card:hover { transform: translateY(-3px); border-color: var(--orange); background: rgba(255,255,255,0.6); }
-  .ha-kicker {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--orange-dark); margin-bottom: 10px;
-  }
-  .ha-card h3 {
-    font-family: 'Fraunces', serif; font-weight: 800; font-size: 22px;
-    line-height: 1.2; letter-spacing: -0.015em; margin: 0 0 10px; color: var(--ink);
-  }
-  .ha-card p { margin: 0 0 16px; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
-  .ha-read, .ha-all a {
-    font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-    color: var(--orange-dark);
-  }
-  .ha-all { margin: 22px 0 0; }
-  .ha-all a { text-decoration: none; }
-  .ha-all a:hover { color: var(--ink); }
-
-  /* ---------- PRESS KIT ---------- */
-  .press-kit { margin: 20px 0 0; }
-  .pk-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
-  .pk-block { margin-bottom: 22px; }
-  .pk-block:last-child { margin-bottom: 0; }
-  .pk-label {
-    font-size: 11.5px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
-    color: var(--ink-soft); margin-bottom: 8px;
-  }
-  .pk-block p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--ink); }
-  .pk-link { color: var(--orange-dark); font-weight: 600; text-decoration: underline; }
-  .pk-aside {
-    border: 1px solid var(--line); border-radius: 14px;
-    padding: 24px; background: rgba(236, 217, 168, 0.4);
-  }
-  .pk-list { list-style: none; margin: 10px 0 20px; padding: 0; }
-  .pk-list li { margin: 0 0 10px; }
-  .pk-list a { color: var(--ink); font-weight: 600; font-size: 15px; text-decoration: none; border-bottom: 1px solid var(--line); }
-  .pk-list a:hover { color: var(--orange-dark); border-color: var(--orange); }
-  .pk-cta .btn { width: 100%; text-align: center; justify-content: center; background: var(--orange); color: var(--ink); font-weight: 700; }
-  .pk-cta .btn:hover { background: var(--orange-dark); color: var(--cream); transform: translateY(-1px); }
-
-  /* ---------- FOOTER LINKS ---------- */
-  footer .footer-links { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 20px; padding-top: 6px; }
-  footer .footer-links a {
-    color: rgba(243,232,207,0.75); font-size: 13px; font-weight: 500;
-    letter-spacing: 0.02em; text-decoration: none;
-  }
-  footer .footer-links a:hover { color: var(--orange); }
-
-  /* Crawlable archive of every episode, kept in sync by update_home_fallback.py */
-  footer .footer-archive { flex-basis: 100%; padding-top: 14px; border-top: 1px solid rgba(243,232,207,0.14); }
-  footer .footer-archive-title {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
-    color: rgba(243,232,207,0.55); margin-bottom: 10px;
-  }
-  footer .footer-archive ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; }
-  footer .footer-archive a {
-    color: rgba(243,232,207,0.6); font-size: 12px; font-weight: 500;
-    letter-spacing: 0.02em; text-decoration: none;
-  }
-  footer .footer-archive a:hover { color: var(--orange); }
-
-  /* ---------- PHONE TYPE SCALE ---------- */
-  @media (max-width: 600px) {
-    .section-head { flex-direction: column; align-items: flex-start; gap: 6px; }
-    h1 { font-size: clamp(36px, 10.4vw, 46px); line-height: 1.02; }
-    .section-head h2, .guests h2, .about h2 { font-size: clamp(28px, 8vw, 36px); }
-    .fe-title { font-size: clamp(28px, 8.2vw, 40px); }
-  }
-
-  /* ---------- RESPONSIVE ---------- */
-  @media (max-width: 860px) {
-    .gf-grid { grid-template-columns: 1fr; }
-    .ha-grid { grid-template-columns: 1fr; }
-    .pk-grid { grid-template-columns: 1fr; }
-    header.hero { grid-template-columns: 1fr; gap: 40px; padding: 20px 0 40px; }
-    .listen { grid-template-columns: 1fr; padding: 24px; }
-    .eps { grid-template-columns: 1fr; }
-    .about { grid-template-columns: 1fr; gap: 20px; }
-    .press-card { grid-template-columns: 1fr; gap: 14px; padding: 24px; }
-    /* Compact mobile nav: the same links as a single scrollable row. */
-    nav { flex-wrap: wrap; row-gap: 2px; padding-top: 20px; }
-    .nav-links {
-      width: 100%; gap: 20px; font-size: 13px;
-      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-      /* Fade the right edge so a cut-off last link reads as "scroll for more". */
-      -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
-      mask-image: linear-gradient(90deg, #000 85%, transparent);
-      padding-right: 24px;
-    }
-    .nav-links::-webkit-scrollbar { display: none; }
-    .nav-links a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
-    .nav-mark { font-size: 15px; }
-    footer .mark { font-size: 16px; }
-    .headshot { width: 120px; height: 120px; right: 0; bottom: -20px; }
-    .guest-grid { grid-template-columns: 1fr 1fr; }
-    .steps { grid-template-columns: 1fr; }
-    .step { border-right: none; border-bottom: 1px solid var(--line); }
-    .step:last-child { border-bottom: none; }
-    .step:not(:last-child)::after { display: none; }
-    .book-card { grid-template-columns: 1fr; padding: 30px; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/site.css" />
+<noscript><style>.fade-up { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body>
 
@@ -1506,7 +75,7 @@
 
 <noscript>
   <div style="background:#14130f;color:#f3e8cf;padding:14px 20px;text-align:center;font-family:system-ui,sans-serif;font-size:14px;">
-    For the live episode feed and full experience, please enable JavaScript. You can still listen on
+    Turn on JavaScript to see the latest episodes, or listen on
     <a href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" style="color:#d87a2c;text-decoration:underline;">Spotify</a>,
     <a href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" style="color:#d87a2c;text-decoration:underline;">Apple Podcasts</a>, or
     <a href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" style="color:#d87a2c;text-decoration:underline;">YouTube</a>.
@@ -1517,13 +86,13 @@
 
   <!-- NAV -->
   <nav aria-label="Primary">
-    <div class="nav-mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
+    <a class="nav-mark" href="/" aria-current="page">The Making <span>Of</span> Hosted By Jack Pitts</a>
     <div class="nav-links">
-      <a href="#episodes">Episodes</a>
-      <a href="#press">Press</a>
-      <a href="#guest-request">Be a Guest</a>
-      <a href="#about">About</a>
-      <a href="#listen">Listen</a>
+      <a href="/episodes">Episodes</a>
+      <a href="/press">Press</a>
+      <a href="/be-a-guest">Be a Guest</a>
+      <a href="/about">About</a>
+      <a href="/#listen">Listen</a>
     </div>
   </nav>
 
@@ -1552,27 +121,23 @@
         <span class="dot"></span>
         <span data-mast-date>OCTOBER 2026</span>
         <span class="dot"></span>
-        <span>NEW CONVERSATIONS EVERY FEW&nbsp;WEEKS</span>
+        <span>A NEW EPISODE EVERY FEW&nbsp;WEEKS</span>
       </div>
-      <div class="eyebrow hero-reveal hero-reveal-2">An entrepreneurship podcast, hosted by Jack Pitts</div>
-      <h1 id="hero-headline" data-word-reveal>Business owners on how they <em>got started</em><br/>and how they grew.</h1>
+      <div class="eyebrow hero-reveal hero-reveal-2">An entrepreneurship podcast hosted by Jack Pitts</div>
+      <h1 id="hero-headline" data-word-reveal>How business owners <em>built</em><br/>their companies.</h1>
       <p class="lede hero-reveal hero-reveal-4">
-        I sit down with founders, operators, and family-business owners and ask about the early days, what went wrong along the way, and the decisions that shaped the company. So far that has meant car washes, candy, laundromats, bourbon, and pet care.
+        Long-form interviews with founders and owners about how they started and how they grew. Past guests include the president of Induron Protective Coatings, a family business founded in 1947, and the co-founders of Four Branches Bourbon.
       </p>
       <div class="cta-row hero-reveal hero-reveal-5">
         <a class="btn btn-primary magnetic" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">
           <span class="bars" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
           Play the latest
         </a>
-        <a class="btn btn-pill magnetic" href="#guest-request">Come on the show</a>
+        <a class="btn btn-pill magnetic" href="/be-a-guest">Be a guest</a>
       </div>
     </div>
 
     <div class="hero-art">
-      <span class="now-playing-badge" aria-hidden="true">
-        <span class="bars"><span></span><span></span><span></span><span></span></span>
-        On Air
-      </span>
       <!-- Real logo if dropped in as logo.png, otherwise CSS-built card -->
       <picture>
         <!-- WebP first: 47 KB vs 1749 KB. logo.png stays full-res as the
@@ -1584,8 +149,6 @@
              onerror="this.style.display='none'; document.getElementById('logo-card').style.display='block';" />
       </picture>
       <div id="logo-card" class="logo-card" style="display:none;">
-        <div class="pods podsL">🎧</div>
-        <div class="pods">🎙️</div>
         <div class="of">The</div>
         <div class="the-making">MAKING<br/>OF</div>
         <div class="hosted">Hosted by</div>
@@ -1610,7 +173,7 @@
 
   <!-- LISTEN STRIP -->
   <div class="listen" id="listen">
-    <h2 class="listen-title">Listen <em>anywhere</em> you stream.</h2>
+    <h2 class="listen-title">Where to <em>listen</em>.</h2>
     <div class="platforms">
       <a class="platform" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 100 24 12 12 0 000-24zm5.52 17.3a.75.75 0 01-1.03.25c-2.82-1.72-6.37-2.11-10.55-1.16a.75.75 0 01-.33-1.46c4.58-1.04 8.51-.6 11.66 1.34.35.21.46.68.25 1.03zm1.47-3.27a.94.94 0 01-1.29.31c-3.23-1.98-8.15-2.55-11.97-1.4a.94.94 0 11-.55-1.8c4.36-1.31 9.79-.67 13.5 1.6.44.27.58.85.31 1.29zm.13-3.4C15.25 8.4 8.8 8.18 5.1 9.3a1.12 1.12 0 11-.66-2.16c4.25-1.29 11.37-1.04 15.85 1.62a1.12 1.12 0 11-1.17 1.91z"/></svg>
@@ -1635,61 +198,29 @@
   <section class="inside-issue fade-up" aria-label="Inside this issue">
     <div class="ii-head">
       <div class="ii-rule"></div>
-      <div class="ii-eyebrow">Inside the archive</div>
+      <div class="ii-eyebrow">From past episodes</div>
       <div class="ii-rule"></div>
     </div>
     <div class="ii-grid">
       <article class="ii-pull">
         <div class="ii-no">No. 13</div>
-        <p>A third-generation Las Vegas casino employee on Goldman Sachs, Disney's Pixar deal, and later running Resorts World Las Vegas as CEO.</p>
+        <p>Grew up in Las Vegas as a third-generation casino employee, worked on Disney's Pixar deal at Goldman Sachs, and later ran Resorts World Las Vegas.</p>
         <div class="ii-by"><span>Alex Dixon</span> &nbsp;/&nbsp; Resorts World Las Vegas</div>
       </article>
       <article class="ii-pull">
         <div class="ii-no">No. 09</div>
-        <p>From growing up poor in Flint and seventeen years in a corporate job to buying a money-losing laundromat and working ninety-hour weeks to turn it around.</p>
+        <p>Grew up poor in Flint. Spent seventeen years in a corporate job, then bought a laundromat that was losing money and worked ninety-hour weeks to fix it.</p>
         <div class="ii-by"><span>Dave Menz</span> &nbsp;/&nbsp; Laundromat Millionaire</div>
       </article>
       <article class="ii-pull">
         <div class="ii-no">No. 01</div>
-        <p>How a Macon kid turned a side-hustle car wash into more than thirty acquisitions and one of the leading car wash platforms in the country.</p>
+        <p>A side-hustle idea became Mammoth Holdings' first self-serve car wash. More than thirty acquisitions followed.</p>
         <div class="ii-by"><span>Gary Dennis</span> &nbsp;/&nbsp; Mammoth Holdings</div>
       </article>
     </div>
     <div class="ii-footer">
-      <span><span data-stat-episodes>19</span> conversations so far, with a new one every few weeks.</span>
+      <span><span data-stat-episodes>19</span> episodes.</span>
     </div>
-  </section>
-
-  <!-- PRESS / FEATURED IN -->
-  <section class="press fade-up" id="press">
-    <div class="press-head">
-      <div>
-        <div class="eyebrow">Featured In</div>
-        <h2>Press &amp; <em>recognition</em></h2>
-      </div>
-      <div class="press-laurel" aria-hidden="true">
-        <svg viewBox="0 0 36 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2 11 C 4 4, 10 2, 14 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M3 14 C 6 9, 10 8, 13 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M4 17 C 7 14, 11 14, 13 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M34 11 C 32 4, 26 2, 22 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M33 14 C 30 9, 26 8, 23 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M32 17 C 29 14, 25 14, 23 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        <span>Trusted</span>
-      </div>
-    </div>
-
-    <a class="press-card" href="https://www.rblandmark.com/2026/01/13/brookfield-businessman-podcast/" target="_blank" rel="noopener">
-      <div>
-        <div class="press-pub">Riverside-Brookfield Landmark<small>January 13, 2026 · by Stella Brown</small></div>
-      </div>
-      <div>
-        <p class="press-headline">"Brookfield businessman featured on podcast"</p>
-        <p class="press-byline">A local story on Doug Taylor's episode and why Jack started the show.</p>
-      </div>
-      <span class="press-cta">Read article</span>
-    </a>
   </section>
 
   <!-- FEATURED EPISODE HERO PANEL -->
@@ -1706,7 +237,7 @@
         <div class="fe-meta">
           <span class="latest-pill">
             <span class="bars" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
-            <span>The Latest</span>
+            <span>Latest episode</span>
           </span>
           <span data-fe-date>October 8, 2026</span>
           <span class="dot"></span>
@@ -1731,54 +262,49 @@
           </a>
         </div>
         <div class="fe-embed" data-fe-spotify-embed aria-label="Play the latest episode"></div>
-        <a class="fe-read" data-fe-read-link href="/episodes/from-selling-ice-to-building-a-140-person-pet-care-business-scott-burnley" aria-label="Read the full issue">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="fe-read" data-fe-read-link href="/episodes/from-selling-ice-to-building-a-140-person-pet-care-business-scott-burnley" aria-label="Episode notes">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </div>
       <aside class="fe-aside">
         <div class="fe-tag">Issue No.</div>
         <div class="fe-num"><span data-fe-issue>19</span></div>
-        <div class="fe-runtime">
-          <span class="bars"><span></span><span></span><span></span><span></span></span>
-          On Air Now
-        </div>
       </aside>
     </div>
   </section>
 
   <!-- FROM THE CATALOG (pinned highlights) -->
-  <section class="catalog fade-up" id="catalog" aria-label="From the catalog">
+  <section class="catalog fade-up" id="catalog" aria-label="Where to start">
     <div class="section-head">
-      <h2>From the Catalog</h2>
-      <span class="meta">Curated picks &amp; show history</span>
+      <h2>Where to Start</h2>
     </div>
     <div class="catalog-grid" id="catalog-grid">
       <!-- FALLBACK:CATALOG:START (auto-generated by update_home_fallback.py; do not hand-edit) -->
       <article class="pin">
         <span class="pin-corner" aria-hidden="true">II</span>
-        <div class="pin-tag">Press Pick, Riverside-Brookfield Landmark</div>
+        <div class="pin-tag">As covered in the Riverside-Brookfield Landmark</div>
         <div class="pin-date">January 8, 2026</div>
         <h3><a class="ep-title-link" href="/episodes/doug-taylor">The Making of Doug Taylor: Taylor's Candy</a></h3>
-        <p>In this episode, Jack Pitts interviews Doug Taylor, known as the Candyman, who shares his journey of building Taylor's Candy from a small family-run operation into a successful candy distribution and manufacturing business.</p>
+        <p>Doug Taylor, known as the Candyman, who shares his journey of building Taylor's Candy from a small family-run operation into a successful candy distribution and manufacturing business. Doug discusses his upbringing, early jobs, and the transition into the candy industry, highlighting the importance of hard work, family dynamics, and adapting to market changes.</p>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
           <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-doug-taylor-taylors-candy/id1853933144?i=1000744284254&uo=4" target="_blank" rel="noopener">Apple</a>
           <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
-          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/doug-taylor-21a73917/" target="_blank" rel="noopener">Connect</a>
+          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/doug-taylor-21a73917/" target="_blank" rel="noopener">Guest&#39;s LinkedIn</a>
         </div>
-        <a class="ep-read" href="/episodes/doug-taylor">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="ep-read" href="/episodes/doug-taylor">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </article>
       <article class="pin">
         <span class="pin-corner" aria-hidden="true">01</span>
-        <div class="pin-tag">Episode 01, The Origin Story</div>
+        <div class="pin-tag">The first episode</div>
         <div class="pin-date">November 18, 2025</div>
         <h3><a class="ep-title-link" href="/episodes/gary-dennis">The Making of Mammoth Holdings with Gary Dennis</a></h3>
-        <p>In this episode of The Making Of Hosted By Jack Pitts, Jack sits down with Gary Dennis, co-founder and former CEO of Mammoth Holdings, to unpack how a kid from Macon, Georgia ended up building one of the leading car wash platforms in the country.</p>
+        <p>Gary Dennis, co-founder and former CEO of Mammoth Holdings, to unpack how a kid from Macon, Georgia ended up building one of the leading car wash platforms in the country. Gary walks through his path from humble beginnings, with a dad who was a maintenance mechanic and a mom who was a secretary, to Georgia Tech, an MBA from Vanderbilt, and an early career in equity research and investment banking.</p>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
           <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-mammoth-holdings-with-gary-dennis/id1853933144?i=1000737312111&uo=4" target="_blank" rel="noopener">Apple</a>
           <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
-          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/gary-dennis-000010b/" target="_blank" rel="noopener">Connect</a>
+          <a class="ep-platform is-linkedin" href="https://www.linkedin.com/in/gary-dennis-000010b/" target="_blank" rel="noopener">Guest&#39;s LinkedIn</a>
         </div>
-        <a class="ep-read" href="/episodes/gary-dennis">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="ep-read" href="/episodes/gary-dennis">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </article>
       <!-- FALLBACK:CATALOG:END -->
     </div>
@@ -1788,7 +314,6 @@
   <section id="episodes">
     <div class="section-head">
       <h2>Recent Episodes</h2>
-      <span class="meta">The full feed updates automatically</span>
     </div>
 
     <div class="eps" id="eps-container">
@@ -1798,273 +323,49 @@
         <div class="ep-issue">Issue No. 18</div>
         <div class="ep-num">September 17, 2026</div>
         <h3><a class="ep-title-link" href="/episodes/how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott">How Four Veterans Built Four Branches Bourbon | Rick Franco &amp; Mike Trott</a></h3>
-        <p>In this episode of The Making Of Hosted By Jack Pitts, I sit down with Rick Franco and Mike Trott, co-founders of Four Branches Bourbon. Four Branches didn’t start as a business. It started as an honor barrel created by four veterans who wanted to remember friends they lost and give back to the military community.</p>
+        <p>Rick Franco and Mike Trott, co-founders of Four Branches Bourbon. Four Branches didn’t start as a business. It started as an honor barrel created by four veterans who wanted to remember friends they lost and give back to the military community.</p>
         <div class="ep-meta"><span>39 min</span><span>Full episode</span></div>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
           <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/how-four-veterans-built-four-branches-bourbon-rick/id1853933144?i=1000790341270&uo=4" target="_blank" rel="noopener">Apple</a>
           <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
         </div>
-        <a class="ep-read" href="/episodes/how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="ep-read" href="/episodes/how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </article>
       <article class="ep fade-up is-in">
         <span class="ep-numeral" aria-hidden="true">17</span>
         <div class="ep-issue">Issue No. 17</div>
         <div class="ep-num">August 20, 2026</div>
         <h3><a class="ep-title-link" href="/episodes/dave-moorman">Dave Moorman: Building an MSP, Scaling Through M&amp;A &amp; Exiting Twice</a></h3>
-        <p>In this episode of The Making Of Hosted By Jack Pitts, I sit down with Dave Moorman, who spent more than 30 years in the IT and MSP world building, scaling, acquiring, and selling businesses. Dave shares how he went from working at 10 years old and discovering computers through a heavy metal band to building DynaSis for 26 years.</p>
+        <p>Dave Moorman, who spent more than 30 years in the IT and MSP world building, scaling, acquiring, and selling businesses. Dave shares how he went from working at 10 years old and discovering computers through a heavy metal band to building DynaSis for 26 years.</p>
         <div class="ep-meta"><span>56 min</span><span>Full episode</span></div>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
           <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/dave-moorman-building-an-msp-scaling-through-m/id1853933144?i=1000784580073&uo=4" target="_blank" rel="noopener">Apple</a>
           <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
         </div>
-        <a class="ep-read" href="/episodes/dave-moorman">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="ep-read" href="/episodes/dave-moorman">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </article>
       <article class="ep fade-up is-in" style="grid-column: 1 / -1;">
         <span class="ep-numeral" aria-hidden="true">16</span>
         <div class="ep-issue">Issue No. 16</div>
         <div class="ep-num">July 30, 2026</div>
         <h3><a class="ep-title-link" href="/episodes/davies-hood-of-induron-protective-coatings">Davies Hood of Induron Protective Coatings: Building an 80-Year Family Business</a></h3>
-        <p>In this episode of The Making Of Hosted By Jack Pitts, Jack sits down with Davies Hood, President of Induron Protective Coatings, a third-generation family business founded in Birmingham in 1947. Davies shares how he went from working difficult summer jobs in the plant to becoming a regional salesperson, company president, and eventually owner.</p>
+        <p>Davies Hood, President of Induron Protective Coatings, a third-generation family business founded in Birmingham in 1947. Davies shares how he went from working difficult summer jobs in the plant to becoming a regional salesperson, company president, and eventually owner.</p>
         <div class="ep-meta"><span>45 min</span><span>Full episode</span></div>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
           <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/davies-hood-of-induron-protective-coatings-building/id1853933144?i=1000779100503&uo=4" target="_blank" rel="noopener">Apple</a>
           <a class="ep-platform is-youtube" href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">YouTube</a>
         </div>
-        <a class="ep-read" href="/episodes/davies-hood-of-induron-protective-coatings">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="ep-read" href="/episodes/davies-hood-of-induron-protective-coatings">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </article>
       <!-- FALLBACK:RECENT:END -->
     </div>
-  </section>
-
-  </div><!-- /wrap -->
-
-  <!-- PAST GUESTS MARQUEE, full bleed (populated from data) -->
-  <div class="marquee" role="region" aria-label="Past guests on the show">
-    <div class="marquee-track" id="marquee-track"></div>
-  </div>
-
-  <div class="wrap"><!-- resume wrap -->
-
-  <!-- FOR GUESTS -->
-  <section class="guests fade-up" id="guests">
-    <div class="eyebrow">For Prospective Guests</div>
-    <h2>Considering coming on <em>The Making Of Hosted By Jack Pitts</em>?</h2>
-
-    <div class="guests-editorial">
-      <div class="guests-body">
-        <p class="lede">
-          The show is for founders, operators, and family-business owners who have spent years building something. I want to hear how you started, the calls you got wrong, and what changed as the business grew.
-        </p>
-        <p>
-          We record remotely for about an hour, and there's almost nothing to prepare. We'll cover where you started, the hard years, and the decisions that got you here. Episodes go up on Spotify, Apple Podcasts, and YouTube, and I share every one on LinkedIn.
-        </p>
-        <p class="guests-tldr">
-          One session. All you have to do is show up and talk.
-        </p>
-      </div>
-      <aside class="guests-aside" aria-label="From a listener">
-        <div class="ga-stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <blockquote>I love the story telling of The Making Of! I can't wait to hear more stories.</blockquote>
-        <div class="ga-attrib">5-star review &nbsp;/&nbsp; Apple Podcasts</div>
-        <div class="ga-rule"></div>
-        <p class="ga-press">"Brookfield businessman featured on podcast"</p>
-        <div class="ga-attrib">Riverside-Brookfield Landmark</div>
-      </aside>
-    </div>
-
-    <div class="how-it-works">
-      <div class="hiw-eyebrow">How it works</div>
-      <ol class="hiw-list">
-        <li><span class="hiw-num">i.</span><span class="hiw-text"><strong>A quick hello.</strong> Send a short request. If it's a fit, I'll reply and we'll set up a time.</span></li>
-        <li><span class="hiw-num">ii.</span><span class="hiw-text"><strong>One session.</strong> About an hour, recorded remotely, lightly edited.</span></li>
-        <li><span class="hiw-num">iii.</span><span class="hiw-text"><strong>It goes live.</strong> Up on Spotify, Apple Podcasts, and YouTube, and I share it on LinkedIn.</span></li>
-      </ol>
-    </div>
-
-    <div class="guest-fit" aria-label="Is the show a fit for you">
-      <div class="gf-eyebrow">Before you reach out</div>
-      <div class="gf-grid">
-        <div class="gf-card">
-          <h3>Who is a good fit</h3>
-          <p>Founders, operators, and family-business owners who have been at it for years and are happy to talk openly about it. If you've had to make payroll and figure things out as you went, you'll be in good company.</p>
-        </div>
-        <div class="gf-card">
-          <h3>Who is probably not a fit</h3>
-          <p>If you mainly want to announce a launch or pitch a product, this isn't the right show. I'm more interested in how you got here than in what you're selling this quarter.</p>
-        </div>
-        <div class="gf-card">
-          <h3>What we usually talk about</h3>
-          <p>How you got started, the first few years, the mistakes, the money, and the moments the business changed direction. We usually finish with what you'd tell someone just starting out.</p>
-        </div>
-        <div class="gf-card">
-          <h3>How to prepare</h3>
-          <p>Almost nothing. You don't need slides or a script. Think of two or three stories you remember well and don't mind sharing. We can swap notes on the angle beforehand if you want, but most guests skip it.</p>
-        </div>
-        <div class="gf-card">
-          <h3>What happens after recording</h3>
-          <p>I lightly edit the episode and publish it to Spotify, Apple Podcasts, and YouTube. You get the links and a share card for your own channels, and I post it on LinkedIn too.</p>
-        </div>
-      </div>
-    </div>
-
-    <p class="past-line">Past guests include</p>
-    <div class="past-guests">
-      <span>Dave Menz</span>
-      <span>Lou Mongello</span>
-      <span>Niilo Pirttijärvi</span>
-      <span>Kris Carlson</span>
-      <span>Ian Hicks</span>
-    </div>
-
-    <div class="book-card has-form" id="guest-request">
-      <div class="book-intro">
-        <h3>Ready to <em>tell your story</em>?</h3>
-        <p>Tell me a bit about you and your business. I read every request and reach out if it looks like a good fit.</p>
-        <div class="book-alt">
-          <a class="btn btn-line" href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Or DM on LinkedIn</a>
-          <small>As featured in the Riverside-Brookfield Landmark.</small>
-        </div>
-      </div>
-      <div class="book-cta guest-form-wrap">
-        <noscript>
-          <p class="gr-noscript">This form needs JavaScript to send. You can also <a href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">message me on LinkedIn</a>.</p>
-        </noscript>
-        <form class="guest-form" id="guest-form" action="/api/guest-request" method="post" novalidate>
-          <div class="gr-field">
-            <label for="gr-name">Name</label>
-            <input id="gr-name" name="name" type="text" autocomplete="name" maxlength="100" required aria-describedby="gr-err-name" />
-            <p class="gr-error" id="gr-err-name"></p>
-          </div>
-          <div class="gr-field">
-            <label for="gr-email">Email</label>
-            <input id="gr-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" required spellcheck="false" aria-describedby="gr-err-email" />
-            <p class="gr-error" id="gr-err-email"></p>
-          </div>
-          <div class="gr-field">
-            <label for="gr-companyRole">Company and role</label>
-            <input id="gr-companyRole" name="companyRole" type="text" autocomplete="organization-title" maxlength="150" required placeholder="e.g. Founder, Acme Car Wash" aria-describedby="gr-err-companyRole" />
-            <p class="gr-error" id="gr-err-companyRole"></p>
-          </div>
-          <div class="gr-field">
-            <label for="gr-link">Website or LinkedIn <span class="gr-optional">(optional)</span></label>
-            <input id="gr-link" name="link" type="url" inputmode="url" autocomplete="url" maxlength="300" spellcheck="false" placeholder="yourcompany.com" aria-describedby="gr-err-link" />
-            <p class="gr-error" id="gr-err-link"></p>
-          </div>
-          <div class="gr-field">
-            <label for="gr-story">Your story in a few sentences</label>
-            <textarea id="gr-story" name="story" rows="5" minlength="20" maxlength="1500" required aria-describedby="gr-story-hint gr-err-story"></textarea>
-            <p class="gr-hint" id="gr-story-hint">How you started, what the business does today, and anything you think would make a good conversation.</p>
-            <p class="gr-error" id="gr-err-story"></p>
-          </div>
-          <div class="gr-hp" aria-hidden="true">
-            <label for="gr-nickname">Leave this field empty</label>
-            <input id="gr-nickname" name="nickname" type="text" tabindex="-1" autocomplete="off" />
-          </div>
-          <input type="hidden" name="t" value="" />
-          <p class="gr-status" role="status" aria-live="polite"></p>
-          <button class="btn btn-orange gr-submit" type="submit">Request to Be a Guest</button>
-          <p class="gr-privacy">I only use this to reply to you. It isn't added to any mailing list. <a href="/privacy">Privacy policy</a>.</p>
-        </form>
-      </div>
-    </div>
-  </section>
-
-  <!-- ABOUT -->
-  <section class="about fade-up" id="about">
-    <div>
-      <h2>About the Host</h2>
-      <p class="pull">"I work in finance, private equity, so I deal with business owners all the time. I was like, hey, why not do a podcast where I get to tell their stories?"</p>
-      <p style="font-size: 13px; color: var(--ink-soft); margin-top: 10px; letter-spacing: 0.04em;">Jack Pitts, in the <a href="https://www.rblandmark.com/2026/01/13/brookfield-businessman-podcast/" target="_blank" rel="noopener" style="color: var(--orange-dark); font-weight: 600;">Riverside-Brookfield Landmark</a></p>
-    </div>
-    <div>
-      <p>
-        <a href="https://thejackpitts.com/" target="_blank" rel="noopener" style="color: var(--orange-dark); font-weight: 600;">Jack Pitts</a> is the founder of <a href="https://saltcreekadvisory.com/" target="_blank" rel="noopener" style="color: var(--orange-dark); font-weight: 600;">Salt Creek Advisory</a>, an AI-native deal sourcing and investment banking practice. Chicago-raised and Vanderbilt-educated, Jack is based in the Chicago area and spends his days around founders, operators, and investors. He started <em>The Making Of Hosted By Jack Pitts</em> to capture the stories he's always wanted to hear.
-      </p>
-      <p>
-        The show takes its inspiration from NPR's <em>How I Built This</em>, with more focus on the operators and family-business owners whose companies you pass every day without knowing the story. You usually hear about the overnight success, not the year a company almost failed. Jack goes looking for that year.
-      </p>
-      <div class="cta-row" style="margin-top: 20px;">
-        <a class="btn btn-primary" href="#guest-request">Request to Be a Guest</a>
-        <a class="btn btn-secondary" href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Connect on LinkedIn</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ARTICLES -->
-  <section class="home-articles fade-up" id="articles">
-    <div class="section-head">
-      <h2>Articles</h2>
-      <span class="meta">Plain-English guides for founders</span>
-    </div>
-    <p class="ha-intro">Short guides for founders thinking about going on a podcast: whether it is worth your time, how to pick the right show, and how to be a guest people remember.</p>
-    <div class="ha-grid">
-      <a class="ha-card" href="/articles/best-entrepreneurship-podcasts-for-founders-2026">
-        <div class="ha-kicker">Evaluation guide</div>
-        <h3>Best Entrepreneurship Podcasts for Founders in 2026: What to Look For</h3>
-        <p>How to judge a founder podcast on its merits instead of a ranking, and the signals that separate a good conversation from a promo reel.</p>
-        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
-      </a>
-      <a class="ha-card" href="/articles/when-should-a-founder-go-on-a-podcast">
-        <div class="ha-kicker">Timing</div>
-        <h3>When Should a Founder Go on a Podcast?</h3>
-        <p>The moments when a podcast helps, the moments it does not, and how to tell the difference before you say yes.</p>
-        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
-      </a>
-      <a class="ha-card" href="/articles/how-to-choose-the-right-podcast-to-tell-your-founder-story">
-        <div class="ha-kicker">Choosing a show</div>
-        <h3>How to Choose the Right Podcast to Tell Your Founder Story</h3>
-        <p>A simple way to match your story to the right format, host, and audience so the episode does something for you.</p>
-        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
-      </a>
-      <a class="ha-card" href="/articles/how-to-be-a-great-podcast-guest-as-a-founder">
-        <div class="ha-kicker">Being a guest</div>
-        <h3>How to Be a Great Podcast Guest as a Founder</h3>
-        <p>What great guests do differently, from the stories they bring to the way they answer, and how to prepare without over-preparing.</p>
-        <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
-      </a>
-    </div>
-    <p class="ha-all"><a href="/articles">See all articles <span aria-hidden="true">&rarr;</span></a></p>
-  </section>
-
-  <!-- PRESS KIT -->
-  <section class="press-kit fade-up" id="press-kit">
-    <div class="section-head">
-      <h2>Press Kit</h2>
-      <span class="meta">Everything a booker or writer needs</span>
-    </div>
-    <div class="pk-grid">
-      <div class="pk-main">
-        <div class="pk-block">
-          <div class="pk-label">The show, in one line</div>
-          <p>The Making Of Hosted By Jack Pitts is an interview podcast where Jack Pitts talks with founders, operators, and family-business owners about how they started and how they grew their companies. A new conversation goes up every few weeks on Spotify, Apple Podcasts, and YouTube.</p>
-        </div>
-        <div class="pk-block">
-          <div class="pk-label">About the host</div>
-          <p>Jack Pitts is the founder of Salt Creek Advisory, an AI-native deal sourcing and investment banking practice. Chicago-raised and Vanderbilt-educated, he spends his days around founders, operators, and investors, and started the show to capture the stories he always wanted to hear. The show takes its inspiration from NPR's <em>How I Built This</em>, with more focus on operators and family-business owners.</p>
-        </div>
-        <div class="pk-block">
-          <div class="pk-label">Featured in</div>
-          <p><a class="pk-link" href="https://www.rblandmark.com/2026/01/13/brookfield-businessman-podcast/" target="_blank" rel="noopener">Riverside-Brookfield Landmark, "Brookfield businessman featured on podcast"</a>, January 13, 2026, by Stella Brown.</p>
-        </div>
-      </div>
-      <aside class="pk-aside">
-        <div class="pk-label">Assets and links</div>
-        <ul class="pk-list">
-          <li><a href="logo.png" target="_blank" rel="noopener">Show logo (PNG)</a></li>
-          <li><a href="headshot.jpg" target="_blank" rel="noopener">Host headshot (JPG)</a></li>
-          <li><a href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Listen on Spotify</a></li>
-          <li><a href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener">Listen on Apple Podcasts</a></li>
-          <li><a href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener">Watch on YouTube</a></li>
-          <li><a href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Jack Pitts on LinkedIn</a></li>
-        </ul>
-        <div class="pk-cta">
-          <a class="btn btn-orange" href="mailto:jack@saltcreekadvisory.com?subject=Press%20inquiry%3A%20The%20Making%20Of%20Hosted%20By%20Jack%20Pitts">Request an interview</a>
-        </div>
-      </aside>
-    </div>
+    <p class="section-more">
+      <a href="/episodes">All episodes <span aria-hidden="true">&rarr;</span></a>
+      <a href="/articles">Guides for founders <span aria-hidden="true">&rarr;</span></a>
+    </p>
   </section>
 
 </div>
@@ -2088,45 +389,27 @@
       </a>
     </div>
     <nav class="footer-links" aria-label="Footer">
-      <a href="#episodes">Episodes</a>
-      <a href="#press">Press</a>
-      <a href="/articles">Articles</a>
-      <a href="#guest-request">Be a Guest</a>
-      <a href="#press-kit">Press Kit</a>
-      <a href="#about">About</a>
+      <a href="/episodes">Episodes</a>
+      <a href="/about">About</a>
+      <a href="/press">Press</a>
+      <a href="/be-a-guest">Be a Guest</a>
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
     </nav>
-    <nav class="footer-archive" aria-label="Every episode">
-      <div class="footer-archive-title"><a href="/episodes">Every episode</a></div>
-      <!-- FALLBACK:ARCHIVE:START (maintained by update_home_fallback.py) -->
-      <ul>
-        <li><a href="/episodes/from-selling-ice-to-building-a-140-person-pet-care-business-scott-burnley">From Selling Ice to Building a 140-Person Pet Care Business | Scott Burnley</a></li>
-        <li><a href="/episodes/how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott">How Four Veterans Built Four Branches Bourbon | Rick Franco &amp; Mike Trott</a></li>
-        <li><a href="/episodes/dave-moorman">Dave Moorman: Building an MSP, Scaling Through M&amp;A &amp; Exiting Twice</a></li>
-        <li><a href="/episodes/davies-hood-of-induron-protective-coatings">Davies Hood of Induron Protective Coatings: Building an 80-Year Family Business</a></li>
-        <li><a href="/episodes/concentrate-ai">Concentrate AI: The LLM Gateway for Fast-Growing Teams</a></li>
-        <li><a href="/episodes/nishank-gite">In The Making Of: Nishank Gite</a></li>
-        <li><a href="/episodes/alex-dixon">The Making Of Alex Dixon: From Goldman Sachs to CEO of Resorts World Las Vegas</a></li>
-        <li><a href="/episodes/david-sauers">The Making Of David Sauers: Building Royal Restrooms Into a Nationwide Franchise</a></li>
-        <li><a href="/episodes/jesse-choe">In The Making Of: Jesse Choe</a></li>
-        <li><a href="/episodes/shane-crocker">The Making Of Shane Crocker: From Family Business to Multi-Industry Operator</a></li>
-        <li><a href="/episodes/dave-menz">The Making Of Dave "Laundromat Millionaire" Menz</a></li>
-        <li><a href="/episodes/lou-mongello">The Making Of Lou Mongello: From Lawyer to Disney Entrepreneur</a></li>
-        <li><a href="/episodes/niilo-pirttij-rvi">In The Making Of: Niilo Pirttijärvi</a></li>
-        <li><a href="/episodes/kris-carlson">The Making of Kris Carlson: From Sales to Seafood</a></li>
-        <li><a href="/episodes/ian-hicks">In The Making Of: Ian Hicks</a></li>
-        <li><a href="/episodes/robbie-ferman">The Making of Robbie Ferman: From Brokerage to Building Sollevare Group</a></li>
-        <li><a href="/episodes/doug-taylor">The Making of Doug Taylor: Taylor's Candy</a></li>
-        <li><a href="/episodes/adam-stevenson">The Making of Adam Stevenson: From Flipping Burgers to Building Businesses</a></li>
-        <li><a href="/episodes/gary-dennis">The Making of Mammoth Holdings with Gary Dennis</a></li>
-      </ul>
-      <!-- FALLBACK:ARCHIVE:END -->
-    </nav>
-    <small>© 2026 The Making Of Hosted By Jack Pitts</small>
+    <small>&copy; 2026 The Making Of Hosted By <a href="https://thejackpitts.com/" target="_blank" rel="noopener">Jack Pitts</a></small>
   </div>
 </footer>
 
+<script>
+  // Old links to homepage sections that are now their own pages
+  // (e.g. a shared /#guest-request) land on the right page.
+  (function() {
+    var MOVED = { "#guest-request": "/be-a-guest", "#guests": "/be-a-guest", "#press": "/press",
+                  "#press-kit": "/press#press-kit", "#about": "/about", "#articles": "/articles" };
+    var to = MOVED[location.hash];
+    if (to) location.replace(to);
+  })();
+</script>
 <script src="episodes.js"></script>
 <script>
   /* =========================================================
@@ -2175,6 +458,19 @@
       if (sp > 0) cut = cut.slice(0, sp);
       return cut.replace(/[ ,;:.\-]+$/, "") + "…";
     }
+    // Feed descriptions often open with a stock lead-in ("In this episode of
+    // The Making Of Hosted By Jack Pitts, I sit down with ..."). Cards drop it
+    // so a row of cards does not repeat it. Mirrors card_blurb() in
+    // sync_latest_episode.py; episodes.js keeps the original text.
+    var LEAD_IN_VERB = /^(?:in|on) this (?:episode|conversation)(?: of the making of hosted by jack pitts)?,\s*(?:host jack pitts|jack pitts|jack|i)\s+(?:sits down with|sit down with|sat down with|interviews)\s+/i;
+    var LEAD_IN = /^(?:in|on) this (?:episode|conversation)(?: of the making of hosted by jack pitts)?,\s*/i;
+    function cardBlurb(s, n) {
+      s = String(s || "").trim();
+      var out = s.replace(LEAD_IN_VERB, "");
+      if (out === s) out = s.replace(LEAD_IN, "");
+      if (out && out !== s) s = out.charAt(0).toUpperCase() + out.slice(1);
+      return trimText(s, n);
+    }
     // Feed text arrives through third-party proxies, so it is parsed in an
     // inert DOMParser document (no scripts, no image loads) and only its
     // text is kept. Never assign proxy content to innerHTML on a live node.
@@ -2192,7 +488,7 @@
       href = safeUrl(href);
       if (!href) return "";
       var aria = key === "linkedin"
-        ? "Connect with " + who + " on LinkedIn"
+        ? who + " on LinkedIn"
         : "Listen to " + who + " on " + (PLATFORM_NAMES[key] || label);
       return '<a class="ep-platform ' + cls + '" href="' + escHtml(href) + '" target="_blank" rel="noopener" aria-label="' + escHtml(aria) + '">' +
         ICONS[key].replace("<svg ", '<svg aria-hidden="true" ') + escHtml(label) + '</a>';
@@ -2380,14 +676,14 @@
       var dn = document.querySelector("[data-fe-date]");      if (dn) dn.textContent = ep.dateLabel || "";
       var du = document.querySelector("[data-fe-duration]");  if (du) du.textContent = ep.duration || "";
       var ti = document.querySelector("[data-fe-title]");     if (ti) ti.textContent = ep.title || "";
-      var de = document.querySelector("[data-fe-desc]");      if (de) de.textContent = trimText(ep.description || "", 400);
+      var de = document.querySelector("[data-fe-desc]");      if (de) de.textContent = cardBlurb(ep.description || "", 400);
       var iss= document.querySelector("[data-fe-issue]");     if (iss) iss.textContent = pad(ep._issue || "--");
       var links = ep.links || {};
       setHref("[data-fe-link-spotify]", safeUrl(links.spotify) || SHOW_LINKS.spotify);
       setHref("[data-fe-link-apple]",   safeUrl(links.apple)   || SHOW_LINKS.apple);
       setHref("[data-fe-link-youtube]", safeUrl(links.youtube) || SHOW_LINKS.youtube);
 
-      // Wire the "Read the full issue" link to the per-episode page.
+      // Wire the "Episode notes" link to the per-episode page.
       var readLink = document.querySelector("[data-fe-read-link]");
       if (readLink) {
         readLink.setAttribute("href", readHref(ep));
@@ -2425,8 +721,8 @@
       if (!items.length) { grid.style.display = "none"; return; }
 
       var TAG_LABELS = {
-        first: { label: "Episode 01, The Origin Story", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>' },
-        press: { label: "Press Pick, Riverside-Brookfield Landmark", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a3 3 0 0 0 3-3V4z"/><path d="M7 8h8M7 12h8M7 16h5"/></svg>' },
+        first: { label: "The first episode", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>' },
+        press: { label: "As covered in the Riverside-Brookfield Landmark", icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h11a3 3 0 0 0 3-3V4z"/><path d="M7 8h8M7 12h8M7 16h5"/></svg>' },
         pick:  { label: "Editor’s Pick", icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .587l3.668 7.431L24 9.21l-6 5.851L19.336 24 12 19.897 4.664 24 6 15.061 0 9.21l8.332-1.192z"/></svg>' }
       };
 
@@ -2443,14 +739,14 @@
           '<div class="pin-tag">' + t.icon + escHtml(t.label) + '</div>' +
           '<div class="pin-date">' + escHtml(ep.dateLabel || "") + '</div>' +
           '<h3><a class="ep-title-link" ' + linkAttrs(ep) + '>' + escHtml(ep.title || "") + '</a></h3>' +
-          '<p>' + escHtml(trimText(ep.description || "", 400)) + '</p>' +
+          '<p>' + escHtml(cardBlurb(ep.description || "", 400)) + '</p>' +
           '<div class="ep-platforms">' +
             pill('is-spotify', 'Spotify',  links.spotify || SHOW_LINKS.spotify, 'spotify', who) +
             pill('is-apple',   'Apple',    links.apple   || SHOW_LINKS.apple,   'apple', who) +
             pill('is-youtube', 'YouTube',  links.youtube || SHOW_LINKS.youtube, 'youtube', who) +
-            (inUrl ? pill('is-linkedin', 'Connect', inUrl, 'linkedin', who) : '') +
+            (inUrl ? pill('is-linkedin', "Guest's LinkedIn", inUrl, 'linkedin', who) : '') +
           '</div>' +
-          '<a class="ep-read" ' + linkAttrs(ep) + ' aria-label="' + escHtml('Read the full issue: ' + (ep.title || "")) + '">Read the full issue <span aria-hidden="true">&rarr;</span></a>' +
+          '<a class="ep-read" ' + linkAttrs(ep) + ' aria-label="' + escHtml('Episode notes: ' + (ep.title || "")) + '">Episode notes <span aria-hidden="true">&rarr;</span></a>' +
           '</article>';
       }).join('');
     }
@@ -2474,15 +770,15 @@
           '<div class="ep-issue">Issue No. ' + issueNo + '</div>' +
           '<div class="ep-num">' + escHtml(ep.dateLabel) + '</div>' +
           '<h3><a class="ep-title-link" ' + linkAttrs(ep) + '>' + escHtml(ep.title) + '</a></h3>' +
-          '<p>' + escHtml(trimText(ep.description, 400)) + '</p>' +
+          '<p>' + escHtml(cardBlurb(ep.description, 400)) + '</p>' +
           '<div class="ep-meta"><span>' + escHtml(ep.duration) + '</span><span>Full episode</span></div>' +
           '<div class="ep-platforms">' +
             pill('is-spotify', 'Spotify',  links.spotify || SHOW_LINKS.spotify, 'spotify', who) +
             pill('is-apple',   'Apple',    links.apple   || SHOW_LINKS.apple,   'apple', who) +
             pill('is-youtube', 'YouTube',  links.youtube || SHOW_LINKS.youtube, 'youtube', who) +
-            (inUrl ? pill('is-linkedin', 'Connect', inUrl, 'linkedin', who) : '') +
+            (inUrl ? pill('is-linkedin', "Guest's LinkedIn", inUrl, 'linkedin', who) : '') +
           '</div>' +
-          '<a class="ep-read" ' + linkAttrs(ep) + ' aria-label="' + escHtml('Read the full issue: ' + (ep.title || "")) + '">Read the full issue <span aria-hidden="true">&rarr;</span></a>' +
+          '<a class="ep-read" ' + linkAttrs(ep) + ' aria-label="' + escHtml('Episode notes: ' + (ep.title || "")) + '">Episode notes <span aria-hidden="true">&rarr;</span></a>' +
           '</article>';
       }).join('');
 
@@ -2492,40 +788,6 @@
       var cards = Array.prototype.slice.call(container.querySelectorAll('.ep.fade-up'));
       if (typeof window.__tmoObserveFade === 'function') window.__tmoObserveFade(cards);
       else if (!('IntersectionObserver' in window)) cards.forEach(function(el){ el.classList.add('is-in'); });
-    }
-
-    /* ---------- MARQUEE: build from data ---------- */
-    function paintMarquee(eps) {
-      var track = document.getElementById('marquee-track');
-      if (!track || !eps || !eps.length) return;
-
-      // Build the list of guests from real data. Skip duplicates.
-      var seen = {};
-      var guests = [];
-      eps.forEach(function(ep) {
-        var name = displayGuest(ep);
-        if (!name || seen[name]) return;
-        seen[name] = true;
-        // Each name goes to that guest's episode page on this site, where
-        // their own episode player and full write-up live.
-        guests.push({ name: name, ep: ep });
-      });
-
-      // The second run only exists for the seamless loop, so it is hidden
-      // from assistive tech and removed from the tab order.
-      function buildRun(isDuplicate) {
-        var hide = isDuplicate ? ' aria-hidden="true"' : '';
-        var html = ['<span class="marquee-label"' + hide + '>Past Guests</span>'];
-        guests.forEach(function(g) {
-          html.push(
-            '<a class="marquee-name" ' + linkAttrs(g.ep) +
-            (isDuplicate ? ' aria-hidden="true" tabindex="-1"' : ' aria-label="' + escHtml('Listen to the episode with ' + g.name) + '"') + '>' +
-            escHtml(g.name) + '</a>'
-          );
-        });
-        return html.join('');
-      }
-      track.innerHTML = buildRun(false) + buildRun(true);
     }
 
     /* ---------- STATS UPDATE FROM DATA ---------- */
@@ -2612,7 +874,6 @@
       var local = (window.EPISODES || []).slice();
       renderAll(local);
       updateStats(local);
-      paintMarquee(local);
       injectEpisodeSchema(local);
 
       // Optional safety net: if the live feed somehow has a title that
@@ -2643,12 +904,10 @@
         try {
           renderAll(merged);
           updateStats(merged);
-          paintMarquee(merged);
           injectEpisodeSchema(merged);
         } catch (e) {
           // Fall back to the list from episodes.js if anything goes wrong.
           renderAll(local);
-          paintMarquee(local);
           injectEpisodeSchema(local);
         }
       }).catch(function() { /* keep the episodes.js render */ });
@@ -2671,17 +930,10 @@
   (function() {
     var pill = document.getElementById('sticky-listen');
     var hero = document.querySelector('header.hero');
-    // Hidden while the guest form is on screen so it never covers the submit button.
-    var guestForm = document.getElementById('guest-request');
     if (!pill || !hero) return;
-    function isFormInView() {
-      if (!guestForm) return false;
-      var r = guestForm.getBoundingClientRect();
-      return r.top < window.innerHeight && r.bottom > 0;
-    }
     function onScroll() {
       var heroBottom = hero.getBoundingClientRect().bottom;
-      if (heroBottom < 0 && !isFormInView()) pill.classList.add('is-visible');
+      if (heroBottom < 0) pill.classList.add('is-visible');
       else pill.classList.remove('is-visible');
     }
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -2798,168 +1050,6 @@
       el.addEventListener('mouseleave', function() {
         el.style.transform = '';
       });
-    });
-  })();
-
-  /* ---------- GUEST REQUEST FORM ---------- */
-  // Progressive enhancement: without JS the <noscript> note points to
-  // LinkedIn. With JS the form POSTs JSON to /api/guest-request.
-  (function() {
-    var form = document.getElementById('guest-form');
-    if (!form || !window.fetch || !window.JSON) return;
-
-    var ENDPOINT = '/api/guest-request';
-    var LINKEDIN_URL = 'https://www.linkedin.com/in/jack-pitts';
-    var LIMITS = { name: 100, email: 254, companyRole: 150, link: 300, storyMin: 20, storyMax: 1500 };
-    var FIELDS = ['name', 'email', 'companyRole', 'link', 'story'];
-    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    var NETWORK_ERROR = "Couldn't send that. Please try again, or ";
-
-    var btn = form.querySelector('.gr-submit');
-    var status = form.querySelector('.gr-status');
-    var btnLabel = btn ? btn.textContent : '';
-    var tField = form.querySelector('input[name="t"]');
-    if (tField) tField.value = String(Date.now());
-
-    function field(name) { return form.elements[name]; }
-    function value(name) { var el = field(name); return el ? String(el.value || '').trim() : ''; }
-
-    function setError(name, msg) {
-      var el = field(name);
-      var err = document.getElementById('gr-err-' + name);
-      if (err) err.textContent = msg || '';
-      if (!el) return;
-      if (msg) el.setAttribute('aria-invalid', 'true');
-      else el.removeAttribute('aria-invalid');
-    }
-
-    function setStatus(msg, isError, withLinkedIn) {
-      if (!status) return;
-      status.textContent = msg || '';
-      status.className = 'gr-status' + (isError ? ' is-error' : '');
-      if (withLinkedIn) {
-        var a = document.createElement('a');
-        a.href = LINKEDIN_URL; a.target = '_blank'; a.rel = 'noopener';
-        a.textContent = 'message me on LinkedIn';
-        status.appendChild(a);
-        status.appendChild(document.createTextNode('.'));
-      }
-    }
-
-    // Accept bare domains and linkedin.com/in/... by adding https://.
-    function normalizeLink(raw) {
-      if (!raw) return '';
-      var v = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw.replace(/^\/+/, '');
-      try {
-        var u = new URL(v);
-        if ((u.protocol !== 'http:' && u.protocol !== 'https:') || u.hostname.indexOf('.') === -1) return null;
-        return v;
-      } catch (e) { return null; }
-    }
-
-    function validate(data) {
-      var errors = {};
-      if (!data.name) errors.name = 'Please add your name.';
-      else if (data.name.length > LIMITS.name) errors.name = 'Please keep your name under ' + LIMITS.name + ' characters.';
-      if (!data.email || data.email.length > LIMITS.email || !EMAIL_RE.test(data.email)) errors.email = 'Please enter a valid email address.';
-      if (!data.companyRole) errors.companyRole = 'Please add your company and role.';
-      else if (data.companyRole.length > LIMITS.companyRole) errors.companyRole = 'Please keep this under ' + LIMITS.companyRole + ' characters.';
-      if (data.link === null || (data.link && data.link.length > LIMITS.link)) errors.link = 'Please enter a website or LinkedIn address, like yourcompany.com.';
-      if (data.story.length < LIMITS.storyMin) errors.story = 'Please share a few sentences (at least ' + LIMITS.storyMin + ' characters).';
-      else if (data.story.length > LIMITS.storyMax) errors.story = 'Please keep your story under ' + LIMITS.storyMax + ' characters.';
-      return errors;
-    }
-
-    function setBusy(isBusy) {
-      if (!btn) return;
-      btn.disabled = isBusy;
-      btn.textContent = isBusy ? 'Sending...' : btnLabel;
-      form.setAttribute('aria-busy', isBusy ? 'true' : 'false');
-    }
-
-    function showSuccess(name) {
-      var first = String(name || '').split(/\s+/)[0] || 'there';
-      var box = document.createElement('div');
-      box.className = 'gr-success';
-      box.setAttribute('role', 'status');
-      box.setAttribute('tabindex', '-1');
-      var p = document.createElement('p');
-      p.textContent = 'Thanks, ' + first + '. Your request is in. I read every one myself and will reply by email if it looks like a good fit.';
-      box.appendChild(p);
-      form.parentNode.replaceChild(box, form);
-      box.focus();
-    }
-
-    FIELDS.forEach(function(name) {
-      var el = field(name);
-      if (el) el.addEventListener('input', function() { if (el.getAttribute('aria-invalid')) setError(name, ''); });
-    });
-
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      if (btn && btn.disabled) return;
-      FIELDS.forEach(function(n) { setError(n, ''); });
-      setStatus('');
-
-      var data = {
-        name: value('name'),
-        email: value('email'),
-        companyRole: value('companyRole'),
-        link: normalizeLink(value('link')),
-        story: value('story')
-      };
-      var errors = validate(data);
-      var firstBad = FIELDS.filter(function(n) { return errors[n]; })[0];
-      if (firstBad) {
-        FIELDS.forEach(function(n) { if (errors[n]) setError(n, errors[n]); });
-        setStatus('Please check the highlighted fields.', true);
-        field(firstBad).focus();
-        return;
-      }
-
-      var payload = {
-        name: data.name,
-        email: data.email,
-        companyRole: data.companyRole,
-        link: data.link || '',
-        story: data.story,
-        nickname: field('nickname') ? field('nickname').value : '',
-        t: tField ? Number(tField.value) || 0 : 0
-      };
-
-      setBusy(true);
-      fetch(ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify(payload)
-      })
-        .then(function(r) {
-          return r.json().catch(function() { return {}; }).then(function(body) {
-            return { status: r.status, ok: r.ok, body: body || {} };
-          });
-        })
-        .then(function(res) {
-          if (res.ok && res.body.ok) { showSuccess(data.name); return; }
-          setBusy(false);
-          var msg = typeof res.body.error === 'string' ? res.body.error : '';
-          var bad = typeof res.body.field === 'string' && FIELDS.indexOf(res.body.field) > -1 ? res.body.field : '';
-          if (res.status === 400 && bad) {
-            setError(bad, msg || 'Please check this field.');
-            setStatus('Please check the highlighted field.', true);
-            field(bad).focus();
-          } else if (res.status === 429) {
-            setStatus((msg || "You've sent a few requests in a row. Please wait a little and try again.") + ' You can also ', true, true);
-          } else if (msg) {
-            setStatus(msg + ' You can also ', true, true);
-          } else {
-            setStatus(NETWORK_ERROR, true, true);
-          }
-        })
-        .catch(function() {
-          setBusy(false);
-          setStatus(NETWORK_ERROR, true, true);
-        });
     });
   })();
 

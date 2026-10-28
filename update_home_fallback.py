@@ -14,9 +14,9 @@ It updates these zones in index.html:
   - Featured: the data-fe-* fields (newest episode).
   - From the Catalog: pins between FALLBACK:CATALOG:START/END markers.
   - Recent Episodes: cards between FALLBACK:RECENT:START/END markers.
-  - Footer archive: links to every episode page between
-    FALLBACK:ARCHIVE:START/END markers, so search engines can reach the
-    whole catalog from the homepage without running JS.
+
+The footer no longer lists every episode: the /episodes archive (built by
+generate_episode_archive.py) links the whole catalog without JavaScript.
 
 Safe to run repeatedly; output is deterministic for a given episodes.js.
 """
@@ -29,7 +29,7 @@ import sys
 from datetime import datetime
 
 from seo_urls import ROOT, episode_path
-from sync_latest_episode import truncate_at_word
+from sync_latest_episode import card_blurb
 
 EPISODES_JS = ROOT / "episodes.js"
 INDEX_HTML = ROOT / "index.html"
@@ -42,8 +42,8 @@ SHOW_LINKS = {
 
 # Mirrors the TAG_LABELS map and pickPinned() order in index.html's render layer.
 TAG_META = {
-    "press": {"corner": "II", "label": "Press Pick, Riverside-Brookfield Landmark"},
-    "first": {"corner": "01", "label": "Episode 01, The Origin Story"},
+    "press": {"corner": "II", "label": "As covered in the Riverside-Brookfield Landmark"},
+    "first": {"corner": "01", "label": "The first episode"},
     "pick": {"corner": "", "label": "Editor's Pick"},
 }
 PIN_ORDER = ["press", "first"]
@@ -95,7 +95,7 @@ def platform_pills(ep: dict, include_connect: bool) -> str:
     li = (ep.get("guestLinkedIn") or "").strip()
     if include_connect and li:
         rows.append(
-            f'          <a class="ep-platform is-linkedin" href="{li}" target="_blank" rel="noopener">Connect</a>'
+            f'          <a class="ep-platform is-linkedin" href="{li}" target="_blank" rel="noopener">Guest&#39;s LinkedIn</a>'
         )
     return "\n".join(rows)
 
@@ -121,11 +121,11 @@ def build_catalog(all_eps: list[dict]) -> str:
         <div class="pin-tag">{esc(meta["label"])}</div>
         <div class="pin-date">{esc(ep.get("dateLabel", ""))}</div>
         <h3><a class="ep-title-link" href="{href}">{esc(ep.get("title", ""))}</a></h3>
-        <p>{esc(truncate_at_word(ep.get("description", "")))}</p>
+        <p>{esc(card_blurb(ep.get("description", "")))}</p>
         <div class="ep-platforms">
 {platform_pills(ep, include_connect=True)}
         </div>
-        <a class="ep-read" href="{href}">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="ep-read" href="{href}">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </article>"""
         )
     return "\n".join(articles)
@@ -145,23 +145,15 @@ def build_recent(all_eps: list[dict], total: int) -> str:
         <div class="ep-issue">Issue No. {issue}</div>
         <div class="ep-num">{esc(ep.get("dateLabel", ""))}</div>
         <h3><a class="ep-title-link" href="{href}">{esc(ep.get("title", ""))}</a></h3>
-        <p>{esc(truncate_at_word(ep.get("description", "")))}</p>
+        <p>{esc(card_blurb(ep.get("description", "")))}</p>
         <div class="ep-meta"><span>{esc(ep.get("duration", ""))}</span><span>Full episode</span></div>
         <div class="ep-platforms">
 {platform_pills(ep, include_connect=True)}
         </div>
-        <a class="ep-read" href="{href}">Read the full issue <span aria-hidden="true">&rarr;</span></a>
+        <a class="ep-read" href="{href}">Episode notes <span aria-hidden="true">&rarr;</span></a>
       </article>"""
         )
     return "\n".join(cards)
-
-
-def build_archive(all_eps: list[dict]) -> str:
-    items = []
-    for ep in all_eps:
-        href = page_href(ep)
-        items.append(f'        <li><a href="{href}">{esc(ep.get("title", ""))}</a></li>')
-    return "      <ul>\n" + "\n".join(items) + "\n      </ul>"
 
 
 def replace_between(html: str, name: str, inner: str) -> str:
@@ -221,7 +213,7 @@ def main() -> int:
     html = set_text(html, "<span data-fe-date>", "</span>", esc(featured.get("dateLabel", "")))
     html = set_text(html, "<span data-fe-duration>", "</span>", esc(featured.get("duration", "")))
     html = set_text(html, '<h2 class="fe-title" data-fe-title>', "</h2>", esc(featured.get("title", "")))
-    html = set_text(html, '<p class="fe-desc" data-fe-desc>', "</p>", esc(truncate_at_word(featured.get("description", ""))))
+    html = set_text(html, '<p class="fe-desc" data-fe-desc>', "</p>", esc(card_blurb(featured.get("description", ""))))
     html = set_text(html, "<span data-fe-issue>", "</span>", pad(total))
     feat_spotify = (featured.get("links") or {}).get("spotify") or SHOW_LINKS["spotify"]
     html = set_attr_href(html, "data-fe-link-spotify", feat_spotify)
@@ -230,7 +222,6 @@ def main() -> int:
     # Catalog + Recent zones.
     html = replace_between(html, "CATALOG", build_catalog(episodes))
     html = replace_between(html, "RECENT", build_recent(episodes, total))
-    html = replace_between(html, "ARCHIVE", build_archive(episodes))
 
     INDEX_HTML.write_text(html, encoding="utf-8")
     print(f"Updated index.html fallback. Featured: {featured.get('title')} (issue {pad(total)})")

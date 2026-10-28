@@ -31,7 +31,8 @@ from generate_episode_pages import (
     nowrap_hyphenated,
 )
 from seo_urls import BASE_URL, ROOT, episode_path, to_url
-from sync_latest_episode import truncate_at_word
+from site_nav import footer_html, topnav_html
+from sync_latest_episode import card_blurb
 
 OUT_FILE = ROOT / "episodes.html"
 
@@ -45,8 +46,9 @@ PAGE_DESC = (
 )
 
 ARCHIVE_CSS = r"""
+.archive-intro a { color: var(--orange-dark); font-weight: 600; }
 .archive-intro {
-  font-family: 'Fraunces', serif; font-weight: 400;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 400;
   font-size: 20px; line-height: 1.6; color: var(--ink-soft);
   max-width: 640px; margin: 0 0 44px;
   text-wrap: pretty;
@@ -60,19 +62,19 @@ ARCHIVE_CSS = r"""
 }
 .ep-row:hover { background: rgba(255,255,255,0.4); padding-left: 12px; }
 .ep-row .row-meta {
-  font-family: 'Inter', sans-serif; font-size: 11.5px;
-  letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700;
+  font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif; font-size: 11.5px;
+  letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
   color: var(--ink-soft); margin-bottom: 9px;
   display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
 }
 .ep-row .row-issue { color: var(--orange-dark); }
 .ep-row .row-title {
-  font-family: 'Fraunces', serif; font-weight: 700;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
   font-size: clamp(21px, 2.6vw, 27px); line-height: 1.24;
-  letter-spacing: -0.015em; margin: 0 0 9px;
+  letter-spacing: -0.01em; margin: 0 0 9px;
 }
 .ep-row .row-desc {
-  font-family: 'Fraunces', serif; font-size: 17px; line-height: 1.5;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-size: 17px; line-height: 1.5;
   color: var(--ink-soft); margin: 0; max-width: 680px;
 }
 """
@@ -101,18 +103,13 @@ PAGE_TMPL = """<!doctype html>
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet" />
 <script type="application/ld+json">{json_ld}</script>
 <style>{css}</style>
 </head>
 <body>
 
-<nav class="topnav">
-  <div class="wrap">
-    <a class="mark" href="/">The Making <span>Of</span> Hosted By Jack Pitts</a>
-    <a class="back" href="/"><span class="back-label">Home</span></a>
-  </div>
-</nav>
+{topnav}
 
 <main class="wrap">
   <div class="masthead">
@@ -124,9 +121,7 @@ PAGE_TMPL = """<!doctype html>
   </div>
 
   <h1 class="hero-title">Every <em>episode</em>.</h1>
-  <p class="archive-intro">Long conversations with founders, operators, and
-  family-business owners about where they started, what went wrong along the
-  way, and how the business grew. Newest first.</p>
+  <p class="archive-intro">{count} interviews with business owners, newest first. Written guides for founders are in <a href="/articles">Articles</a>.</p>
 
   <ul class="ep-list">
 {rows}
@@ -134,23 +129,19 @@ PAGE_TMPL = """<!doctype html>
 
   <aside class="book-strip" aria-label="Be a guest">
     <div>
-      <h3>Have a story like this? <em>Come on the show.</em></h3>
-      <p>About an hour, recorded remotely, no slides or script needed. Tell me a little about your story and I'll reply personally if it's a fit.</p>
+      <h3>Be a guest on <em>the show</em>.</h3>
+      <p>About an hour, recorded remotely on Riverside. No prep needed. Email me if you're interested.</p>
     </div>
-    <a href="{guest_request}">Request to Be a Guest</a>
+    <a href="{guest_request}">Be a Guest</a>
   </aside>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
-    <small>&copy; 2026 Jack Pitts. Conversations with the people behind the business. <a href="/articles" style="color: var(--orange); text-decoration: underline;">Read the articles.</a> <a class="foot-link" href="/privacy" style="color: var(--orange); text-decoration: underline;">Privacy</a> <a class="foot-link" href="/terms" style="color: var(--orange); text-decoration: underline;">Terms</a></small>
-  </div>
-</footer>
+<!--SITE_FOOTER-->
 
 </body>
 </html>
 """
+PAGE_TMPL = PAGE_TMPL.replace("<!--SITE_FOOTER-->", footer_html())
 
 
 def pad(n: int) -> str:
@@ -164,7 +155,7 @@ def build_row(ep: dict, issue_no: int) -> str:
         meta_bits.append(f'<span>{escape(ep["dateLabel"])}</span>')
     if ep.get("duration"):
         meta_bits.append(f'<span>{escape(ep["duration"])}</span>')
-    desc = escape(truncate_at_word(ep.get("description", "")))
+    desc = escape(card_blurb(ep.get("description", "")))
     return (
         f'    <li><a class="ep-row" href="{path}">\n'
         f'      <div class="row-meta">{"".join(meta_bits)}</div>\n'
@@ -225,6 +216,7 @@ def build_page(episodes: list[dict]) -> str:
         count=total,
         rows=rows,
         guest_request=GUEST_REQUEST,
+        topnav=topnav_html("/episodes"),
     )
 
 

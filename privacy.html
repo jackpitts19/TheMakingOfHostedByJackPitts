@@ -24,7 +24,7 @@
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet" />
 <style>
 :root {
   --cream: #f3e8cf;
@@ -37,7 +37,7 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: var(--cream); color: var(--ink); }
-body { font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.55; }
+body { font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif; line-height: 1.55; }
 a { color: inherit; }
 img { max-width: 100%; display: block; }
 body::before {
@@ -53,65 +53,140 @@ body > * { position: relative; z-index: 2; }
   position: sticky; top: 0; z-index: 5;
 }
 .topnav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.topnav .mark { font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; }
+.topnav .mark { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: 18px; letter-spacing: -0.01em; text-decoration: none; }
 .topnav .mark span { color: var(--orange); font-style: italic; font-weight: 600; margin-right: 0.12em; }
-.topnav .back { text-decoration: none; color: var(--ink-soft); font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
-.topnav .back::before { content: "\2190"; color: var(--orange-dark); font-size: 16px; }
-.topnav .back:hover { color: var(--ink); }
-.masthead { padding: 52px 0 16px; display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
-.masthead .kicker { color: var(--orange-dark); font-weight: 800; }
+.masthead { padding: 52px 0 16px; display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+.masthead .kicker { color: var(--orange-dark); font-weight: 700; }
 .masthead .dot { width: 4px; height: 4px; background: var(--ink-soft); border-radius: 50%; opacity: 0.6; align-self: center; }
-.hero-title { font-family: 'Fraunces', serif; font-weight: 800; line-height: 1.04; font-size: clamp(34px, 5.4vw, 60px); letter-spacing: -0.022em; margin: 0 0 22px; }
+.hero-title { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; line-height: 1.08; font-size: clamp(34px, 5.4vw, 60px); letter-spacing: -0.022em; margin: 0 0 22px; }
 .hero-title em { font-style: italic; color: var(--orange-dark); font-weight: 700; }
-.body h2 { font-family: 'Fraunces', serif; font-weight: 800; font-size: clamp(24px, 3vw, 31px); letter-spacing: -0.015em; line-height: 1.15; margin: 44px 0 14px; }
-.body h3 { font-family: 'Fraunces', serif; font-weight: 700; font-size: 20px; letter-spacing: -0.01em; margin: 26px 0 8px; }
-.body p { font-family: 'Fraunces', serif; font-weight: 400; font-size: 19px; line-height: 1.62; color: var(--ink); margin: 0 0 20px; letter-spacing: -0.003em; }
+.body h2 { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: clamp(24px, 3vw, 31px); letter-spacing: -0.01em; line-height: 1.15; margin: 44px 0 14px; }
+.body h3 { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: 20px; letter-spacing: -0.01em; margin: 26px 0 8px; }
+.body p { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 400; font-size: 19px; line-height: 1.62; color: var(--ink); margin: 0 0 20px; letter-spacing: -0.003em; }
 .body ul { margin: 0 0 22px; padding-left: 22px; }
-.body li { font-family: 'Fraunces', serif; font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
+.body li { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-size: 19px; line-height: 1.55; margin: 0 0 10px; }
 .body a { color: var(--orange-dark); font-weight: 600; text-decoration: underline; }
 .book-strip { margin: 60px 0 34px; padding: 34px 30px; background: var(--ink); color: var(--cream); border-radius: 18px; display: flex; align-items: center; justify-content: space-between; gap: 26px; flex-wrap: wrap; }
-.book-strip h3 { font-family: 'Fraunces', serif; font-weight: 800; font-size: 23px; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--cream); }
+.book-strip h3 { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: 23px; margin: 0 0 6px; letter-spacing: -0.01em; color: var(--cream); }
 .book-strip h3 em { color: var(--orange); font-style: italic; }
 .book-strip p { margin: 0; font-size: 14.5px; color: rgba(243,232,207,0.78); max-width: 440px; }
 .book-strip a { background: var(--orange); color: var(--ink); padding: 14px 22px; border-radius: 999px; font-weight: 700; text-decoration: none; font-size: 14px; letter-spacing: 0.01em; white-space: nowrap; transition: transform .15s, background .15s; }
 .book-strip a:hover { transform: translateY(-2px); background: #ffb361; }
 footer { background: var(--ink); color: var(--cream); padding: 40px 0 36px; margin-top: 30px; }
 footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
-footer .mark { font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px; }
+footer .mark { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: 18px; }
 footer .mark span { color: var(--orange); font-style: italic; font-weight: 600; }
 footer small { color: rgba(243,232,207,0.55); font-size: 12px; }
 @media (max-width: 720px) {
   .masthead { padding-top: 38px; }
   .book-strip { padding: 26px 22px; }
 }
-.lede { font-family: 'Fraunces', serif; font-weight: 400; font-size: clamp(19px, 2.1vw, 23px); line-height: 1.5; color: var(--ink-soft); margin: 0 0 12px; }
+.lede { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 400; font-size: clamp(19px, 2.1vw, 23px); line-height: 1.5; color: var(--ink-soft); margin: 0 0 12px; }
 .updated { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--ink-soft); margin: 0 0 8px; }
-/* Shared with the episode pages: balanced headings, no lone last words,
-   and a compact one-line top bar with a 44x44 arrow back link on phones. */
 h1, h2, h3 { text-wrap: balance; }
 p { text-wrap: pretty; }
 footer .foot-link { display: inline-block; padding: 14px 6px; margin: -14px 0; }
 @media (max-width: 720px) {
   .topnav { padding: 12px 0; }
   .topnav .mark { font-size: clamp(13px, 3.9vw, 15px); line-height: 1.2; min-width: 0; }
-  .topnav .back { font-size: 11.5px; letter-spacing: 0.06em; white-space: nowrap; }
 }
 @media (max-width: 480px) {
   .wrap { padding: 0 16px; }
-  .topnav .back .back-label {
-    position: absolute; width: 1px; height: 1px; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap;
+}
+/* Primary links (site_nav.py) */
+.topnav-links { display: flex; gap: 20px; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; }
+.topnav-links a {
+  color: var(--ink-soft); text-decoration: none; white-space: nowrap;
+  display: inline-flex; align-items: center; min-height: 36px;
+}
+.topnav-links a:hover { color: var(--orange-dark); }
+.topnav-links a[aria-current="page"] {
+  color: var(--ink); text-decoration: underline; text-decoration-color: var(--orange);
+  text-decoration-thickness: 2px; text-underline-offset: 5px;
+}
+@media (max-width: 760px) {
+  .topnav { padding: 10px 0 0; }
+  .topnav .wrap { flex-wrap: wrap; row-gap: 0; }
+  .topnav .mark { flex-basis: 100%; font-size: clamp(14px, 4vw, 16px); line-height: 1.2; }
+  .topnav-links {
+    width: 100%; gap: 18px; font-size: 12.5px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    padding-right: 24px;
   }
-  .topnav .back { padding: 0; min-width: 44px; min-height: 44px; justify-content: center; }
+  .topnav-links::-webkit-scrollbar { display: none; }
+  .topnav-links a { min-height: 40px; }
+}
+/* Footer (site_nav.py) */
+footer .socials { display: flex; gap: 16px; }
+footer .socials a {
+  color: var(--cream); width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  display: grid; place-items: center;
+  transition: background .15s ease, color .15s ease;
+}
+footer .socials a:hover { background: var(--orange); color: var(--ink); }
+footer .socials svg { width: 16px; height: 16px; }
+footer .footer-links { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px 24px; padding: 6px 0 0; }
+footer .footer-links a {
+  color: rgba(243,232,207,0.75); font-size: 13px; font-weight: 500;
+  letter-spacing: 0.02em; text-decoration: none;
+}
+footer .footer-links a:hover { color: var(--orange); }
+footer small a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+footer small a:hover { color: var(--orange); }
+/* Shared header and footer (site_nav.py CHROME_CSS) */
+.topnav {
+  position: static; border-bottom: 0; background: transparent;
+  -webkit-backdrop-filter: none; backdrop-filter: none; padding: 28px 0 10px;
+}
+.topnav .wrap, footer .wrap { max-width: 1120px; padding: 0 28px; }
+.topnav .mark { font-size: 18px; letter-spacing: 0.02em; color: var(--ink); }
+.topnav .mark span { color: var(--orange); font-style: normal; font-weight: 700; margin-right: 0; }
+.topnav-links { gap: 28px; font-size: 14px; font-weight: 500; letter-spacing: 0; }
+.topnav-links a[aria-current="page"] { font-weight: 700; text-underline-offset: 6px; }
+footer { padding: 50px 0 40px; margin-top: 60px; }
+footer .mark { font-size: 20px; }
+footer .mark span { font-style: normal; font-weight: 700; }
+@media (max-width: 860px) {
+  .topnav { padding: 20px 0 0; }
+  .topnav .wrap { flex-wrap: wrap; row-gap: 2px; }
+  .topnav .mark { flex-basis: 100%; font-size: 15px; }
+  .topnav-links {
+    width: 100%; gap: 20px; font-size: 13px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    padding-right: 24px;
+  }
+  .topnav-links a { min-height: 44px; }
+  footer .mark { font-size: 16px; }
+}
+@media (max-width: 600px) {
+  .topnav .wrap, footer .wrap { padding: 0 16px; }
+}
+/* Phones: all five links fit, so no clipped last item and no fade. */
+@media (max-width: 440px) {
+  .topnav-links {
+    gap: 14px; font-size: 12.5px; padding-right: 0;
+    -webkit-mask-image: none; mask-image: none;
+  }
 }
 </style>
 </head>
 <body>
 
-<nav class="topnav">
+<nav class="topnav" aria-label="Primary">
   <div class="wrap">
     <a class="mark" href="/">The Making <span>Of</span> Hosted By Jack Pitts</a>
-    <a class="back" href="/"><span class="back-label">Home</span></a>
+    <div class="topnav-links">
+      <a href="/episodes">Episodes</a>
+      <a href="/press">Press</a>
+      <a href="/be-a-guest">Be a Guest</a>
+      <a href="/about">About</a>
+      <a href="/#listen">Listen</a>
+    </div>
   </div>
 </nav>
 
@@ -133,44 +208,29 @@ footer .foot-link { display: inline-block; padding: 14px 6px; margin: -14px 0; }
 
     <h2>The short version</h2>
     <ul>
-      <li>The only personal information I ask for is what you type into the guest request form.</li>
-      <li>I use it only to read your request and reply to you.</li>
+      <li>This site has no forms. If you email me, for example to ask to be a guest or about press, I get whatever you choose to put in that email.</li>
+      <li>I use it only to read your email and reply to you.</li>
       <li>I never add you to a mailing list, and I never sell or rent your information. There are no ads on this site.</li>
       <li>This site does not set its own cookies or use tracking analytics.</li>
       <li>Some things on the site, like the podcast players and fonts, load from other companies, and those companies have their own privacy policies.</li>
     </ul>
 
-    <h2>What I collect through the guest request form</h2>
-    <p>If you send a guest request, the form collects:</p>
-    <ul>
-      <li>Your name</li>
-      <li>Your email address</li>
-      <li>Your company and role</li>
-      <li>A link, such as your LinkedIn profile or company website (optional)</li>
-      <li>Your story, in your own words</li>
-    </ul>
-    <p>A few technical details are included with each request so I can spot spam and understand where requests come from:</p>
-    <ul>
-      <li>The date and time you sent it</li>
-      <li>Your approximate country, as estimated by Cloudflare from your connection</li>
-      <li>Your browser's user agent (a short description of your browser and device type)</li>
-    </ul>
-    <p>The form also records when the page loaded and includes a hidden field that people never see. Both are used only to filter out automated spam and are not kept.</p>
-    <p>Your IP address is used briefly to limit how many requests can be sent in a short time, which helps stop spam. It is not included in the email I receive. Cloudflare, which hosts this site, also processes IP addresses as part of delivering every page, like any web host.</p>
+    <h2>What I get when you email me</h2>
+    <p>Guest requests and press inquiries reach me only by email that you choose to send to <a href="mailto:jack@saltcreekadvisory.com">jack@saltcreekadvisory.com</a>. The "Email me about being a guest" and "Request an interview" buttons just open a draft in your own email app; nothing is sent until you press send, and nothing is sent through this website.</p>
+    <p>I get whatever you put in the email, plus what every email carries, such as your email address, your name as your email app shows it, and the time you sent it. The guest draft suggests a few lines (your name, company and role, a website or LinkedIn link, and a few sentences about your story), but what you include is up to you.</p>
+    <p>Cloudflare, which hosts this site, processes IP addresses as part of delivering every page, like any web host.</p>
 
     <h2>How I use it</h2>
-    <p>I use what you send only to review your request and reply to you. That's it. Your information is never added to a mailing list, never sold or rented, and never used for advertising.</p>
+    <p>I use what you send only to read your email and reply to you. It is never added to a mailing list, sold, rented, or used for advertising.</p>
 
-    <h2>How it is delivered and stored</h2>
-    <p>When you submit the form, your request is sent to me as an email using Cloudflare's email service. If that ever fails, Resend, an email delivery provider, may be used as a backup to send the same email. The request ends up in my email inbox, which is hosted by my email provider.</p>
-    <p>I keep a request only as long as it is useful for considering it and following up. If you ask me to delete it, I will delete it from my inbox. Copies held by my service providers are removed under their own retention schedules.</p>
+    <h2>How it is stored</h2>
+    <p>Your email stays in my email inbox, which is hosted by my email provider. I keep it only as long as it is useful for considering your request and following up. If you ask me to delete it, I will delete it from my inbox. Copies held by my service providers are removed under their own retention schedules.</p>
 
     <h2>Service providers</h2>
     <p>A few companies help run this site and handle information on my behalf:</p>
     <ul>
-      <li><strong>Cloudflare</strong> hosts the website and sends guest requests to me by email.</li>
+      <li><strong>Cloudflare</strong> hosts the website.</li>
       <li><strong>My email provider</strong> stores the emails I receive.</li>
-      <li><strong>Resend</strong>, an email delivery provider, may be used as a backup if Cloudflare's email service fails.</li>
     </ul>
 
     <h2>Cookies, analytics, and other companies' services</h2>
@@ -179,7 +239,7 @@ footer .foot-link { display: inline-block; padding: 14px 6px; margin: -14px 0; }
     <ul>
       <li><strong>Podcast players.</strong> Episode pages and the homepage show embedded Spotify or Apple Podcasts players. These load from Spotify or Apple when the page is opened and may set cookies or collect data, especially when you press play.</li>
       <li><strong>Fonts.</strong> The site's fonts load from Google Fonts.</li>
-      <li><strong>The latest episodes.</strong> To check for brand new episodes, the homepage asks Apple's podcast directory for the show's public podcast feed and then loads that feed from the show's podcast host (Riverside). If the feed cannot be loaded directly, your browser may request it through public relay services (allorigins.win, corsproxy.io, or codetabs.com). Those services may see your IP address like any web request. No form information is ever sent this way.</li>
+      <li><strong>The latest episodes.</strong> To check for brand new episodes, the homepage asks Apple's podcast directory for the show's public podcast feed and then loads that feed from the show's podcast host (Riverside). If the feed cannot be loaded directly, your browser may request it through public relay services (allorigins.win, corsproxy.io, or codetabs.com). Those services may see your IP address like any web request. Nothing you type or send to me is ever sent this way.</li>
       <li><strong>Links to other platforms.</strong> Links to Apple Podcasts, Spotify, YouTube, LinkedIn, X, and other sites take you to those platforms, which have their own policies and may set cookies once you get there. Share buttons on episode pages are plain links; nothing is sent to those platforms unless you click.</li>
     </ul>
 
@@ -203,17 +263,39 @@ footer .foot-link { display: inline-block; padding: 14px 6px; margin: -14px 0; }
 
   <aside class="book-strip" aria-label="Be a guest">
     <div>
-      <h3>Have a story worth telling? <em>Come on the show.</em></h3>
-      <p>About an hour, recorded remotely, no slides or script needed. Tell me a little about your story and I'll reply personally if it's a fit.</p>
+      <h3>Be a guest on <em>the show</em>.</h3>
+      <p>About an hour, recorded remotely on Riverside. No prep needed. Email me if you're interested.</p>
     </div>
-    <a href="/#guest-request">Request to Be a Guest</a>
+    <a href="/be-a-guest">Be a Guest</a>
   </aside>
 </main>
 
 <footer>
   <div class="wrap">
     <div class="mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
-    <small>&copy; 2026 Jack Pitts. Conversations with the people behind the business. <a class="foot-link" href="/privacy" style="color: var(--orange); text-decoration: underline;">Privacy</a> <a class="foot-link" href="/terms" style="color: var(--orange); text-decoration: underline;">Terms</a></small>
+    <div class="socials">
+      <a href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener" aria-label="Spotify">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 100 24 12 12 0 000-24zm5.52 17.3a.75.75 0 01-1.03.25c-2.82-1.72-6.37-2.11-10.55-1.16a.75.75 0 01-.33-1.46c4.58-1.04 8.51-.6 11.66 1.34.35.21.46.68.25 1.03zm1.47-3.27a.94.94 0 01-1.29.31c-3.23-1.98-8.15-2.55-11.97-1.4a.94.94 0 11-.55-1.8c4.36-1.31 9.79-.67 13.5 1.6.44.27.58.85.31 1.29zm.13-3.4C15.25 8.4 8.8 8.18 5.1 9.3a1.12 1.12 0 11-.66-2.16c4.25-1.29 11.37-1.04 15.85 1.62a1.12 1.12 0 11-1.17 1.91z"/></svg>
+      </a>
+      <a href="https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144" target="_blank" rel="noopener" aria-label="Apple Podcasts">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 00-4 4v6a4 4 0 008 0V5a4 4 0 00-4-4zm6 10a1 1 0 00-2 0 4 4 0 01-8 0 1 1 0 00-2 0 6 6 0 005 5.91V20H9a1 1 0 000 2h6a1 1 0 000-2h-2v-3.09A6 6 0 0018 11z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg" target="_blank" rel="noopener" aria-label="YouTube">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.4.5A3 3 0 00.5 6.2C0 8 0 12 0 12s0 4 .5 5.8a3 3 0 002.1 2.1c1.8.5 9.4.5 9.4.5s7.6 0 9.4-.5a3 3 0 002.1-2.1C24 16 24 12 24 12s0-4-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg>
+      </a>
+      <a href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.87 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM0 8h5v16H0V8zm7.5 0H12v2.2h.07c.63-1.18 2.17-2.43 4.47-2.43C21.4 7.77 24 10.1 24 14.73V24h-5v-8.2c0-1.96-.04-4.48-2.73-4.48-2.74 0-3.16 2.13-3.16 4.34V24h-5V8z"/></svg>
+      </a>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="/episodes">Episodes</a>
+      <a href="/about">About</a>
+      <a href="/press">Press</a>
+      <a href="/be-a-guest">Be a Guest</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+    </nav>
+    <small>&copy; 2026 The Making Of Hosted By <a href="https://thejackpitts.com/" target="_blank" rel="noopener">Jack Pitts</a></small>
   </div>
 </footer>
 

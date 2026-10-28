@@ -51,17 +51,6 @@ jobs:
       - name: Run unit tests
         run: python3 -m unittest discover tests
 
-      - name: Run Worker tests
-        # Only when the guest-request Worker has tests. The ubuntu runner ships
-        # with Node, so no setup-node step is needed. Test files are listed
-        # explicitly because newer Node reads a bare directory as a file name.
-        run: |
-          if [ -d tests/worker ]; then
-            node --test $(find tests/worker -name '*.test.*' | sort)
-          else
-            echo "No tests/worker directory; skipping."
-          fi
-
       - name: Sync new episodes into episodes.js
         # Adds every feed episode not already listed (capped per run). Retries
         # the feed with backoff; if it is still down, this step fails WITHOUT

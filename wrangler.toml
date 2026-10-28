@@ -1,40 +1,12 @@
 name = "frosty-pond-4366"
 compatibility_date = "2026-07-01"
 
-# Worker script. It only handles /api/* (the guest-request form); every other
-# URL is served straight from the static assets below.
-main = "worker/index.js"
-
+# Static site only: there is no Worker script. Guest requests go by email from
+# /be-a-guest, so nothing on the site needs server code.
 [assets]
 directory = "."
-# Exposes the static assets to the Worker as env.ASSETS.
-binding = "ASSETS"
-# Only these paths run the Worker before asset matching. Everything else is a
-# plain static-asset request and never touches the script.
-run_worker_first = ["/api/*"]
 # Without this, Workers static assets answer an unmatched route with an empty
 # body and no page. 404.html is deployed either way, but only this setting
 # makes it the response for a not-found URL (still a 404 status, which is what
 # search engines need to see).
 not_found_handling = "404-page"
-
-# Outbound email for guest requests (Cloudflare Email Routing). No destination
-# is hardcoded here so no personal address lands in this public repo; the
-# Worker sends to the GUEST_REQUEST_TO secret, which must be a verified
-# Email Routing destination address. Enable Email Routing first.
-[[send_email]]
-name = "GUEST_MAIL"
-
-# Rate limit for /api/guest-request: 3 submissions per IP per 60 seconds
-# (period must be 10 or 60). namespace_id is any positive integer, as a string.
-[[ratelimits]]
-name = "GUEST_RL"
-namespace_id = "1001"
-simple = { limit = 3, period = 60 }
-
-# Public, non-secret settings. GUEST_REQUEST_TO (the inbox) is set as a secret:
-#   npx wrangler secret put GUEST_REQUEST_TO
-# Optional backup sender secrets: RESEND_API_KEY and RESEND_FROM.
-[vars]
-GUEST_REQUEST_FROM = "guest-requests@themakingofhostedbyjackpitts.com"
-ALLOWED_ORIGINS = "https://themakingofhostedbyjackpitts.com"

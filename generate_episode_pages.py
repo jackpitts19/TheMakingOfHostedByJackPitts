@@ -22,6 +22,7 @@ from seo_titles import GUEST_LINES, SEO_TITLES
 from sync_latest_episode import truncate_at_word
 
 from episode_page_template import CSS, PAGE_TMPL  # noqa: F401  (CSS is re-exported for the archive)
+from site_nav import GUEST_PAGE, topnav_html
 
 EPISODES_JS = ROOT / "episodes.js"
 OUT_DIR = ROOT / "episodes"
@@ -37,13 +38,13 @@ APPLE_PODCAST_ID = "1853933144"
 SHOW_YT = "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
 JACK_LI = "https://www.linkedin.com/in/jack-pitts"
 JACK_SITE = "https://thejackpitts.com/"  # the person's canonical page; LinkedIn is a sameAs
-# Every guest CTA goes to the request form on the homepage, same tab.
-GUEST_REQUEST = "/#guest-request"
+# Every guest CTA goes to the /be-a-guest page, same tab (requests go by email).
+GUEST_REQUEST = GUEST_PAGE
 META_DESC_LIMIT = 160
 # A sentence end earlier than this makes a stub description (Google shows
 # ~155 chars), so cut at a word boundary instead.
 META_DESC_SENTENCE_FLOOR = 110
-FALLBACK_DESCRIPTION = "Jack talks with a business owner about how they got started and how they grew."
+FALLBACK_DESCRIPTION = "Jack Pitts interviews a business owner about how they built the company."
 
 # Feed descriptions open with show boilerplate ("In this episode of The Making
 # Of, Hosted by Jack Pitts, I sit down with ..."). It eats half the snippet
@@ -227,7 +228,7 @@ def guest_line_for(ep, issue_no):
     line = (ep.get("guestLine") or "").strip() or GUEST_LINES.get(episode_slug(ep))
     if line:
         return line
-    return f"Jack's guest on Issue {issue_label(issue_no)}. Listen to the full conversation using the links above."
+    return f"Jack's guest on Issue {issue_label(issue_no)}. Listen with the links above."
 
 
 def build_guest_block(ep, issue_no):
@@ -503,6 +504,7 @@ def build_page_html(idx, ep, all_eps, total):
         related_reading=build_related_reading(idx),
         guest_request=GUEST_REQUEST,
         jack_site=JACK_SITE,
+        topnav=topnav_html("/episodes"),
     )
     return page
 

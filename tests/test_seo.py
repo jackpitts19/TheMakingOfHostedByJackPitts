@@ -43,7 +43,9 @@ from seo_urls import (
 )
 from sync_latest_episode import strip_tags
 from resolve_episode_links import apply_apple_data
+from site_nav import FOOTER_LINKS, NAV_ITEMS, footer_html, topnav_html
 from validate_seo import (
+    SITE_PAGES,
     check_duplicates,
     check_episode_guests,
     check_episode_slugs,
@@ -548,17 +550,23 @@ class EpisodePageTemplateTests(unittest.TestCase):
         ep = ep or dict(SYNTHETIC_EPISODE, appleEpisodeId="123", links={})
         return build_page_html(0, ep, [ep], 1)
 
-    def test_guest_cta_goes_to_the_form_in_the_same_tab(self):
+    def test_guest_cta_goes_to_the_guest_page_in_the_same_tab(self):
         html = self._page()
         self.assertNotIn(CAL_HOST, html)
         self.assertNotIn(PRIVATE_HOST, html)
-        self.assertIn('<a href="/#guest-request">Request to Be a Guest</a>', html)
-        self.assertNotRegex(html, r'href="/#guest-request"[^>]*target=')
+        self.assertIn('<a href="/be-a-guest">Be a Guest</a>', html)
+        self.assertNotRegex(html, r'href="/be-a-guest"[^>]*target=')
+        self.assertNotIn("#guest-request", html)
+
+    def test_episode_page_carries_the_primary_nav(self):
+        html = self._page()
+        self.assertIn(topnav_html("/episodes"), html)
+        self.assertEqual(len(re.findall(r'<a [^>]*aria-current=', html)), 1)
 
     def test_book_strip_and_footer_copy(self):
         html = self._page()
-        self.assertIn("About an hour, recorded remotely, no slides or script needed.", html)
-        self.assertIn("Conversations with the people behind the business.", html)
+        self.assertIn("About an hour, recorded remotely on Riverside. No prep needed.", html)
+        self.assertIn(footer_html(), html)
         self.assertNotIn("Every conversation is a long one", html)
 
     def test_page_has_one_h1_no_em_dash_and_parseable_json_ld(self):
@@ -608,7 +616,8 @@ class ArchiveAndFallbackTests(unittest.TestCase):
     def test_archive_cta_and_copy(self):
         html = generate_episode_archive.build_page([dict(SYNTHETIC_EPISODE)])
         self.assertNotIn(CAL_HOST, html)
-        self.assertIn('<a href="/#guest-request">Request to Be a Guest</a>', html)
+        self.assertIn('<a href="/be-a-guest">Be a Guest</a>', html)
+        self.assertIn('<a href="/episodes" aria-current="page">Episodes</a>', html)
         for phrase in ("builders", "actually", "highlight", "Every conversation is a long one", EM_DASH):
             self.assertNotIn(phrase, html)
         self.assertLessEqual(len(generate_episode_archive.PAGE_DESC), 160)
@@ -705,7 +714,7 @@ class LegalPagesTest(unittest.TestCase):
 
     def test_every_page_footer_links_privacy_and_terms(self):
         pages = (
-            [self.ROOT / n for n in ("index.html", "episodes.html", "articles.html", "privacy.html", "terms.html", "404.html")]
+            [self.ROOT / n for n in SITE_PAGES]
             + sorted((self.ROOT / "articles").glob("*.html"))
             + sorted((self.ROOT / "episodes").glob("*.html"))
         )
@@ -715,11 +724,156 @@ class LegalPagesTest(unittest.TestCase):
             self.assertIn('href="/privacy"', footer, page.name)
             self.assertIn('href="/terms"', footer, page.name)
 
-    def test_guest_form_note_links_the_privacy_policy(self):
-        self.assertIn(
-            "It isn't added to any mailing list. <a href=\"/privacy\">Privacy policy</a>.",
-            self._read("index.html"),
+    def test_every_page_has_the_same_minimal_footer(self):
+        for page in _all_pages():
+            html = page.read_text(encoding="utf-8")
+            self.assertEqual(html.count("<footer"), 1, page.name)
+            self.assertIn(footer_html(), html, page.name)
+            self.assertNotIn("footer-archive", html, page.name)
+
+    def test_footer_links_are_the_six_standard_links(self):
+        self.assertEqual(
+            [label for _, label in FOOTER_LINKS],
+            ["Episodes", "About", "Press", "Be a Guest", "Privacy", "Terms"],
         )
+
+    def test_every_episode_is_linked_from_the_archive_and_the_sitemap(self):
+        archive = self._read("episodes.html")
+        sitemap = build_sitemap(load_episodes())
+        for ep in load_episodes():
+            path = episode_path(ep)
+            self.assertIn(f'href="{path}"', archive, path)
+            self.assertIn(f"{BASE_URL}{path}</loc>", sitemap, path)
+
+    def test_articles_index_stays_reachable_without_the_footer(self):
+        html = (self.ROOT / "episodes" / f"{episode_slug(load_episodes()[0])}.html").read_text(encoding="utf-8")
+        self.assertIn('href="/articles"', html)
+
+    def test_salt_creek_is_described_as_a_sell_side_bank(self):
+        for page in _all_pages():
+            html = page.read_text(encoding="utf-8")
+            self.assertNotIn("AI-native", html, page.name)
+            self.assertNotRegex(html, r"(?<!co-)founder of (?:<a[^>]*>)?Salt Creek", page.name)
+
+    def test_privacy_policy_describes_email_not_a_form(self):
+        html = self._read("privacy.html")
+        self.assertIn("This site has no forms.", html)
+        for gone in ("Resend", "rate limit", "guest request form", "hidden field"):
+            self.assertNotIn(gone, html)
+
+
+def _all_pages():
+    root = Path(__file__).parent.parent
+    return (
+        [root / n for n in SITE_PAGES]
+        + sorted((root / "articles").glob("*.html"))
+        + sorted((root / "episodes").glob("*.html"))
+    )
+
+
+class MultiPageSiteTests(unittest.TestCase):
+    """Home, /about, /press and /be-a-guest are separate pages; guests email."""
+
+    ROOT = Path(__file__).parent.parent
+    NEW_PAGES = {"/about": "about.html", "/press": "press.html", "/be-a-guest": "be-a-guest.html"}
+    GUEST_MAILTO = (
+        "mailto:jack@saltcreekadvisory.com?subject=Guest%20request%3A%20The%20Making%20Of%20Hosted%20By%20Jack%20Pitts"
+        "&amp;body=Name%3A%20%0D%0ACompany%20and%20role%3A%20%0D%0AWebsite%20or%20LinkedIn%3A%20%0D%0A"
+        "A%20few%20sentences%20about%20your%20story%3A%20%0D%0A"
+    )
+
+    def _read(self, name):
+        return (self.ROOT / name).read_text(encoding="utf-8")
+
+    def test_new_pages_are_public_and_in_the_sitemap(self):
+        paths = public_paths(load_episodes())
+        sitemap = build_sitemap(load_episodes())
+        for path in self.NEW_PAGES:
+            self.assertIn(path, paths)
+            self.assertIn(f"{BASE_URL}{path}</loc>", sitemap)
+
+    def test_no_page_has_a_form_posting_to_the_retired_endpoint(self):
+        for page in _all_pages():
+            html = page.read_text(encoding="utf-8")
+            self.assertNotRegex(html, r"<form\b", page.name)
+            self.assertNotIn("/api/guest-request", html, page.name)
+
+    def test_validator_rejects_a_form_posting_to_the_api(self):
+        errors = []
+        check_site_html(errors, "x.html", '<h1>x</h1><form action="/api/guest-request" method="post"></form>')
+        self.assertTrue(any("/api/" in e for e in errors))
+
+    def test_guest_page_offers_the_prefilled_email(self):
+        html = self._read("be-a-guest.html")
+        self.assertIn(f'<a class="btn btn-orange" href="{self.GUEST_MAILTO}">Email me about being a guest</a>', html)
+        self.assertIn("<span>jack@saltcreekadvisory.com</span>", html)
+        self.assertIn('href="https://www.linkedin.com/in/jack-pitts"', html)
+
+    def test_every_page_nav_links_the_section_pages(self):
+        for page in _all_pages():
+            html = page.read_text(encoding="utf-8")
+            nav = re.search(r'<nav[^>]*aria-label="Primary"[^>]*>(.*?)</nav>', html, re.S)
+            self.assertIsNotNone(nav, page.name)
+            for href, label in NAV_ITEMS:
+                self.assertRegex(nav.group(1), rf'<a href="{re.escape(href)}"[^>]*>{label}</a>', page.name)
+
+    def test_nav_marks_the_current_page(self):
+        expected = {"about.html": "/about", "press.html": "/press", "be-a-guest.html": "/be-a-guest", "episodes.html": "/episodes"}
+        for name, href in expected.items():
+            self.assertIn(f'<a href="{href}" aria-current="page">', self._read(name), name)
+
+    def test_no_links_to_retired_homepage_sections(self):
+        retired = ("#guest-request", "#guests", "#press", "#about", "#press-kit", "#articles")
+        for page in _all_pages():
+            hrefs = re.findall(r'href="([^"]+)"', page.read_text(encoding="utf-8"))
+            for href in hrefs:
+                if href.startswith("/press#") or href.startswith("mailto:"):
+                    continue
+                self.assertFalse(any(href.endswith(r) for r in retired), f"{page.name}: {href}")
+
+    def test_each_new_page_has_one_h1_and_its_own_canonical(self):
+        for path, name in self.NEW_PAGES.items():
+            html = self._read(name)
+            errors = []
+            check_site_html(errors, name, html)
+            self.assertEqual(errors, [], name)
+            self.assertIn(f'<link rel="canonical" href="{BASE_URL}{path}" />', html)
+            for block in JSON_LD_BLOCK_RE.findall(html):
+                json.loads(block)
+
+    def test_home_keeps_the_episode_feed_and_drops_the_moved_sections(self):
+        html = self._read("index.html")
+        for marker in ("FALLBACK:CATALOG:START", "FALLBACK:RECENT:START", 'id="listen"', "data-fe-title", 'src="episodes.js"'):
+            self.assertIn(marker, html)
+        for moved in ('id="press"', 'id="guests"', 'id="about"', 'id="press-kit"', 'id="articles"', "marquee-track"):
+            self.assertNotIn(moved, html)
+
+    def test_moved_sections_live_on_their_pages(self):
+        self.assertIn('id="about"', self._read("about.html"))
+        press = self._read("press.html")
+        self.assertIn('id="press"', press)
+        self.assertIn('id="press-kit"', press)
+        self.assertIn("mailto:jack@saltcreekadvisory.com?subject=Press%20inquiry", press)
+        guest = self._read("be-a-guest.html")
+        for piece in ('id="guests"', "Riverside", "jack@saltcreekadvisory.com", 'id="marquee-track"', 'src="/marquee.js"'):
+            self.assertIn(piece, guest)
+        # The owner asked for a short page: no long fit essay or step list.
+        for gone in ('class="how-it-works"', 'class="guest-fit"', "Lightly edited"):
+            self.assertNotIn(gone, guest)
+
+
+
+class CardBlurbTests(unittest.TestCase):
+    def test_strips_stock_lead_in_and_capitalizes(self):
+        from sync_latest_episode import card_blurb
+        text = "In this episode of The Making Of Hosted By Jack Pitts, I sit down with Jane Doe, founder of Doe Widgets."
+        self.assertEqual(card_blurb(text), "Jane Doe, founder of Doe Widgets.")
+        self.assertEqual(card_blurb("In this episode, Jane Doe shares her story."), "Jane Doe shares her story.")
+
+    def test_leaves_other_openings_alone(self):
+        from sync_latest_episode import card_blurb
+        self.assertEqual(card_blurb("Jane Doe went from A to B."), "Jane Doe went from A to B.")
+
 
 if __name__ == "__main__":
     unittest.main()

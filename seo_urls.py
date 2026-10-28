@@ -35,18 +35,23 @@ BASE_URL = "https://themakingofhostedbyjackpitts.com"
 # Public, canonical, indexable pages that are not generated from episode or
 # article data. Each entry is a site-root-relative path whose source file is
 # resolved by `source_file_for()`.
-#   "/"          -> index.html      (homepage)
-#   "/episodes"  -> episodes.html   (episode archive)
-#   "/articles"  -> articles.html   (article archive)
-#   "/privacy"   -> privacy.html    (privacy policy)
-#   "/terms"     -> terms.html      (terms and disclaimer)
-STATIC_PATHS: tuple[str, ...] = ("/", "/episodes", "/articles", "/privacy", "/terms")
+#   "/"            -> index.html       (homepage)
+#   "/episodes"    -> episodes.html    (episode archive)
+#   "/articles"    -> articles.html    (article archive)
+#   "/about"       -> about.html       (the host)
+#   "/press"       -> press.html       (press coverage and press kit)
+#   "/be-a-guest"  -> be-a-guest.html  (how to come on the show, by email)
+#   "/privacy"     -> privacy.html     (privacy policy)
+#   "/terms"       -> terms.html       (terms and disclaimer)
+STATIC_PATHS: tuple[str, ...] = (
+    "/", "/episodes", "/articles", "/about", "/press", "/be-a-guest", "/privacy", "/terms",
+)
 
-# Deliberately NOT separate URLs: the press, press-kit, about, and guest/booking
-# sections live on the homepage as #press, #press-kit, #about, and #guests.
-# Fragments are not distinct URLs to a crawler -- listing them would just repeat
-# the homepage in the sitemap. They are covered by "/".
-HOMEPAGE_SECTIONS: tuple[str, ...] = ("press", "press-kit", "about", "guests", "listen")
+# The homepage keeps one in-page anchor that other pages link to: the listen
+# strip (/#listen). Fragments are not distinct URLs to a crawler, so it is
+# covered by "/". Press, press kit, about and guests used to be homepage
+# sections; they are now their own pages above.
+HOMEPAGE_SECTIONS: tuple[str, ...] = ("listen",)
 
 
 def slugify(name: str) -> str:

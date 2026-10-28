@@ -7,6 +7,8 @@ through generate_episode_pages, which re-exports it). Pure constants: changing
 anything here changes every generated episode page on the next run.
 """
 
+from site_nav import CHROME_CSS, FOOTER_CSS, TOPNAV_CSS, footer_html
+
 CSS = r"""
 :root {
   --cream: #f3e8cf;
@@ -19,7 +21,7 @@ CSS = r"""
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; background: var(--cream); color: var(--ink); }
-body { font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.55; }
+body { font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif; line-height: 1.55; }
 a { color: inherit; }
 img { max-width: 100%; display: block; }
 
@@ -57,36 +59,28 @@ body > * { position: relative; z-index: 2; }
 }
 .topnav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .topnav .mark {
-  font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: 18px;
   letter-spacing: -0.01em; color: var(--ink); text-decoration: none;
 }
 .topnav .mark span { color: var(--orange); font-style: italic; font-weight: 600; margin-right: 0.12em; }
-.topnav .back {
-  text-decoration: none; color: var(--ink-soft);
-  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
-  font-weight: 600;
-  display: inline-flex; align-items: center; gap: 8px;
-}
-.topnav .back::before { content: "\2190"; color: var(--orange-dark); font-size: 16px; }
-.topnav .back:hover { color: var(--ink); }
 
 /* Masthead meta line under nav */
 .masthead {
   padding: 56px 0 18px;
   display: flex; flex-wrap: wrap; gap: 14px;
-  font-family: 'Inter', sans-serif;
-  font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+  font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-soft); font-weight: 600;
 }
-.masthead .issue { color: var(--orange-dark); font-weight: 800; }
+.masthead .issue { color: var(--orange-dark); font-weight: 700; }
 .masthead .dot { width: 4px; height: 4px; background: var(--ink-soft); border-radius: 50%; opacity: 0.6; align-self: center; }
 
 /* Hero headline */
 .hero-title {
-  font-family: 'Fraunces', serif;
-  font-weight: 800; line-height: 1.02;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif;
+  font-weight: 700; line-height: 1.08;
   font-size: clamp(34px, 6.4vw, 76px);
-  letter-spacing: -0.025em;
+  letter-spacing: -0.01em;
   margin: 0 0 18px;
   color: var(--ink);
   overflow-wrap: break-word;
@@ -94,7 +88,7 @@ body > * { position: relative; z-index: 2; }
 }
 .hero-title em { font-style: italic; color: var(--orange-dark); font-weight: 700; }
 .hero-sub {
-  font-family: 'Fraunces', serif; font-weight: 500;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 500;
   font-size: clamp(19px, 2.4vw, 30px);
   line-height: 1.28; color: var(--ink-soft);
   overflow-wrap: break-word;
@@ -126,7 +120,7 @@ body > * { position: relative; z-index: 2; }
 /* Share this episode: same pills, quieter, under the listen row */
 .share-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -26px 0 44px; }
 .share-row .share-label {
-  font-size: 11.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase;
   font-weight: 700; color: var(--ink-soft); margin-right: 4px;
 }
 .share-row a, .share-row button {
@@ -135,7 +129,7 @@ body > * { position: relative; z-index: 2; }
   padding: 7px 13px; border-radius: 999px;
   border: 1px solid var(--line); background: transparent;
   color: var(--ink-soft); text-decoration: none; cursor: pointer;
-  font: 600 12.5px/1.2 'Inter', system-ui, sans-serif; letter-spacing: 0.02em;
+  font: 600 12.5px/1.2 "Libre Franklin", "Helvetica Neue", Arial, sans-serif; letter-spacing: 0.02em;
   transition: background .15s, color .15s, border-color .15s;
 }
 .share-row a:hover, .share-row button:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
@@ -143,14 +137,14 @@ body > * { position: relative; z-index: 2; }
 
 /* Section heading */
 .sec-eyebrow {
-  font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-style: italic; font-weight: 600;
   font-size: 18px; color: var(--orange-dark); margin: 56px 0 12px;
 }
 .sec-rule { height: 1px; background: var(--line); margin: 0 0 28px; }
 
 /* Long body copy */
 .body p {
-  font-family: 'Fraunces', serif; font-weight: 400;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 400;
   font-size: 20px; line-height: 1.62; color: var(--ink);
   margin: 0 0 22px;
   letter-spacing: -0.003em;
@@ -165,28 +159,30 @@ body > * { position: relative; z-index: 2; }
   margin: 14px 0 0;
 }
 .guest-card .gc-eyebrow {
-  font-family: 'Inter', sans-serif; font-size: 11.5px;
-  letter-spacing: 0.16em; text-transform: uppercase;
+  font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif; font-size: 11.5px;
+  letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-soft); font-weight: 700;
   margin-bottom: 10px;
 }
 .guest-card h2 {
-  font-family: 'Fraunces', serif; font-weight: 800;
-  font-size: 30px; letter-spacing: -0.015em;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
+  font-size: 30px; letter-spacing: -0.01em;
   margin: 0 0 8px; color: var(--ink);
 }
 .guest-card p {
-  font-family: 'Fraunces', serif; font-size: 17px;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-size: 17px;
   color: var(--ink-soft); margin: 0 0 18px; line-height: 1.5;
 }
 .guest-card .gc-cta {
   display: inline-flex; align-items: center; gap: 8px;
-  background: #0a66c2; color: #fff;
+  background: transparent; color: var(--ink);
+  border: 1.5px solid var(--ink-soft);
   padding: 12px 20px; border-radius: 999px;
   text-decoration: none; font-weight: 700; font-size: 14px;
   letter-spacing: 0.01em;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
 }
-.guest-card .gc-cta:hover { transform: translateY(-2px); }
+.guest-card .gc-cta:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); transform: translateY(-1px); }
 .guest-card .gc-cta svg { width: 16px; height: 16px; }
 
 /* More from the show */
@@ -196,8 +192,8 @@ body > * { position: relative; z-index: 2; }
   padding-top: 36px;
 }
 .related h2 {
-  font-family: 'Fraunces', serif; font-weight: 800;
-  font-size: 30px; letter-spacing: -0.015em;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
+  font-size: 30px; letter-spacing: -0.01em;
   margin: 0 0 24px;
 }
 .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
@@ -210,12 +206,12 @@ body > * { position: relative; z-index: 2; }
 }
 .r-card:hover { transform: translateY(-3px); border-color: var(--orange); background: rgba(255,255,255,0.6); }
 .r-card .r-issue {
-  font-family: 'Inter', sans-serif; font-size: 11px;
-  letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700;
+  font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif; font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
   color: var(--orange-dark); margin-bottom: 8px;
 }
 .r-card .r-title {
-  font-family: 'Fraunces', serif; font-weight: 700;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
   font-size: 18px; line-height: 1.25; color: var(--ink);
   margin: 0 0 10px; letter-spacing: -0.01em;
 }
@@ -228,7 +224,7 @@ body > * { position: relative; z-index: 2; }
 .read-list { display: flex; flex-direction: column; gap: 2px; }
 .read-list a {
   display: block; text-decoration: none; color: var(--ink);
-  font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 600; font-size: 18px;
   line-height: 1.35; letter-spacing: -0.01em;
   padding: 15px 0; border-bottom: 1px solid var(--line);
   transition: color .15s, padding-left .15s;
@@ -247,7 +243,7 @@ body > * { position: relative; z-index: 2; }
   gap: 28px; flex-wrap: wrap;
 }
 .book-strip h3 {
-  font-family: 'Fraunces', serif; font-weight: 800;
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
   font-size: 24px; margin: 0 0 6px; letter-spacing: -0.01em;
   color: var(--cream);
 }
@@ -267,7 +263,7 @@ footer {
   padding: 40px 0 36px; margin-top: 30px;
 }
 footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
-footer .mark { font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px; }
+footer .mark { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: 18px; }
 footer .mark span { color: var(--orange); font-style: italic; font-weight: 600; }
 footer small { color: rgba(243,232,207,0.55); font-size: 12px; }
 /* Bigger tap area without changing the line: padding offset by negative margin. */
@@ -279,23 +275,17 @@ footer .foot-link { display: inline-block; padding: 14px 6px; margin: -14px 0; }
   .book-strip { padding: 28px 22px; }
   .topnav { padding: 12px 0; }
   .topnav .mark { font-size: clamp(13px, 3.9vw, 15px); line-height: 1.2; min-width: 0; }
-  .topnav .back { font-size: 11.5px; letter-spacing: 0.06em; white-space: nowrap; }
   /* Balanced lines only on phones, so the desktop headline is unchanged. */
   .hero-title { line-height: 1.06; text-wrap: balance; }
   .hero-sub { text-wrap: balance; }
 }
 @media (max-width: 480px) {
   .wrap { padding: 0 16px; }
-  /* Keep the full show name on one line: the back link shrinks to its arrow,
-     and its text stays available to screen readers. */
-  .topnav .back .back-label {
-    position: absolute; width: 1px; height: 1px; overflow: hidden;
-    clip: rect(0 0 0 0); white-space: nowrap;
-  }
-  /* Arrow-only, but still a 44x44 tap target. */
-  .topnav .back { padding: 0; min-width: 44px; min-height: 44px; justify-content: center; }
 }
 """
+CSS += TOPNAV_CSS
+CSS += FOOTER_CSS
+CSS += CHROME_CSS
 
 
 PAGE_TMPL = """<!doctype html>
@@ -322,18 +312,13 @@ PAGE_TMPL = """<!doctype html>
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet" />
 <script type="application/ld+json">{json_ld}</script>
 <style>{css}</style>
 </head>
 <body>
 
-<nav class="topnav">
-  <div class="wrap">
-    <a class="mark" href="/">The Making <span>Of</span> Hosted By Jack Pitts</a>
-    <a class="back" href="/episodes"><span class="back-label">All episodes</span></a>
-  </div>
-</nav>
+{topnav}
 
 <main class="wrap">
   <div class="masthead">
@@ -394,21 +379,19 @@ PAGE_TMPL = """<!doctype html>
 
   <aside class="book-strip" aria-label="Be a guest">
     <div>
-      <h3>Have a story like this? <em>Come on the show.</em></h3>
-      <p>About an hour, recorded remotely, no slides or script needed. Tell me a little about your story and I'll reply personally if it's a fit.</p>
+      <h3>Be a guest on <em>the show</em>.</h3>
+      <p>About an hour, recorded remotely on Riverside. No prep needed. Email me if you're interested.</p>
     </div>
-    <a href="{guest_request}">Request to Be a Guest</a>
+    <a href="{guest_request}">Be a Guest</a>
   </aside>
 </main>
 
-<footer>
-  <div class="wrap">
-    <div class="mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
-    <small>&copy; 2026 <a href="{jack_site}" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: underline;">Jack Pitts</a>. Conversations with the people behind the business. Have a story? <a href="{guest_request}" style="color: var(--orange); text-decoration: underline;">Come on the show.</a> <a class="foot-link" href="/privacy" style="color: var(--orange); text-decoration: underline;">Privacy</a> <a class="foot-link" href="/terms" style="color: var(--orange); text-decoration: underline;">Terms</a></small>
-  </div>
-</footer>
+<!--SITE_FOOTER-->
 
 {share_script}
 </body>
 </html>
 """
+
+# The shared footer has no braces, so it is safe to splice into the format string.
+PAGE_TMPL = PAGE_TMPL.replace("<!--SITE_FOOTER-->", footer_html())

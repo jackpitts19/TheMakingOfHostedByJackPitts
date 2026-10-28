@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Manual deploy of the Worker "frosty-pond-4366" (static assets + the
-# /api/guest-request script) using wrangler.toml in this folder.
+# Manual deploy of the Worker "frosty-pond-4366" (static assets only, no
+# script) using wrangler.toml in this folder.
 #
 # Production normally deploys through Cloudflare's Git integration on every
 # push to main, so you rarely need this. Use it for a hotfix or to test a

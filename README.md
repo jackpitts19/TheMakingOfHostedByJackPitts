@@ -6,22 +6,26 @@ Live site: https://themakingofhostedbyjackpitts.com
 
 ## What's in here
 
-- `index.html` — the main landing page. Single file, inline CSS, inline render script.
-- `episodes.js` — the source of truth for the episode list. Exposes `window.EPISODES`.
-- `episodes/` — one polished, magazine-style page per episode.
-- `episodes.html` — the episode archive served at `/episodes`.
-- `articles.html`, `articles/` — the article archive and the articles themselves.
-- `share-cards/` — branded 1200x630 PNG share cards, one per episode, plus a `latest.png` for OG.
-- `sitemap.xml`, `robots.txt` — generated crawl surface. Do not hand-edit `sitemap.xml`.
-- `seo_urls.py` — **single source of truth for public URLs.** Every generator imports it.
-- `generate_share_cards.py` — regenerates the share cards from `episodes.js`.
-- `generate_episode_pages.py` — regenerates the per-episode HTML pages from `episodes.js`.
-- `generate_episode_archive.py` — regenerates `episodes.html` from `episodes.js`.
-- `update_home_fallback.py` — refreshes the homepage's no-JS fallback markup.
-- `generate_sitemap.py` — regenerates `sitemap.xml` from `episodes.js` + `articles/`.
-- `validate_seo.py` — fails the build on any indexing defect. Run it before pushing.
-- `generate_logo_webp.py` — rebuilds `logo.webp` from `logo.png`. Run if the logo changes.
-- `logo.png`, `headshot.jpg` — show artwork. **`logo.png` stays full-resolution**
+- `index.html`: the homepage (hero, latest episode, catalog picks, recent episodes, listen strip), with an inline render script.
+- `about.html`, `press.html`, `be-a-guest.html`: the host bio (`/about`), press coverage and press kit (`/press`), and how to come on the show (`/be-a-guest`). Guest requests go by email from that page; there is no form or server code.
+- `site.css`: the shared stylesheet for the homepage and those three pages.
+- `site_nav.py`: the primary nav links and the minimal footer every page carries; generators import them, and the tests check every page against them. The footer does not list episodes; `/episodes` links them all.
+- `marquee.js`: paints the past-guests band on `/be-a-guest` from `episodes.js`.
+- `episodes.js`: the source of truth for the episode list. Exposes `window.EPISODES`.
+- `episodes/`: one polished, magazine-style page per episode.
+- `episodes.html`: the episode archive served at `/episodes`.
+- `articles.html`, `articles/`: the article archive and the articles themselves.
+- `share-cards/`: branded 1200x630 PNG share cards, one per episode, plus a `latest.png` for OG.
+- `sitemap.xml`, `robots.txt`: generated crawl surface. Do not hand-edit `sitemap.xml`.
+- `seo_urls.py`: **single source of truth for public URLs.** Every generator imports it.
+- `generate_share_cards.py`: regenerates the share cards from `episodes.js`.
+- `generate_episode_pages.py`: regenerates the per-episode HTML pages from `episodes.js`.
+- `generate_episode_archive.py`: regenerates `episodes.html` from `episodes.js`.
+- `update_home_fallback.py`: refreshes the homepage's no-JS fallback markup.
+- `generate_sitemap.py`: regenerates `sitemap.xml` from `episodes.js` + `articles/`.
+- `validate_seo.py`: fails the build on any indexing defect. Run it before pushing.
+- `generate_logo_webp.py`: rebuilds `logo.webp` from `logo.png`. Run if the logo changes.
+- `logo.png`, `headshot.jpg`: show artwork. **`logo.png` stays full-resolution**
   because the Press Kit offers it as a download; the homepage hero serves
   `logo.webp` (47 KB vs 1749 KB) via `<picture>`, with `logo.png` as fallback.
 
@@ -66,7 +70,6 @@ Tests:
 
 ```bash
 python3 -m unittest discover tests
-node --test tests/worker/*.test.mjs   # guest-request Worker (list files; the bare folder fails on Node 22+)
 ```
 
 ### Adding an article

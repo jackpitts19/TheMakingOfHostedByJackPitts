@@ -16,7 +16,7 @@ the following is true, because each one costs real Search Console coverage:
   * an internal link points at a missing file or at a redirecting `.html` URL
   * robots.txt does not allow crawling or does not advertise the sitemap
   * any site page links the retired public calendar or the private booking
-    host, contains an em dash, has other than exactly one <h1>, or carries
+    host, has a form posting to /api/, contains an em dash, has other than exactly one <h1>, or carries
     JSON-LD that does not parse
   * an episodes.js guest is the whole episode title or contains "|"
 
@@ -43,11 +43,17 @@ from seo_urls import (
 )
 
 SITEMAP_XML = ROOT / "sitemap.xml"
+# Every hand-written or generated top-level page (articles/ and episodes/ are
+# globbed separately).
+SITE_PAGES = (
+    "index.html", "episodes.html", "articles.html", "about.html", "press.html",
+    "be-a-guest.html", "privacy.html", "terms.html", "404.html",
+)
 ROBOTS_TXT = ROOT / "robots.txt"
 SITEMAP_NS = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
 
 # Non-HTML files that internal links may legitimately point at.
-ASSET_SUFFIXES = {".png", ".jpg", ".jpeg", ".svg", ".webp", ".ico", ".xml", ".txt", ".pdf"}
+ASSET_SUFFIXES = {".png", ".jpg", ".jpeg", ".svg", ".webp", ".ico", ".xml", ".txt", ".pdf", ".css", ".js"}
 
 TITLE_RE = re.compile(r"<title>(.*?)</title>", re.S | re.I)
 DESC_RE = re.compile(r'<meta\s+name="description"\s+content="(.*?)"', re.S | re.I)
@@ -56,10 +62,12 @@ CANONICAL_RE = re.compile(r'<link\s+rel="canonical"\s+href="(.*?)"', re.I)
 HREF_RE = re.compile(r'href="([^"]+)"')
 H1_RE = re.compile(r"<h1\b", re.I)
 EM_DASH = "\u2014"
+# The guest-request Worker is retired: nothing may post to /api/ any more.
+FORM_TO_API_RE = re.compile(r"<form\b[^>]*action=\"/api/", re.I)
 
 # Hosts that must never appear on the site: the retired public Google
-# appointment calendar, and the private booking host (guests now apply through
-# the form at /#guest-request). Split so a repo-wide grep for either host only
+# appointment calendar, and the private booking host (guests now reach Jack by
+# email from /be-a-guest). Split so a repo-wide grep for either host only
 # finds real occurrences, never this rule.
 FORBIDDEN_HOSTS = ("calendar.app" + ".google", "helmiq" + ".net")
 
@@ -185,7 +193,7 @@ def check_episode_guests(errors: list[str], episodes: list[dict]) -> None:
 
 def site_html_files() -> list[Path]:
     """Every HTML page the site serves, including the non-indexed 404."""
-    files = [ROOT / n for n in ("index.html", "episodes.html", "articles.html", "privacy.html", "terms.html", "404.html")]
+    files = [ROOT / n for n in SITE_PAGES]
     files += sorted((ROOT / "articles").glob("*.html"))
     files += sorted((ROOT / "episodes").glob("*.html"))
     return [f for f in files if f.is_file()]
@@ -196,9 +204,11 @@ def check_site_html(errors: list[str], rel: str, html: str) -> None:
     lowered = html.lower()
     for host in FORBIDDEN_HOSTS:
         if host in lowered:
-            errors.append(f"{rel}: contains '{host}' (guest CTAs must point to /#guest-request)")
+            errors.append(f"{rel}: contains '{host}' (guest CTAs must point to /be-a-guest)")
     if EM_DASH in html:
         errors.append(f"{rel}: contains an em dash (banned by house style)")
+    if FORM_TO_API_RE.search(html):
+        errors.append(f"{rel}: has a form posting to /api/ (the site is static; guest requests go by email)")
     h1_count = len(H1_RE.findall(SCRIPT_STYLE_RE.sub("", html)))
     if h1_count != 1:
         errors.append(f"{rel}: has {h1_count} <h1> elements, expected exactly 1")
