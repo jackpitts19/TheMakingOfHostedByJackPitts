@@ -11,17 +11,24 @@ with its own trackId, per-episode URL, and full description. This script:
 
 Safe to run on a schedule: it only writes when something actually changed.
 Episodes not found on Apple (title mismatch) are left untouched and reported.
+If Apple's lookup is down, this is enrichment only: it warns, leaves
+episodes.js exactly as it was, and exits 0 so the rest of the run continues.
 """
 
 from __future__ import annotations
 
 import json
-import re
 import sys
-import urllib.request
-from pathlib import Path
+from typing import Callable
 
-from sync_latest_episode import APPLE_PODCAST_ID, UA, load_episodes, save_episodes, strip_tags
+from sync_latest_episode import (
+    APPLE_PODCAST_ID,
+    fetch_text,
+    load_episodes,
+    norm_title,  # noqa: F401 (re-exported; the one shared title matcher)
+    save_episodes,
+    strip_tags,
+)
 
 LOOKUP_URL = (
     "https://itunes.apple.com/lookup?id="
@@ -30,15 +37,9 @@ LOOKUP_URL = (
 )
 
 
-def norm_title(title: str) -> str:
-    """Normalize a title for matching: casefold, drop punctuation/quote variants."""
-    return re.sub(r"[^a-z0-9]+", " ", str(title or "").casefold()).strip()
-
-
 def fetch_apple_episodes() -> dict[str, dict]:
-    req = urllib.request.Request(LOOKUP_URL, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        data = json.loads(resp.read().decode("utf-8", errors="replace"))
+    """Apple's episodes keyed by normalised title. fetch_text retries with backoff."""
+    data = json.loads(fetch_text(LOOKUP_URL))
     items = [r for r in data.get("results", []) if r.get("kind") == "podcast-episode"]
     if not items:
         raise RuntimeError("Apple lookup returned no podcast episodes")
@@ -111,9 +112,16 @@ def apply_apple_data(ep: dict, apple: dict) -> bool:
     return changed
 
 
-def main() -> int:
+def main(fetch: Callable[[], dict[str, dict]] = fetch_apple_episodes) -> int:
     prefix, episodes = load_episodes()
-    apple_by_title = fetch_apple_episodes()
+    try:
+        apple_by_title = fetch()
+    except (RuntimeError, ValueError, OSError) as exc:
+        print(
+            f"WARNING: Apple lookup failed, episodes.js left unchanged: {exc}",
+            file=sys.stderr,
+        )
+        return 0
 
     changed_titles = []
     missing_titles = []

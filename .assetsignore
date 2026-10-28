@@ -9,9 +9,28 @@ wrangler.toml
 
 # Build sources must not ship as crawlable assets. Before this, every generator
 # was publicly served -- /generate_sitemap.py returned HTTP 200 -- putting source
-# files on the indexable surface for no benefit. Mirrors deploy.sh's rsync list.
+# files on the indexable surface for no benefit. This list replaces the old
+# deploy.sh rsync excludes, including its *.sh, *.log and *.tmp patterns
+# (save_episodes() writes episodes.js.tmp before an atomic replace).
 *.py
+*.sh
+*.log
+*.tmp
 __pycache__
 tests
 episodes.json
 tmo-podcast.skill
+
+# Worker source and tooling: the assets directory is the repo root, so without
+# these the Worker code would be publicly downloadable. _headers must NOT be
+# listed here; Cloudflare reads it from the assets directory (it is not served).
+worker
+package.json
+package-lock.json
+node_modules
+.wrangler
+.dev.vars
+.env
+.env.*
+.gstack
+.gitignore

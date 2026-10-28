@@ -8,7 +8,9 @@ still see the latest episodes. That fallback used to be hand-written and went
 stale whenever sync_latest_episode.py added a new episode. This script keeps it
 in sync with episodes.js so the fallback always mirrors the newest episodes.
 
-It updates four zones in index.html:
+It updates these zones in index.html:
+  - Masthead and stats: issue number, month, and the episode count
+    ([data-stat-episodes]) that no-JS visitors and crawlers read.
   - Featured: the data-fe-* fields (newest episode).
   - From the Catalog: pins between FALLBACK:CATALOG:START/END markers.
   - Recent Episodes: cards between FALLBACK:RECENT:START/END markers.
@@ -62,6 +64,9 @@ def pad(n: int) -> str:
 
 def page_href(ep: dict) -> str:
     """Root-absolute, extensionless episode link.
+
+    Goes through seo_urls.episode_path, which honours a pinned episodes.js
+    "slug", so these links match the generated page filenames.
 
     Root-absolute so the same string is correct from any page, and extensionless
     because Cloudflare Pages 307-redirects the `.html` form (see seo_urls.py).
@@ -204,6 +209,8 @@ def main() -> int:
 
     # Masthead: issue number tracks episode count, month tracks the newest episode.
     html = set_text(html, "<strong data-mast-issue>", "</strong>", f"ISSUE NO. {pad(total)}")
+    # Same zero-padding as the runtime counter in index.html, so JS and no-JS agree.
+    html = set_text(html, "<span data-stat-episodes>", "</span>", pad(total))
     try:
         mast_month = datetime.strptime(featured.get("date", ""), "%Y-%m-%d").strftime("%B %Y").upper()
         html = set_text(html, "<span data-mast-date>", "</span>", mast_month)

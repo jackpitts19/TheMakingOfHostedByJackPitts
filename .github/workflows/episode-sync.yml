@@ -20,6 +20,13 @@ on:
 permissions:
   contents: write
 
+# One run at a time. A cron run and a push run that overlap would both try to
+# commit generated files; the second one waits instead of racing (and is never
+# cancelled mid-commit).
+concurrency:
+  group: episode-sync
+  cancel-in-progress: false
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -37,18 +44,35 @@ jobs:
       - name: Install dependencies
         # Pillow is required by generate_share_cards.py. Without it, the regenerate
         # step crashes exactly when a new episode lands, freezing the site on the
-        # previous episode until someone fixes it by hand.
-        run: pip install pillow
+        # previous episode until someone fixes it by hand. Pinned so a new
+        # Pillow release can't change share-card bytes or break the run.
+        run: pip install "pillow==11.3.0"
 
       - name: Run unit tests
         run: python3 -m unittest discover tests
 
-      - name: Sync latest episode into episodes.js
+      - name: Run Worker tests
+        # Only when the guest-request Worker has tests. The ubuntu runner ships
+        # with Node, so no setup-node step is needed. Test files are listed
+        # explicitly because newer Node reads a bare directory as a file name.
+        run: |
+          if [ -d tests/worker ]; then
+            node --test $(find tests/worker -name '*.test.*' | sort)
+          else
+            echo "No tests/worker directory; skipping."
+          fi
+
+      - name: Sync new episodes into episodes.js
+        # Adds every feed episode not already listed (capped per run). Retries
+        # the feed with backoff; if it is still down, this step fails WITHOUT
+        # writing episodes.js, so the site keeps its current episode list.
         run: python3 sync_latest_episode.py
 
       - name: Resolve per-episode Apple links and full descriptions
         # Fills appleEpisodeId + per-episode links.apple + full descriptions from
         # Apple's public lookup API so every episode page embeds ITS OWN player.
+        # If Apple is down this only warns and leaves episodes.js alone; the
+        # next run fills the links in.
         run: python3 resolve_episode_links.py
 
       - name: Regenerate episode assets and homepage fallback
@@ -79,8 +103,11 @@ jobs:
         run: python3 validate_seo.py
 
       - name: Commit and push if changed
+        # `git status --porcelain` (not `git diff`) so a run whose only change
+        # is a NEW untracked file, like a new episode page or share card, still
+        # commits it.
         run: |
-          if git diff --quiet; then
+          if [ -z "$(git status --porcelain -- index.html episodes.js sitemap.xml episodes.html episodes share-cards)" ]; then
             echo "No repo changes detected."
             exit 0
           fi
@@ -88,4 +115,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html episodes.js sitemap.xml episodes.html episodes/*.html share-cards/*.png
           git commit -m $'chore: sync latest episode assets\n\nCo-Authored-By: Oz <oz-agent@warp.dev>'
+          # Pick up anything pushed while this run was working, then push.
+          git pull --rebase origin main
           git push

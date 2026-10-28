@@ -23,20 +23,25 @@ import json
 import sys
 from html import escape
 
-from generate_episode_pages import CSS, json_ld_script, load_episodes
+from generate_episode_pages import (
+    CSS,
+    GUEST_REQUEST,
+    json_ld_script,
+    load_episodes,
+    nowrap_hyphenated,
+)
 from seo_urls import BASE_URL, ROOT, episode_path, to_url
 from sync_latest_episode import truncate_at_word
 
 OUT_FILE = ROOT / "episodes.html"
 
 SITE = "The Making Of Hosted By Jack Pitts"
-BOOK_CAL = "https://calendar.app.google/8s9JEAriAqG2qS7MA"
 
 PAGE_TITLE = "All Episodes | The Making Of Hosted By Jack Pitts"
 PAGE_DESC = (
-    "Every episode of The Making Of Hosted By Jack Pitts: long-form "
-    "entrepreneurship interviews with founders, operators, and family-business "
-    "builders on what it actually took."
+    "Every episode of The Making Of Hosted By Jack Pitts, the entrepreneurship "
+    "podcast where founders and family-business owners share how they got "
+    "started and grew."
 )
 
 ARCHIVE_CSS = r"""
@@ -44,6 +49,7 @@ ARCHIVE_CSS = r"""
   font-family: 'Fraunces', serif; font-weight: 400;
   font-size: 20px; line-height: 1.6; color: var(--ink-soft);
   max-width: 640px; margin: 0 0 44px;
+  text-wrap: pretty;
 }
 .ep-list { list-style: none; margin: 0; padding: 0; }
 .ep-list li { border-top: 1px solid var(--line); }
@@ -104,7 +110,7 @@ PAGE_TMPL = """<!doctype html>
 <nav class="topnav">
   <div class="wrap">
     <a class="mark" href="/">The Making <span>Of</span> Hosted By Jack Pitts</a>
-    <a class="back" href="/">Home</a>
+    <a class="back" href="/"><span class="back-label">Home</span></a>
   </div>
 </nav>
 
@@ -118,9 +124,9 @@ PAGE_TMPL = """<!doctype html>
   </div>
 
   <h1 class="hero-title">Every <em>episode</em>.</h1>
-  <p class="archive-intro">Long-form conversations with founders, operators, and
-  family-business builders about how the thing actually got made. No highlight
-  reels. Newest first.</p>
+  <p class="archive-intro">Long conversations with founders, operators, and
+  family-business owners about where they started, what went wrong along the
+  way, and how the business grew. Newest first.</p>
 
   <ul class="ep-list">
 {rows}
@@ -129,16 +135,16 @@ PAGE_TMPL = """<!doctype html>
   <aside class="book-strip" aria-label="Be a guest">
     <div>
       <h3>Have a story like this? <em>Come on the show.</em></h3>
-      <p>Sixty to seventy-five minutes, remote, no prep deck. Pick a time and we'll figure out the angle together.</p>
+      <p>About an hour, recorded remotely, no slides or script needed. Tell me a little about your story and I'll reply personally if it's a fit.</p>
     </div>
-    <a href="{book_cal}" target="_blank" rel="noopener">Book a guest call</a>
+    <a href="{guest_request}">Request to Be a Guest</a>
   </aside>
 </main>
 
 <footer>
   <div class="wrap">
     <div class="mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
-    <small>&copy; 2026 Jack Pitts. Every conversation is a long one. <a href="/articles" style="color: var(--orange); text-decoration: underline;">Read the articles.</a></small>
+    <small>&copy; 2026 Jack Pitts. Conversations with the people behind the business. <a href="/articles" style="color: var(--orange); text-decoration: underline;">Read the articles.</a> <a class="foot-link" href="/privacy" style="color: var(--orange); text-decoration: underline;">Privacy</a> <a class="foot-link" href="/terms" style="color: var(--orange); text-decoration: underline;">Terms</a></small>
   </div>
 </footer>
 
@@ -162,7 +168,7 @@ def build_row(ep: dict, issue_no: int) -> str:
     return (
         f'    <li><a class="ep-row" href="{path}">\n'
         f'      <div class="row-meta">{"".join(meta_bits)}</div>\n'
-        f'      <h2 class="row-title">{escape(ep.get("title", ""))}</h2>\n'
+        f'      <h2 class="row-title">{nowrap_hyphenated(escape(ep.get("title", "")))}</h2>\n'
         f'      <p class="row-desc">{desc}</p>\n'
         f"    </a></li>"
     )
@@ -218,7 +224,7 @@ def build_page(episodes: list[dict]) -> str:
         css=CSS + ARCHIVE_CSS,
         count=total,
         rows=rows,
-        book_cal=BOOK_CAL,
+        guest_request=GUEST_REQUEST,
     )
 
 

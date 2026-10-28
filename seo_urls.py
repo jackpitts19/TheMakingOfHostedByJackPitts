@@ -38,7 +38,9 @@ BASE_URL = "https://themakingofhostedbyjackpitts.com"
 #   "/"          -> index.html      (homepage)
 #   "/episodes"  -> episodes.html   (episode archive)
 #   "/articles"  -> articles.html   (article archive)
-STATIC_PATHS: tuple[str, ...] = ("/", "/episodes", "/articles")
+#   "/privacy"   -> privacy.html    (privacy policy)
+#   "/terms"     -> terms.html      (terms and disclaimer)
+STATIC_PATHS: tuple[str, ...] = ("/", "/episodes", "/articles", "/privacy", "/terms")
 
 # Deliberately NOT separate URLs: the press, press-kit, about, and guest/booking
 # sections live on the homepage as #press, #press-kit, #about, and #guests.
@@ -54,18 +56,46 @@ def slugify(name: str) -> str:
     return s or "episode"
 
 
+def _strip_quotes(text: str) -> str:
+    return re.sub(r"^[\"“”'\s]+|[\"“”'\s]+$", "", text)
+
+
 def extract_guest_name(title: str) -> str:
-    """Best-effort guest name from an episode title, for entries with no `guest`."""
-    t = title or ""
+    """Best-effort guest name from an episode title.
+
+    Handles every title format the show has published:
+      "Topic | Name"                 -> Name (text after the LAST pipe)
+      "From X to Y: Name"            -> Name (topic-first titles)
+      "In The Making Of: Name"       -> Name
+      "The Making Of Name: Topic"    -> Name
+      "Name of Company: Topic"       -> Name
+    Falls back to the whole title when nothing matches.
+    """
+    original = title or ""
+    t = original.strip()
+    if "|" in t:
+        return _strip_quotes(t.rsplit("|", 1)[1]) or original
+    if re.match(r"^From\s", t, flags=re.I):
+        parts = re.split(r":|\s+with\s+", t, flags=re.I)
+        return _strip_quotes(parts[-1]) if len(parts) > 1 else original
     t = re.sub(r"^In\s+The\s+Making\s+Of:\s*", "", t, flags=re.I)
     t = re.sub(r"^The\s+Making\s+(Of|of)\s+", "", t, flags=re.I)
     t = re.split(r":|\s+with\s+|\s+from\s+", t, maxsplit=1, flags=re.I)[0]
-    t = re.sub(r"^[\"“”'\s]+|[\"“”'\s]+$", "", t)
-    return t or (title or "")
+    t = re.split(r"\s+of\s+", t, maxsplit=1)[0]
+    t = _strip_quotes(t)
+    return t or original
 
 
 def episode_slug(ep: dict) -> str:
-    """Slug for an episode. Shared by the page, share card, and sitemap."""
+    """Slug for an episode. Shared by the page, share card, and sitemap.
+
+    A pinned `slug` in episodes.js always wins, so correcting a guest name
+    never moves a live URL or share-card path. Entries without one fall back
+    to the slugified guest name.
+    """
+    pinned = str(ep.get("slug") or "").strip()
+    if pinned:
+        return pinned
     return slugify(ep.get("guest") or extract_guest_name(ep.get("title", "")))
 
 
@@ -85,24 +115,37 @@ def article_paths() -> list[str]:
 
 
 def article_pages() -> list[tuple[str, str]]:
-    """Every article as (path, title), title read from the file's own <title>.
+    """Every article as (path, title), title read from the file's own <h1>.
 
     Read from disk rather than listed here so a new articles/*.html file shows
-    up in episode pages' related-reading strip with no code change.
+    up in episode pages' related-reading strip with no code change. The visible
+    H1 is used, not the <title>, so link text matches the headline readers see
+    on the article and the homepage (the <title> can be a shorter SEO variant).
+    Falls back to the <title> when an article has no H1.
     """
     pages: list[tuple[str, str]] = []
     for path in article_paths():
         html = source_file_for(path).read_text(encoding="utf-8")
+        title = _article_heading(html)
+        if title:
+            pages.append((path, title))
+    return pages
+
+
+def _article_heading(html: str) -> str:
+    h1 = re.search(r"<h1\b[^>]*>(.*?)</h1>", html, re.S | re.I)
+    if h1:
+        text = re.sub(r"<[^>]+>", "", h1.group(1))
+    else:
         match = re.search(r"<title>(.*?)</title>", html, re.S | re.I)
         if not match:
-            continue
+            return ""
         # Titles are "<article title> | <site name>"; keep the article half.
-        # Unescape so callers get plain text and escape once for their own
-        # context. Returning the raw tag content would double-encode any title
-        # containing an entity, e.g. "&amp;" rendering as "&amp;amp;".
-        title = unescape(match.group(1).split("|")[0].strip())
-        pages.append((path, title))
-    return pages
+        text = match.group(1).split("|")[0]
+    # Unescape so callers get plain text and escape once for their own
+    # context. Returning the raw tag content would double-encode any title
+    # containing an entity, e.g. "&amp;" rendering as "&amp;amp;".
+    return unescape(re.sub(r"\s+", " ", text).strip())
 
 
 def article_lastmod(path: str) -> str | None:

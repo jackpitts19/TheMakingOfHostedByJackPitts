@@ -6,13 +6,31 @@ because Cloudflare Pages 307-redirects `.html`), and a newly published episode
 or article must reach the sitemap without anyone editing a URL list by hand.
 """
 
+import json
+import re
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from generate_episode_pages import build_related_reading, page_title
+import generate_episode_archive
+import update_home_fallback
+from generate_episode_pages import (
+    build_guest_block,
+    build_page_html,
+    build_related_reading,
+    build_share_row,
+    guest_people,
+    iso_duration,
+    json_ld_for,
+    meta_description_for,
+    page_title,
+    seo_title_for,
+)
+from seo_titles import GUEST_LINES, SEO_TITLES
 from generate_sitemap import build_sitemap, load_episodes
 from seo_urls import (
     BASE_URL,
@@ -27,8 +45,10 @@ from sync_latest_episode import strip_tags
 from resolve_episode_links import apply_apple_data
 from validate_seo import (
     check_duplicates,
+    check_episode_guests,
     check_episode_slugs,
     check_page_html,
+    check_site_html,
     check_robots_text,
     run_checks,
     sitemap_locs,
@@ -179,7 +199,7 @@ class HouseStyleTests(unittest.TestCase):
     def _shipped_pages(self):
         root = Path(__file__).parent.parent
         return (
-            [root / n for n in ("index.html", "episodes.html", "articles.html", "404.html")]
+            [root / n for n in ("index.html", "episodes.html", "articles.html", "privacy.html", "terms.html", "404.html")]
             + sorted((root / "articles").glob("*.html"))
             + sorted((root / "episodes").glob("*.html"))
         )
@@ -381,6 +401,325 @@ class ValidatorFiresTests(unittest.TestCase):
         )
         self.assertEqual(errors, [])
 
+
+
+JSON_LD_BLOCK_RE = re.compile(r'<script type="application/ld\+json">(.*?)</script>', re.S)
+SHOW = "The Making Of Hosted By Jack Pitts"
+EM_DASH = "\u2014"
+# Split so a repo-wide grep for these hosts finds only real occurrences.
+CAL_HOST = "calendar.app" + ".google"
+PRIVATE_HOST = "helmiq" + ".net"
+
+
+class SeoTitleTests(unittest.TestCase):
+    def test_seo_title_from_episode_data_wins(self):
+        ep = dict(SYNTHETIC_EPISODE, seoTitle="Jane Doe of Doe Widgets: Building Something")
+        self.assertEqual(seo_title_for(ep), "Jane Doe of Doe Widgets: Building Something")
+
+    def test_seo_title_falls_back_to_published_title(self):
+        self.assertEqual(seo_title_for(SYNTHETIC_EPISODE), SYNTHETIC_EPISODE["title"])
+
+    def test_seo_titles_map_is_used_by_slug(self):
+        slug, expected = next(iter(SEO_TITLES.items()))
+        ep = {"title": "Some Title", "guest": "x", "slug": slug}
+        if episode_slug(ep) != slug:
+            self.skipTest("seo_urls.episode_slug does not honour ep['slug'] yet")
+        self.assertEqual(seo_title_for(ep), expected)
+
+    def test_every_seo_title_follows_the_rules(self):
+        for slug, title in SEO_TITLES.items():
+            with self.subTest(slug=slug):
+                self.assertTrue(50 <= len(title) <= 65, f"{len(title)} chars: {title}")
+                self.assertNotIn(EM_DASH, title)
+                self.assertNotIn("Making Of", title)
+
+    def test_every_map_key_is_a_live_episode_slug(self):
+        slugs = {episode_slug(ep) for ep in load_episodes()}
+        stale = sorted((set(SEO_TITLES) | set(GUEST_LINES)) - slugs)
+        self.assertEqual(stale, [], "seo_titles.py keys with no matching episode")
+
+    def test_guest_lines_have_no_em_dashes_or_stock_phrases(self):
+        for slug, line in GUEST_LINES.items():
+            with self.subTest(slug=slug):
+                self.assertNotIn(EM_DASH, line)
+                for phrase in ("compounded", "actually", "false starts"):
+                    self.assertNotIn(phrase, line.lower())
+
+
+class MetaDescriptionTests(unittest.TestCase):
+    def test_strips_show_boilerplate_but_keeps_a_full_sentence(self):
+        ep = {"description": "In this episode of The Making Of, Hosted by Jack Pitts , I sit down "
+                             "with Jane Doe, founder of Doe Widgets."}
+        self.assertEqual(meta_description_for(ep), "Jack Pitts sits down with Jane Doe, founder of Doe Widgets.")
+
+    def test_names_the_host_when_a_snippet_opens_with_i_sat(self):
+        ep = {"description": "In this episode of The Making Of Hosted By Jack Pitts, I sat down "
+                             "with Jane Doe and John Roe of Doe Widgets."}
+        self.assertEqual(meta_description_for(ep), "Jack Pitts sat down with Jane Doe and John Roe of Doe Widgets.")
+
+    def test_strips_short_episode_lead(self):
+        ep = {"description": "In this episode, Jack Pitts interviews Jane Doe about widgets."}
+        self.assertEqual(meta_description_for(ep), "Jack Pitts interviews Jane Doe about widgets.")
+
+    def test_meta_description_override(self):
+        ep = {"description": "Long text.", "metaDescription": "Jane Doe on widgets."}
+        self.assertEqual(meta_description_for(ep), "Jane Doe on widgets.")
+
+    def test_long_text_is_trimmed_to_160_at_a_word(self):
+        ep = {"description": "Jane Doe built a widget company from nothing. " * 10}
+        desc = meta_description_for(ep)
+        self.assertLessEqual(len(desc), 160)
+        self.assertGreaterEqual(len(desc), 110)
+
+    def test_early_sentence_end_does_not_make_a_stub(self):
+        # The Dave Menz case: a 58-char first sentence used to become the whole description.
+        ep = {"description": "Jane Doe did not start with much. " + "She worked long weeks and kept going " * 8}
+        desc = meta_description_for(ep)
+        self.assertGreaterEqual(len(desc), 110)
+        self.assertTrue(desc.endswith("\u2026"))
+
+    def test_empty_description_uses_fallback(self):
+        self.assertTrue(meta_description_for({"description": ""}))
+
+    def test_every_live_episode_description_fits(self):
+        for ep in load_episodes():
+            with self.subTest(title=ep.get("title")):
+                self.assertLessEqual(len(meta_description_for(ep)), 160)
+                self.assertFalse(meta_description_for(ep).lower().startswith("in this episode"))
+
+
+class EpisodeJsonLdTests(unittest.TestCase):
+    EP = dict(
+        SYNTHETIC_EPISODE,
+        guest="Jane Doe & John Roe",
+        duration="1h 9m",
+        appleEpisodeId="123",
+        links={
+            "spotify": "https://open.spotify.com/show/abc",
+            "apple": "https://podcasts.apple.com/us/podcast/x/id1?i=123",
+        },
+    )
+
+    def _ld(self, ep=None):
+        return json.loads(json_ld_for(ep or self.EP, 1, "jane-doe"))
+
+    def test_json_ld_parses_and_has_episode_and_breadcrumbs(self):
+        types = [block["@type"] for block in self._ld()]
+        self.assertEqual(types, ["PodcastEpisode", "BreadcrumbList"])
+
+    def test_show_level_spotify_is_not_claimed_as_episode_audio(self):
+        raw = json_ld_for(self.EP, 1, "jane-doe")
+        self.assertNotIn("contentUrl", raw)
+        self.assertNotIn("open.spotify.com/show", raw)
+
+    def test_per_episode_apple_url_is_same_as(self):
+        self.assertEqual(self._ld()[0]["sameAs"], [self.EP["links"]["apple"]])
+
+    def test_series_duration_and_guests(self):
+        episode = self._ld()[0]
+        self.assertEqual(episode["partOfSeries"]["@type"], "PodcastSeries")
+        self.assertEqual(episode["timeRequired"], "PT1H9M")
+        self.assertEqual([a["name"] for a in episode["actor"]], ["Jane Doe", "John Roe"])
+        self.assertEqual(episode["author"]["name"], "Jack Pitts")
+
+    def test_breadcrumb_ends_with_the_guest(self):
+        crumbs = self._ld()[1]["itemListElement"]
+        self.assertEqual([c["name"] for c in crumbs][1:], ["Episodes", "Jane Doe & John Roe"])
+
+    def test_script_close_tag_in_title_is_escaped(self):
+        raw = json_ld_for(dict(self.EP, title="A </script> B"), 1, "jane-doe")
+        self.assertNotIn("</script", raw)
+        json.loads(raw)
+
+    def test_guest_people_rejects_companies_and_titles(self):
+        self.assertEqual(guest_people({"guest": "Concentrate AI", "title": "x"}), [])
+        self.assertEqual(guest_people({"guest": "Topic | Jane Doe", "title": "x"}), [])
+        self.assertEqual(guest_people({"guest": "Same", "title": "Same"}), [])
+        self.assertEqual(guest_people({"guest": "Niilo Pirttijärvi", "title": "x"}), ["Niilo Pirttijärvi"])
+
+    def test_iso_duration(self):
+        self.assertEqual(iso_duration("39 min"), "PT39M")
+        self.assertEqual(iso_duration("1h 3m"), "PT1H3M")
+        self.assertIsNone(iso_duration(""))
+
+
+class EpisodePageTemplateTests(unittest.TestCase):
+    def _page(self, ep=None):
+        ep = ep or dict(SYNTHETIC_EPISODE, appleEpisodeId="123", links={})
+        return build_page_html(0, ep, [ep], 1)
+
+    def test_guest_cta_goes_to_the_form_in_the_same_tab(self):
+        html = self._page()
+        self.assertNotIn(CAL_HOST, html)
+        self.assertNotIn(PRIVATE_HOST, html)
+        self.assertIn('<a href="/#guest-request">Request to Be a Guest</a>', html)
+        self.assertNotRegex(html, r'href="/#guest-request"[^>]*target=')
+
+    def test_book_strip_and_footer_copy(self):
+        html = self._page()
+        self.assertIn("About an hour, recorded remotely, no slides or script needed.", html)
+        self.assertIn("Conversations with the people behind the business.", html)
+        self.assertNotIn("Every conversation is a long one", html)
+
+    def test_page_has_one_h1_no_em_dash_and_parseable_json_ld(self):
+        html = self._page()
+        errors = []
+        check_site_html(errors, "fixture", html)
+        self.assertEqual(errors, [])
+        for block in JSON_LD_BLOCK_RE.findall(html):
+            json.loads(block)
+
+    def test_seo_title_drives_title_tags_but_not_the_h1(self):
+        ep = dict(SYNTHETIC_EPISODE, seoTitle="Jane Doe of Doe Widgets on Building Something Big", links={})
+        html = self._page(ep)
+        self.assertIn("<title>Jane Doe of Doe Widgets on Building Something Big</title>", html)
+        self.assertIn('property="og:title" content="Jane Doe of Doe Widgets on Building Something Big"', html)
+        self.assertIn('<h1 class="hero-title">The Making Of <em>Jane Doe</em></h1>', html)
+
+    def test_player_label_matches_the_embed(self):
+        self.assertIn('aria-label="Apple Podcasts player"', self._page())
+
+    def test_listen_links_name_the_guest(self):
+        self.assertIn('aria-label="Listen on Spotify: Jane Doe"', self._page())
+
+    def test_share_row_has_plain_share_links(self):
+        row = build_share_row("https://example.com/episodes/jane-doe", "Jane Doe", "Jane Doe")
+        self.assertIn("linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fexample.com", row)
+        self.assertIn("twitter.com/intent/tweet?url=", row)
+        self.assertIn('href="mailto:?subject=', row)
+        self.assertIn("data-copy-link", row)
+
+    def test_guest_card_uses_specific_line_or_neutral_fallback(self):
+        card = build_guest_block(SYNTHETIC_EPISODE, 7)
+        self.assertIn("Jane Doe", card)
+        self.assertIn("Issue No. 07", card)
+        self.assertNotIn("compounded", card)
+        slug = next(iter(GUEST_LINES))
+        live = next((ep for ep in load_episodes() if episode_slug(ep) == slug), None)
+        if live:
+            self.assertIn(GUEST_LINES[slug].split(",")[0], build_guest_block(live, 1).replace("&amp;", "&"))
+
+    def test_hyphenated_headline_words_do_not_split(self):
+        ep = dict(SYNTHETIC_EPISODE, title="Building a 140-Person Business", guest="Jane Doe", links={})
+        self.assertIn('<span class="nb">140-Person</span>', self._page(ep))
+
+
+class ArchiveAndFallbackTests(unittest.TestCase):
+    def test_archive_cta_and_copy(self):
+        html = generate_episode_archive.build_page([dict(SYNTHETIC_EPISODE)])
+        self.assertNotIn(CAL_HOST, html)
+        self.assertIn('<a href="/#guest-request">Request to Be a Guest</a>', html)
+        for phrase in ("builders", "actually", "highlight", "Every conversation is a long one", EM_DASH):
+            self.assertNotIn(phrase, html)
+        self.assertLessEqual(len(generate_episode_archive.PAGE_DESC), 160)
+
+    def test_home_fallback_refreshes_the_episode_count(self):
+        # Runs against a temporary copy: the real index.html is never touched.
+        with tempfile.TemporaryDirectory() as tmp:
+            copy = Path(tmp) / "index.html"
+            shutil.copy(update_home_fallback.INDEX_HTML, copy)
+            original = update_home_fallback.INDEX_HTML
+            update_home_fallback.INDEX_HTML = copy
+            try:
+                update_home_fallback.main()
+            finally:
+                update_home_fallback.INDEX_HTML = original
+            total = len(update_home_fallback.load_episodes())
+            expected = f"<span data-stat-episodes>{update_home_fallback.pad(total)}</span>"
+            self.assertIn(expected, copy.read_text(encoding="utf-8"))
+
+
+class SiteRuleValidatorTests(unittest.TestCase):
+    CLEAN = "<html><body><h1>Title</h1></body></html>"
+
+    def _check(self, html):
+        errors = []
+        check_site_html(errors, "fixture.html", html)
+        return errors
+
+    def test_clean_page_reports_nothing(self):
+        self.assertEqual(self._check(self.CLEAN), [])
+
+    def test_reports_public_calendar_link(self):
+        html = self.CLEAN.replace("</body>", f'<a href="https://{CAL_HOST}/x">b</a></body>')
+        self.assertTrue(any(CAL_HOST in e for e in self._check(html)))
+
+    def test_reports_private_booking_host(self):
+        html = self.CLEAN.replace("</body>", f'<a href="https://{PRIVATE_HOST}/x">b</a></body>')
+        self.assertTrue(any(PRIVATE_HOST in e for e in self._check(html)))
+
+    def test_reports_em_dash(self):
+        html = self.CLEAN.replace("Title", "Title \u2014 sub")
+        self.assertTrue(any("em dash" in e for e in self._check(html)))
+
+    def test_reports_missing_h1(self):
+        self.assertTrue(any("0 <h1>" in e for e in self._check("<html><body></body></html>")))
+
+    def test_reports_two_h1s(self):
+        html = self.CLEAN.replace("</body>", "<h1>Again</h1></body>")
+        self.assertTrue(any("2 <h1>" in e for e in self._check(html)))
+
+    def test_h1_inside_script_is_not_counted(self):
+        html = self.CLEAN.replace("</body>", "<script>var t = '<h1>x</h1>';</script></body>")
+        self.assertEqual(self._check(html), [])
+
+    def test_reports_guest_equal_to_title(self):
+        errors = []
+        check_episode_guests(errors, [{"title": "Topic | Jane Doe", "guest": "Topic | Jane Doe"}])
+        self.assertTrue(any("whole title" in e for e in errors))
+
+    def test_reports_guest_with_pipe(self):
+        errors = []
+        check_episode_guests(errors, [{"title": "A title", "guest": "Topic | Jane Doe"}])
+        self.assertTrue(any("contains '|'" in e for e in errors))
+
+    def test_clean_guest_reports_nothing(self):
+        errors = []
+        check_episode_guests(errors, [{"title": "Topic | Jane Doe", "guest": "Jane Doe"}])
+        self.assertEqual(errors, [])
+
+
+
+class LegalPagesTest(unittest.TestCase):
+    """Privacy and terms pages exist, are public, and every page links them."""
+
+    ROOT = Path(__file__).parent.parent
+
+    def _read(self, name):
+        return (self.ROOT / name).read_text(encoding="utf-8")
+
+    def test_legal_pages_are_public_and_in_the_sitemap(self):
+        paths = public_paths(load_episodes())
+        self.assertIn("/privacy", paths)
+        self.assertIn("/terms", paths)
+        sitemap = build_sitemap(load_episodes())
+        self.assertIn(f"{BASE_URL}/privacy</loc>", sitemap)
+        self.assertIn(f"{BASE_URL}/terms</loc>", sitemap)
+
+    def test_legal_pages_carry_the_effective_date_and_contact(self):
+        for name in ("privacy.html", "terms.html"):
+            html = self._read(name)
+            self.assertIn("Last updated: October 28, 2026", html)
+            self.assertIn("mailto:jack@saltcreekadvisory.com", html)
+        self.assertIn("State of Illinois", self._read("terms.html"))
+
+    def test_every_page_footer_links_privacy_and_terms(self):
+        pages = (
+            [self.ROOT / n for n in ("index.html", "episodes.html", "articles.html", "privacy.html", "terms.html", "404.html")]
+            + sorted((self.ROOT / "articles").glob("*.html"))
+            + sorted((self.ROOT / "episodes").glob("*.html"))
+        )
+        for page in pages:
+            html = page.read_text(encoding="utf-8")
+            footer = html[html.index("<footer"):]
+            self.assertIn('href="/privacy"', footer, page.name)
+            self.assertIn('href="/terms"', footer, page.name)
+
+    def test_guest_form_note_links_the_privacy_policy(self):
+        self.assertIn(
+            "It isn't added to any mailing list. <a href=\"/privacy\">Privacy policy</a>.",
+            self._read("index.html"),
+        )
 
 if __name__ == "__main__":
     unittest.main()

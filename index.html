@@ -1,5 +1,5 @@
-<!-- Cloudflare podcast deployment test -->
 <!doctype html>
+<!-- Cloudflare podcast deployment test -->
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -9,9 +9,9 @@
 <meta name="author" content="Jack Pitts" />
 
 <title>The Making Of Hosted By Jack Pitts | Entrepreneurship Podcast</title>
-<meta name="description" content="An entrepreneurship podcast with real stories from founders, operators, and family-business builders. Hosted by Jack Pitts on Spotify, Apple, and YouTube." />
+<meta name="description" content="An entrepreneurship podcast where Jack Pitts interviews founders, operators, and family-business owners on how they got started and how they grew." />
 
-<!-- TODO ON DEPLOY: replace these absolute URLs with the production domain -->
+<!-- Canonical and OG URLs use the production domain -->
 <link rel="canonical" href="https://themakingofhostedbyjackpitts.com/" />
 
 <!-- Open Graph (LinkedIn, Facebook, iMessage previews) -->
@@ -19,7 +19,7 @@
 <meta property="og:locale" content="en_US" />
 <meta property="og:site_name" content="The Making Of Hosted By Jack Pitts" />
 <meta property="og:title" content="The Making Of Hosted By Jack Pitts | Entrepreneurship Podcast" />
-<meta property="og:description" content="An entrepreneurship podcast with real stories from founders, operators, and family-business builders. A new conversation every three weeks. Hosted by Jack Pitts." />
+<meta property="og:description" content="An entrepreneurship podcast where Jack Pitts interviews founders, operators, and family-business owners on how they got started and how they grew. New episodes every few weeks." />
 <meta property="og:url" content="https://themakingofhostedbyjackpitts.com/" />
 <meta property="og:image" content="https://themakingofhostedbyjackpitts.com/share-cards/latest.png" />
 <meta property="og:image:width" content="1200" />
@@ -29,7 +29,7 @@
 <!-- Twitter / X -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="The Making Of Hosted By Jack Pitts | Entrepreneurship Podcast" />
-<meta name="twitter:description" content="An entrepreneurship podcast with real stories from founders, operators, and family-business builders. Hosted by Jack Pitts." />
+<meta name="twitter:description" content="An entrepreneurship podcast where Jack Pitts interviews founders, operators, and family-business owners on how they got started and how they grew." />
 <meta name="twitter:image" content="https://themakingofhostedbyjackpitts.com/share-cards/latest.png" />
 
 <!-- Favicon: orange "M" mark on cream square, inlined as a data URI so there's
@@ -44,9 +44,10 @@
 {
   "@context": "https://schema.org",
   "@type": "PodcastSeries",
+  "@id": "https://themakingofhostedbyjackpitts.com/#podcast",
   "name": "The Making Of Hosted By Jack Pitts",
   "url": "https://themakingofhostedbyjackpitts.com/",
-  "description": "An entrepreneurship podcast with real stories from founders, operators, and family-business builders. Hosted by Jack Pitts.",
+  "description": "An entrepreneurship podcast where Jack Pitts interviews founders, operators, and family-business owners on how they got started and how they grew.",
   "genre": ["Entrepreneurship", "Business"],
   "keywords": "entrepreneurship podcast, founder stories, small business, family business, operators, business interviews",
   "webFeed": "https://api.riverside.fm/hosting/wMWn2YqB.rss",
@@ -99,6 +100,14 @@
     border-radius: 4px;
   }
   *:focus:not(:focus-visible) { outline: none; }
+  /* --orange-dark is for cream backgrounds only (2.9:1 on ink). Dark panels
+     switch to --orange, which measures about 6:1 on ink. */
+  .listen :focus-visible, .featured-episode :focus-visible, .book-card :focus-visible,
+  footer :focus-visible, .sticky-listen:focus-visible { outline-color: var(--orange); }
+
+  /* Headlines: balance line lengths so a single word never sits alone. */
+  h1, h2, h3, .marquee-name { text-wrap: balance; }
+  p, blockquote { text-wrap: pretty; }
 
   /* Respect users who prefer reduced motion. */
   @media (prefers-reduced-motion: reduce) {
@@ -112,7 +121,7 @@
     .hero-reveal, .fade-up { opacity: 1 !important; transform: none !important; }
     h1 .word { opacity: 1 !important; transform: none !important; }
     .wave-path { stroke-dashoffset: 0 !important; }
-    .magnetic { transform: none !important; }
+    .magnetic, .platform, .ep-platform, .pin { transform: none !important; }
   }
   body {
     background: var(--cream);
@@ -279,7 +288,8 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
   }
-  .marquee:hover .marquee-track { animation-play-state: paused; }
+  .marquee:hover .marquee-track,
+  .marquee:focus-within .marquee-track { animation-play-state: paused; }
 
   /* ---------- EPISODE CARDS, EDITORIAL UPGRADE ---------- */
   .ep {
@@ -523,6 +533,8 @@
     transition: color .15s, border-color .15s, transform .15s;
   }
   .fe-read:hover { color: #ffb361; border-bottom-color: #ffb361; transform: translateX(3px); }
+  .fe-read { position: relative; }
+  .fe-read::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
 
   /* ---------- FEATURED EPISODE HERO PANEL ---------- */
   .featured-episode .fe-embed { margin-top: 22px; max-width: 560px; }
@@ -744,7 +756,8 @@
   h1 {
     font-family: 'Fraunces', serif;
     font-weight: 900;
-    font-size: clamp(42px, 6vw, 74px);
+    /* Sized for the three-line headline; was clamp(42px, 6vw, 74px). */
+    font-size: clamp(40px, 4.8vw, 58px);
     line-height: 0.98;
     letter-spacing: -0.02em;
     margin: 0 0 22px;
@@ -858,7 +871,7 @@
     gap: 32px;
     align-items: center;
   }
-  .listen h3 {
+  .listen h2, .listen h3 {
     font-family: 'Fraunces', serif;
     font-weight: 800;
     font-size: 22px;
@@ -866,7 +879,7 @@
     line-height: 1.15;
     max-width: 160px;
   }
-  .listen h3 em { color: var(--orange); font-style: italic; }
+  .listen h2 em, .listen h3 em { color: var(--orange); font-style: italic; }
   .platforms {
     display: flex; gap: 12px; flex-wrap: wrap;
   }
@@ -954,6 +967,9 @@
     transition: background .15s ease, color .15s ease, border-color .15s ease, transform .15s ease;
   }
   .ep-platform svg { width: 13px; height: 13px; }
+  /* 44px tap height without changing the pill's look. */
+  .ep-platform { position: relative; }
+  .ep-platform::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 44px; transform: translateY(-50%); }
   .ep-platform:hover { background: var(--ink); color: var(--cream); border-color: var(--ink); transform: translateY(-1px); }
   .ep-platform.is-spotify:hover { background: #1db954; color: var(--ink); border-color: #1db954; }
   .ep-platform.is-apple:hover  { background: #872EC4; color: var(--cream); border-color: #872EC4; }
@@ -1294,6 +1310,61 @@
   .book-card .btn-line:hover { background: rgba(255,255,255,0.06); }
   .book-card small { color: rgba(243,232,207,0.6); font-size: 12px; text-align: center; margin-top: 4px; }
 
+  /* ---------- GUEST REQUEST FORM (inside the book card) ---------- */
+  .book-card.has-form { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: start; scroll-margin-top: 24px; }
+  .book-intro p { margin-bottom: 22px; }
+  .book-alt { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .book-alt .btn { min-height: 44px; }
+  .book-alt small { text-align: left; margin-top: 0; }
+  .guest-form { display: flex; flex-direction: column; gap: 16px; }
+  .gr-field { display: flex; flex-direction: column; gap: 6px; }
+  .gr-field label {
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 16px;
+    color: var(--cream); letter-spacing: -0.005em;
+  }
+  .gr-optional { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 13px; color: rgba(243,232,207,0.6); }
+  .guest-form input, .guest-form textarea {
+    width: 100%; min-height: 48px;
+    font-family: 'Inter', system-ui, sans-serif; font-size: 16px; line-height: 1.4;
+    color: var(--ink); background: var(--cream);
+    border: 1.5px solid transparent; border-radius: 12px;
+    padding: 12px 14px;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .guest-form textarea { min-height: 132px; resize: vertical; }
+  .guest-form input::placeholder, .guest-form textarea::placeholder { color: rgba(58,53,43,0.55); }
+  .guest-form input:focus, .guest-form textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(216,122,44,0.45); }
+  .guest-form [aria-invalid="true"] { border-color: var(--orange); box-shadow: 0 0 0 2px rgba(216,122,44,0.35); }
+  .book-card .gr-hint { margin: 0; font-size: 13px; color: rgba(243,232,207,0.62); max-width: none; }
+  .book-card .gr-error { margin: 0; font-size: 13.5px; font-weight: 600; color: var(--orange); max-width: none; }
+  .book-card .gr-error:empty { display: none; }
+  .gr-hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+  .guest-form .gr-submit { justify-content: center; min-height: 48px; font-size: 15px; border: 0; cursor: pointer; font-family: inherit; }
+  .guest-form .gr-submit[disabled] { opacity: 0.7; cursor: progress; transform: none; }
+  .book-card .gr-privacy { margin: -4px 0 0; font-size: 12.5px; color: rgba(243,232,207,0.6); text-align: center; max-width: none; }
+  .book-card .gr-privacy a { color: inherit; text-decoration: underline; }
+  .book-card .gr-privacy a:hover { color: var(--orange); }
+  .book-card .gr-status { margin: 0; font-size: 14px; color: var(--cream); max-width: none; }
+  .book-card .gr-status:empty { display: none; }
+  .book-card .gr-status.is-error { color: var(--orange); font-weight: 600; }
+  .gr-status a, .gr-noscript a { color: var(--cream); text-decoration: underline; }
+  .book-card .gr-noscript { margin: 0 0 12px; color: var(--cream); font-size: 14px; }
+  .gr-success {
+    border: 1px solid rgba(243,232,207,0.22); border-radius: 16px;
+    padding: 26px 24px; background: rgba(255,255,255,0.04);
+  }
+  .gr-success:focus { outline: none; }
+  .book-card .gr-success p {
+    margin: 0; max-width: none; color: var(--cream);
+    font-family: 'Fraunces', serif; font-size: 20px; line-height: 1.45;
+  }
+  @media (max-width: 860px) {
+    .book-card.has-form { grid-template-columns: 1fr; gap: 28px; }
+  }
+  @media (max-width: 600px) {
+    .book-card.has-form { padding: 28px 20px; border-radius: 18px; }
+  }
+
   /* ---------- GUEST FIT GUIDE ---------- */
   .guest-fit { margin: 44px 0 8px; }
   .gf-eyebrow {
@@ -1310,6 +1381,8 @@
     letter-spacing: -0.01em; margin: 0 0 10px; color: var(--ink);
   }
   .gf-card p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-soft); }
+  /* Five cards in a three-column grid: let the last one span the empty cell. */
+  @media (min-width: 861px) { .gf-card:last-child:nth-child(3n + 2) { grid-column: span 2; } }
 
   /* ---------- HOME ARTICLES ---------- */
   .home-articles { margin: 20px 0 0; }
@@ -1385,6 +1458,14 @@
   }
   footer .footer-archive a:hover { color: var(--orange); }
 
+  /* ---------- PHONE TYPE SCALE ---------- */
+  @media (max-width: 600px) {
+    .section-head { flex-direction: column; align-items: flex-start; gap: 6px; }
+    h1 { font-size: clamp(36px, 10.4vw, 46px); line-height: 1.02; }
+    .section-head h2, .guests h2, .about h2 { font-size: clamp(28px, 8vw, 36px); }
+    .fe-title { font-size: clamp(28px, 8.2vw, 40px); }
+  }
+
   /* ---------- RESPONSIVE ---------- */
   @media (max-width: 860px) {
     .gf-grid { grid-template-columns: 1fr; }
@@ -1395,7 +1476,18 @@
     .eps { grid-template-columns: 1fr; }
     .about { grid-template-columns: 1fr; gap: 20px; }
     .press-card { grid-template-columns: 1fr; gap: 14px; padding: 24px; }
-    .nav-links { display: none; }
+    /* Compact mobile nav: the same links as a single scrollable row. */
+    nav { flex-wrap: wrap; row-gap: 2px; padding-top: 20px; }
+    .nav-links {
+      width: 100%; gap: 20px; font-size: 13px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+      /* Fade the right edge so a cut-off last link reads as "scroll for more". */
+      -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+      mask-image: linear-gradient(90deg, #000 85%, transparent);
+      padding-right: 24px;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
+    .nav-links a { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
     .nav-mark { font-size: 15px; }
     footer .mark { font-size: 16px; }
     .headshot { width: 120px; height: 120px; right: 0; bottom: -20px; }
@@ -1424,12 +1516,12 @@
 <div class="wrap">
 
   <!-- NAV -->
-  <nav>
+  <nav aria-label="Primary">
     <div class="nav-mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
     <div class="nav-links">
       <a href="#episodes">Episodes</a>
       <a href="#press">Press</a>
-      <a href="#guests">Be a Guest</a>
+      <a href="#guest-request">Be a Guest</a>
       <a href="#about">About</a>
       <a href="#listen">Listen</a>
     </div>
@@ -1460,19 +1552,19 @@
         <span class="dot"></span>
         <span data-mast-date>OCTOBER 2026</span>
         <span class="dot"></span>
-        <span>A NEW CONVERSATION EVERY THREE WEEKS</span>
+        <span>NEW CONVERSATIONS EVERY FEW&nbsp;WEEKS</span>
       </div>
       <div class="eyebrow hero-reveal hero-reveal-2">An entrepreneurship podcast, hosted by Jack Pitts</div>
-      <h1 id="hero-headline" data-word-reveal>Real stories from the <em>builders</em><br/>we don't always think about.</h1>
+      <h1 id="hero-headline" data-word-reveal>Business owners on how they <em>got started</em><br/>and how they grew.</h1>
       <p class="lede hero-reveal hero-reveal-4">
-        Service industries, generational family businesses, the operators most people walk past. Each conversation digs into what actually compounded into a real company. The false starts, the unsexy middle, the years no one writes about.
+        I sit down with founders, operators, and family-business owners and ask about the early days, what went wrong along the way, and the decisions that shaped the company. So far that has meant car washes, candy, laundromats, bourbon, and pet care.
       </p>
       <div class="cta-row hero-reveal hero-reveal-5">
         <a class="btn btn-primary magnetic" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">
           <span class="bars" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
           Play the latest
         </a>
-        <a class="btn btn-pill magnetic" href="#guests">Come on the show</a>
+        <a class="btn btn-pill magnetic" href="#guest-request">Come on the show</a>
       </div>
     </div>
 
@@ -1518,7 +1610,7 @@
 
   <!-- LISTEN STRIP -->
   <div class="listen" id="listen">
-    <h3>Listen <em>anywhere</em> you stream.</h3>
+    <h2 class="listen-title">Listen <em>anywhere</em> you stream.</h2>
     <div class="platforms">
       <a class="platform" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 100 24 12 12 0 000-24zm5.52 17.3a.75.75 0 01-1.03.25c-2.82-1.72-6.37-2.11-10.55-1.16a.75.75 0 01-.33-1.46c4.58-1.04 8.51-.6 11.66 1.34.35.21.46.68.25 1.03zm1.47-3.27a.94.94 0 01-1.29.31c-3.23-1.98-8.15-2.55-11.97-1.4a.94.94 0 11-.55-1.8c4.36-1.31 9.79-.67 13.5 1.6.44.27.58.85.31 1.29zm.13-3.4C15.25 8.4 8.8 8.18 5.1 9.3a1.12 1.12 0 11-.66-2.16c4.25-1.29 11.37-1.04 15.85 1.62a1.12 1.12 0 11-1.17 1.91z"/></svg>
@@ -1549,22 +1641,22 @@
     <div class="ii-grid">
       <article class="ii-pull">
         <div class="ii-no">No. 13</div>
-        <p>A Goldman Sachs banker turned third-generation Vegas casino CEO on advising Disney's Pixar deal and running billion-dollar gaming floors.</p>
+        <p>A third-generation Las Vegas casino employee on Goldman Sachs, Disney's Pixar deal, and later running Resorts World Las Vegas as CEO.</p>
         <div class="ii-by"><span>Alex Dixon</span> &nbsp;/&nbsp; Resorts World Las Vegas</div>
       </article>
       <article class="ii-pull">
         <div class="ii-no">No. 09</div>
-        <p>From poverty in Flint and seventeen years of corporate work to a laundromat empire built on aggressive saving and ninety-hour weeks.</p>
+        <p>From growing up poor in Flint and seventeen years in a corporate job to buying a money-losing laundromat and working ninety-hour weeks to turn it around.</p>
         <div class="ii-by"><span>Dave Menz</span> &nbsp;/&nbsp; Laundromat Millionaire</div>
       </article>
       <article class="ii-pull">
         <div class="ii-no">No. 01</div>
-        <p>How a Macon kid turned a side-hustle car wash into more than thirty acquisitions and one of the country's largest express wash platforms.</p>
+        <p>How a Macon kid turned a side-hustle car wash into more than thirty acquisitions and one of the leading car wash platforms in the country.</p>
         <div class="ii-by"><span>Gary Dennis</span> &nbsp;/&nbsp; Mammoth Holdings</div>
       </article>
     </div>
     <div class="ii-footer">
-      <span><span data-stat-episodes>13</span> conversations on the shelf so far. A new one every three weeks.</span>
+      <span><span data-stat-episodes>19</span> conversations so far, with a new one every few weeks.</span>
     </div>
   </section>
 
@@ -1594,7 +1686,7 @@
       </div>
       <div>
         <p class="press-headline">"Brookfield businessman featured on podcast"</p>
-        <p class="press-byline">A local feature on the show, the format, and the kinds of builders Jack interviews.</p>
+        <p class="press-byline">A local story on Doug Taylor's episode and why Jack started the show.</p>
       </div>
       <span class="press-cta">Read article</span>
     </a>
@@ -1679,7 +1771,7 @@
         <div class="pin-tag">Episode 01, The Origin Story</div>
         <div class="pin-date">November 18, 2025</div>
         <h3><a class="ep-title-link" href="/episodes/gary-dennis">The Making of Mammoth Holdings with Gary Dennis</a></h3>
-        <p>In this episode of The Making Of, Jack Pitts sits down with Gary Dennis, co-founder and former CEO of Mammoth Holdings, to unpack how a kid from Macon, Georgia ended up building one of the leading car wash platforms in the country.</p>
+        <p>In this episode of The Making Of Hosted By Jack Pitts, Jack sits down with Gary Dennis, co-founder and former CEO of Mammoth Holdings, to unpack how a kid from Macon, Georgia ended up building one of the leading car wash platforms in the country.</p>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
           <a class="ep-platform is-apple" href="https://podcasts.apple.com/us/podcast/the-making-of-mammoth-holdings-with-gary-dennis/id1853933144?i=1000737312111&uo=4" target="_blank" rel="noopener">Apple</a>
@@ -1706,7 +1798,7 @@
         <div class="ep-issue">Issue No. 18</div>
         <div class="ep-num">September 17, 2026</div>
         <h3><a class="ep-title-link" href="/episodes/how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott">How Four Veterans Built Four Branches Bourbon | Rick Franco &amp; Mike Trott</a></h3>
-        <p>In this episode of The Making Of, Hosted by Jack Pitts, I sit down with Rick Franco and Mike Trott, co-founders of Four Branches Bourbon. Four Branches didn’t start as a business. It started as an honor barrel created by four veterans who wanted to remember friends they lost and give back to the military community.</p>
+        <p>In this episode of The Making Of Hosted By Jack Pitts, I sit down with Rick Franco and Mike Trott, co-founders of Four Branches Bourbon. Four Branches didn’t start as a business. It started as an honor barrel created by four veterans who wanted to remember friends they lost and give back to the military community.</p>
         <div class="ep-meta"><span>39 min</span><span>Full episode</span></div>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
@@ -1720,7 +1812,7 @@
         <div class="ep-issue">Issue No. 17</div>
         <div class="ep-num">August 20, 2026</div>
         <h3><a class="ep-title-link" href="/episodes/dave-moorman">Dave Moorman: Building an MSP, Scaling Through M&amp;A &amp; Exiting Twice</a></h3>
-        <p>In this episode of The Making Of, Hosted by Jack Pitts , I sit down with Dave Moorman, who spent more than 30 years in the IT and MSP world building, scaling, acquiring, and selling businesses. Dave shares how he went from working at 10 years old and discovering computers through a heavy metal band to building DynaSis for 26 years.</p>
+        <p>In this episode of The Making Of Hosted By Jack Pitts, I sit down with Dave Moorman, who spent more than 30 years in the IT and MSP world building, scaling, acquiring, and selling businesses. Dave shares how he went from working at 10 years old and discovering computers through a heavy metal band to building DynaSis for 26 years.</p>
         <div class="ep-meta"><span>56 min</span><span>Full episode</span></div>
         <div class="ep-platforms">
           <a class="ep-platform is-spotify" href="https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH" target="_blank" rel="noopener">Spotify</a>
@@ -1750,7 +1842,7 @@
   </div><!-- /wrap -->
 
   <!-- PAST GUESTS MARQUEE, full bleed (populated from data) -->
-  <div class="marquee" aria-label="Past guests on the show">
+  <div class="marquee" role="region" aria-label="Past guests on the show">
     <div class="marquee-track" id="marquee-track"></div>
   </div>
 
@@ -1764,18 +1856,18 @@
     <div class="guests-editorial">
       <div class="guests-body">
         <p class="lede">
-          The show is built for founders, operators, and family-business builders with a real story to tell. Not a launch announcement. Not a fundraising lap. A real conversation about what actually compounded into a company.
+          The show is for founders, operators, and family-business owners who have spent years building something. I want to hear how you started, the calls you got wrong, and what changed as the business grew.
         </p>
         <p>
-          Sixty to seventy-five minutes, recorded remotely. No script. No homework binder. No prep deck. We dig into the unsexy middle, the false starts, and the years no one writes about. Episodes go up on Spotify, Apple Podcasts, and YouTube, then we push them on LinkedIn so your story keeps reaching the right people.
+          We record remotely for about an hour, and there's almost nothing to prepare. We'll cover where you started, the hard years, and the decisions that got you here. Episodes go up on Spotify, Apple Podcasts, and YouTube, and I share every one on LinkedIn.
         </p>
         <p class="guests-tldr">
-          Light lift on your end. Show up and talk. One session is the whole ask.
+          One session. All you have to do is show up and talk.
         </p>
       </div>
       <aside class="guests-aside" aria-label="From a listener">
         <div class="ga-stars" aria-hidden="true">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-        <blockquote>I love the storytelling of The Making Of. I can't wait to hear more stories.</blockquote>
+        <blockquote>I love the story telling of The Making Of! I can't wait to hear more stories.</blockquote>
         <div class="ga-attrib">5-star review &nbsp;/&nbsp; Apple Podcasts</div>
         <div class="ga-rule"></div>
         <p class="ga-press">"Brookfield businessman featured on podcast"</p>
@@ -1786,34 +1878,34 @@
     <div class="how-it-works">
       <div class="hiw-eyebrow">How it works</div>
       <ol class="hiw-list">
-        <li><span class="hiw-num">i.</span><span class="hiw-text"><strong>A quick hello.</strong> Optional. A short call if you want to talk before we record. Most guests skip it.</span></li>
-        <li><span class="hiw-num">ii.</span><span class="hiw-text"><strong>One session.</strong> Sixty to seventy-five minutes, remote, unedited.</span></li>
-        <li><span class="hiw-num">iii.</span><span class="hiw-text"><strong>It goes live.</strong> Up on every platform, with a LinkedIn push so the story keeps moving.</span></li>
+        <li><span class="hiw-num">i.</span><span class="hiw-text"><strong>A quick hello.</strong> Send a short request. If it's a fit, I'll reply and we'll set up a time.</span></li>
+        <li><span class="hiw-num">ii.</span><span class="hiw-text"><strong>One session.</strong> About an hour, recorded remotely, lightly edited.</span></li>
+        <li><span class="hiw-num">iii.</span><span class="hiw-text"><strong>It goes live.</strong> Up on Spotify, Apple Podcasts, and YouTube, and I share it on LinkedIn.</span></li>
       </ol>
     </div>
 
     <div class="guest-fit" aria-label="Is the show a fit for you">
-      <div class="gf-eyebrow">Before you book</div>
+      <div class="gf-eyebrow">Before you reach out</div>
       <div class="gf-grid">
         <div class="gf-card">
           <h3>Who is a good fit</h3>
-          <p>Founders, operators, and family-business owners who have actually built something over years and can talk about it honestly. If you have run the thing, made payroll, and lived the boring middle, you will feel at home here.</p>
+          <p>Founders, operators, and family-business owners who have been at it for years and are happy to talk openly about it. If you've had to make payroll and figure things out as you went, you'll be in good company.</p>
         </div>
         <div class="gf-card">
           <h3>Who is probably not a fit</h3>
-          <p>If you are after a launch announcement, a fundraising lap, or a scripted promo, this is not the show. I am here for the real story, not a press release. Pure pitch decks and thought-leadership monologues usually land better somewhere else.</p>
+          <p>If you mainly want to announce a launch or pitch a product, this isn't the right show. I'm more interested in how you got here than in what you're selling this quarter.</p>
         </div>
         <div class="gf-card">
           <h3>What we usually talk about</h3>
-          <p>The origin, the false starts, the unsexy middle, and the decisions that compounded. Money, mistakes, the years no one writes about, and what you would tell someone standing where you started.</p>
+          <p>How you got started, the first few years, the mistakes, the money, and the moments the business changed direction. We usually finish with what you'd tell someone just starting out.</p>
         </div>
         <div class="gf-card">
           <h3>How to prepare</h3>
-          <p>Almost nothing. No deck, no homework binder, no script. Bring a few stories you actually remember and are willing to tell straight. We can trade a couple of notes on angle beforehand if you want, but most guests skip it.</p>
+          <p>Almost nothing. You don't need slides or a script. Think of two or three stories you remember well and don't mind sharing. We can swap notes on the angle beforehand if you want, but most guests skip it.</p>
         </div>
         <div class="gf-card">
           <h3>What happens after recording</h3>
-          <p>I edit lightly and publish to Spotify, Apple Podcasts, and YouTube. You get the links and a share card for your own channels, and I push the episode on LinkedIn so your story keeps reaching the right people.</p>
+          <p>I lightly edit the episode and publish it to Spotify, Apple Podcasts, and YouTube. You get the links and a share card for your own channels, and I post it on LinkedIn too.</p>
         </div>
       </div>
     </div>
@@ -1822,20 +1914,60 @@
     <div class="past-guests">
       <span>Dave Menz</span>
       <span>Lou Mongello</span>
-      <span>Niilo Pirttijarvi</span>
+      <span>Niilo Pirttijärvi</span>
       <span>Kris Carlson</span>
       <span>Ian Hicks</span>
     </div>
 
-    <div class="book-card">
-      <div>
-        <h3>Ready to <em>get on the calendar</em>?</h3>
-        <p>Pick a time that works. We will hop on a quick intro call and figure out the right angle for your episode together.</p>
+    <div class="book-card has-form" id="guest-request">
+      <div class="book-intro">
+        <h3>Ready to <em>tell your story</em>?</h3>
+        <p>Tell me a bit about you and your business. I read every request and reach out if it looks like a good fit.</p>
+        <div class="book-alt">
+          <a class="btn btn-line" href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Or DM on LinkedIn</a>
+          <small>As featured in the Riverside-Brookfield Landmark.</small>
+        </div>
       </div>
-      <div class="book-cta">
-        <a class="btn btn-orange" href="https://calendar.app.google/8s9JEAriAqG2qS7MA" target="_blank" rel="noopener">Book a Guest Call</a>
-        <a class="btn btn-line" href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Or DM on LinkedIn</a>
-        <small>Replies within 1 to 2 business days. As featured in the Riverside-Brookfield Landmark.</small>
+      <div class="book-cta guest-form-wrap">
+        <noscript>
+          <p class="gr-noscript">This form needs JavaScript to send. You can also <a href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">message me on LinkedIn</a>.</p>
+        </noscript>
+        <form class="guest-form" id="guest-form" action="/api/guest-request" method="post" novalidate>
+          <div class="gr-field">
+            <label for="gr-name">Name</label>
+            <input id="gr-name" name="name" type="text" autocomplete="name" maxlength="100" required aria-describedby="gr-err-name" />
+            <p class="gr-error" id="gr-err-name"></p>
+          </div>
+          <div class="gr-field">
+            <label for="gr-email">Email</label>
+            <input id="gr-email" name="email" type="email" inputmode="email" autocomplete="email" maxlength="254" required spellcheck="false" aria-describedby="gr-err-email" />
+            <p class="gr-error" id="gr-err-email"></p>
+          </div>
+          <div class="gr-field">
+            <label for="gr-companyRole">Company and role</label>
+            <input id="gr-companyRole" name="companyRole" type="text" autocomplete="organization-title" maxlength="150" required placeholder="e.g. Founder, Acme Car Wash" aria-describedby="gr-err-companyRole" />
+            <p class="gr-error" id="gr-err-companyRole"></p>
+          </div>
+          <div class="gr-field">
+            <label for="gr-link">Website or LinkedIn <span class="gr-optional">(optional)</span></label>
+            <input id="gr-link" name="link" type="url" inputmode="url" autocomplete="url" maxlength="300" spellcheck="false" placeholder="yourcompany.com" aria-describedby="gr-err-link" />
+            <p class="gr-error" id="gr-err-link"></p>
+          </div>
+          <div class="gr-field">
+            <label for="gr-story">Your story in a few sentences</label>
+            <textarea id="gr-story" name="story" rows="5" minlength="20" maxlength="1500" required aria-describedby="gr-story-hint gr-err-story"></textarea>
+            <p class="gr-hint" id="gr-story-hint">How you started, what the business does today, and anything you think would make a good conversation.</p>
+            <p class="gr-error" id="gr-err-story"></p>
+          </div>
+          <div class="gr-hp" aria-hidden="true">
+            <label for="gr-nickname">Leave this field empty</label>
+            <input id="gr-nickname" name="nickname" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+          <input type="hidden" name="t" value="" />
+          <p class="gr-status" role="status" aria-live="polite"></p>
+          <button class="btn btn-orange gr-submit" type="submit">Request to Be a Guest</button>
+          <p class="gr-privacy">I only use this to reply to you. It isn't added to any mailing list. <a href="/privacy">Privacy policy</a>.</p>
+        </form>
       </div>
     </div>
   </section>
@@ -1852,10 +1984,10 @@
         <a href="https://thejackpitts.com/" target="_blank" rel="noopener" style="color: var(--orange-dark); font-weight: 600;">Jack Pitts</a> is the founder of <a href="https://saltcreekadvisory.com/" target="_blank" rel="noopener" style="color: var(--orange-dark); font-weight: 600;">Salt Creek Advisory</a>, an AI-native deal sourcing and investment banking practice. Chicago-raised and Vanderbilt-educated, Jack is based in the Chicago area and spends his days around founders, operators, and investors. He started <em>The Making Of Hosted By Jack Pitts</em> to capture the stories he's always wanted to hear.
       </p>
       <p>
-        The show takes its inspiration from NPR's <em>How I Built This</em>, with a sharper focus on the operators and family-business builders behind companies most people walk past every day. Each episode unpacks what it actually takes to build something. The false starts, the unsexy middle, and the moments that compound into a real company.
+        The show takes its inspiration from NPR's <em>How I Built This</em>, with more focus on the operators and family-business owners whose companies you pass every day without knowing the story. You usually hear about the overnight success, not the year a company almost failed. Jack goes looking for that year.
       </p>
       <div class="cta-row" style="margin-top: 20px;">
-        <a class="btn btn-primary" href="https://calendar.app.google/8s9JEAriAqG2qS7MA" target="_blank" rel="noopener">Book a Call</a>
+        <a class="btn btn-primary" href="#guest-request">Request to Be a Guest</a>
         <a class="btn btn-secondary" href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Connect on LinkedIn</a>
       </div>
     </div>
@@ -1867,18 +1999,18 @@
       <h2>Articles</h2>
       <span class="meta">Plain-English guides for founders</span>
     </div>
-    <p class="ha-intro">Short, honest guides on going on a podcast as a founder. How to decide if it is worth your time, how to choose the right show, and how to be a guest people actually remember. No filler.</p>
+    <p class="ha-intro">Short guides for founders thinking about going on a podcast: whether it is worth your time, how to pick the right show, and how to be a guest people remember.</p>
     <div class="ha-grid">
       <a class="ha-card" href="/articles/best-entrepreneurship-podcasts-for-founders-2026">
         <div class="ha-kicker">Evaluation guide</div>
         <h3>Best Entrepreneurship Podcasts for Founders in 2026: What to Look For</h3>
-        <p>How to judge a founder podcast on its merits instead of a ranking, and the signals that separate a real conversation from a promo reel.</p>
+        <p>How to judge a founder podcast on its merits instead of a ranking, and the signals that separate a good conversation from a promo reel.</p>
         <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="ha-card" href="/articles/when-should-a-founder-go-on-a-podcast">
         <div class="ha-kicker">Timing</div>
         <h3>When Should a Founder Go on a Podcast?</h3>
-        <p>The moments when a podcast actually helps, the moments it does not, and how to tell the difference before you say yes.</p>
+        <p>The moments when a podcast helps, the moments it does not, and how to tell the difference before you say yes.</p>
         <span class="ha-read">Read the guide <span aria-hidden="true">&rarr;</span></span>
       </a>
       <a class="ha-card" href="/articles/how-to-choose-the-right-podcast-to-tell-your-founder-story">
@@ -1907,11 +2039,11 @@
       <div class="pk-main">
         <div class="pk-block">
           <div class="pk-label">The show, in one line</div>
-          <p>The Making Of Hosted By Jack Pitts is an interview show about founders, operators, and family-business builders behind companies most people walk past. A new conversation goes up roughly every three weeks on Spotify, Apple Podcasts, and YouTube.</p>
+          <p>The Making Of Hosted By Jack Pitts is an interview podcast where Jack Pitts talks with founders, operators, and family-business owners about how they started and how they grew their companies. A new conversation goes up every few weeks on Spotify, Apple Podcasts, and YouTube.</p>
         </div>
         <div class="pk-block">
           <div class="pk-label">About the host</div>
-          <p>Jack Pitts is the founder of Salt Creek Advisory, an AI-native deal sourcing and investment banking practice. Chicago-raised and Vanderbilt-educated, he spends his days around founders, operators, and investors, and started the show to capture the stories he always wanted to hear. The show takes its inspiration from NPR's <em>How I Built This</em>, with a sharper focus on overlooked builders.</p>
+          <p>Jack Pitts is the founder of Salt Creek Advisory, an AI-native deal sourcing and investment banking practice. Chicago-raised and Vanderbilt-educated, he spends his days around founders, operators, and investors, and started the show to capture the stories he always wanted to hear. The show takes its inspiration from NPR's <em>How I Built This</em>, with more focus on operators and family-business owners.</p>
         </div>
         <div class="pk-block">
           <div class="pk-label">Featured in</div>
@@ -1929,7 +2061,7 @@
           <li><a href="https://www.linkedin.com/in/jack-pitts" target="_blank" rel="noopener">Jack Pitts on LinkedIn</a></li>
         </ul>
         <div class="pk-cta">
-          <a class="btn btn-orange" href="https://calendar.app.google/8s9JEAriAqG2qS7MA" target="_blank" rel="noopener">Book or request an interview</a>
+          <a class="btn btn-orange" href="mailto:jack@saltcreekadvisory.com?subject=Press%20inquiry%3A%20The%20Making%20Of%20Hosted%20By%20Jack%20Pitts">Request an interview</a>
         </div>
       </aside>
     </div>
@@ -1959,9 +2091,11 @@
       <a href="#episodes">Episodes</a>
       <a href="#press">Press</a>
       <a href="/articles">Articles</a>
-      <a href="#guests">Be a Guest</a>
+      <a href="#guest-request">Be a Guest</a>
       <a href="#press-kit">Press Kit</a>
       <a href="#about">About</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
     </nav>
     <nav class="footer-archive" aria-label="Every episode">
       <div class="footer-archive-title"><a href="/episodes">Every episode</a></div>
@@ -1997,8 +2131,9 @@
 <script>
   /* =========================================================
      The Making Of Hosted By Jack Pitts -- render layer.
-     - Pulls fresh episodes from the Apple Podcasts feed via a
-       CORS-friendly proxy. Falls back to window.EPISODES on fail.
+     - Renders from window.EPISODES (episodes.js, the source of truth).
+     - Optional safety net: the show RSS (via CORS proxies) can only ADD
+       newer episodes; feed text is parsed inertly and always escaped.
      - Renders Featured, From The Catalog, and Recent grids.
      ========================================================= */
   (function() {
@@ -2010,6 +2145,8 @@
       "https://corsproxy.io/?",
       "https://api.codetabs.com/v1/proxy?quest="
     ];
+    var SITE_ORIGIN = "https://themakingofhostedbyjackpitts.com";
+    var MAX_LIVE_ADDITIONS = 3;
     var SHOW_LINKS = {
       spotify: "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
       apple:   "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144",
@@ -2038,12 +2175,27 @@
       if (sp > 0) cut = cut.slice(0, sp);
       return cut.replace(/[ ,;:.\-]+$/, "") + "…";
     }
-    function stripTags(s) { var d = document.createElement("div"); d.innerHTML = s||""; return d.textContent || d.innerText || ""; }
+    // Feed text arrives through third-party proxies, so it is parsed in an
+    // inert DOMParser document (no scripts, no image loads) and only its
+    // text is kept. Never assign proxy content to innerHTML on a live node.
+    function stripTags(s) {
+      try {
+        var doc = new DOMParser().parseFromString(String(s || ""), "text/html");
+        return (doc.body && doc.body.textContent) || "";
+      } catch (e) { return ""; }
+    }
+    // Only http(s) URLs make it into an href.
+    function safeUrl(u) { u = String(u || "").trim(); return /^https?:\/\//i.test(u) ? u : ""; }
 
-    function pill(cls, label, href, key) {
+    var PLATFORM_NAMES = { spotify: "Spotify", apple: "Apple Podcasts", youtube: "YouTube" };
+    function pill(cls, label, href, key, who) {
+      href = safeUrl(href);
       if (!href) return "";
-      return '<a class="ep-platform ' + cls + '" href="' + href + '" target="_blank" rel="noopener" aria-label="' + label + '">' +
-        ICONS[key] + label + '</a>';
+      var aria = key === "linkedin"
+        ? "Connect with " + who + " on LinkedIn"
+        : "Listen to " + who + " on " + (PLATFORM_NAMES[key] || label);
+      return '<a class="ep-platform ' + cls + '" href="' + escHtml(href) + '" target="_blank" rel="noopener" aria-label="' + escHtml(aria) + '">' +
+        ICONS[key].replace("<svg ", '<svg aria-hidden="true" ') + escHtml(label) + '</a>';
     }
 
     function fmtDate(d) {
@@ -2145,8 +2297,27 @@
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-+|-+$/g, "") || "episode";
     }
+    // ep.slug (optional, pinned in episodes.js) wins so URLs never move when
+    // a guest name is corrected. Mirrors seo_urls.episode_slug().
     function episodePageHref(ep) {
+      if (ep.slug) return "/episodes/" + String(ep.slug);
       return "/episodes/" + slugify(ep.guest || extractGuestName(ep.title || "") || ep.title || "");
+    }
+    // Episodes added from the live feed have no page on this site until the
+    // sync runs, so they link out to the platform instead of a 404.
+    function hasLocalPage(ep) { return !ep._live; }
+    function readHref(ep) {
+      return hasLocalPage(ep) ? episodePageHref(ep) : (safeUrl(ep.links && ep.links.apple) || SHOW_LINKS.apple);
+    }
+    function linkAttrs(ep) {
+      return 'href="' + escHtml(readHref(ep)) + '"' + (hasLocalPage(ep) ? '' : ' target="_blank" rel="noopener"');
+    }
+    // Display name for the guest. Newer titles use "Topic | Guest", so show
+    // the part after the last pipe. Display only: the slug is unaffected.
+    function displayGuest(ep) {
+      var name = String(ep.guest || extractGuestName(ep.title || "") || "");
+      if (name.indexOf("|") > -1) name = name.split("|").pop();
+      return name.trim() || String(ep.title || "");
     }
 
     /* Pull a guest name out of an episode title. Falls back to the title
@@ -2155,14 +2326,26 @@
          "The Making Of [Name]"
          "In The Making Of: [Name]"
          "The Making of [Name] with [Company]"  */
+    // Mirrors seo_urls.extract_guest_name() so a live-feed-only episode gets
+    // the same guest name the generated page will use after the next sync.
     function extractGuestName(title) {
       if (!title) return "";
-      var t = title.replace(/^In\s+The\s+Making\s+Of:\s*/i, "");
+      function stripQuotes(v) { return v.replace(/^["“”'\s]+|["“”'\s]+$/g, ""); }
+      var t = title.trim();
+      // "Topic | Name" titles: the guest is after the last pipe.
+      if (t.indexOf("|") > -1) return stripQuotes(t.split("|").pop()) || title;
+      // "From X to Y: Name" topic-first titles: the guest is the last part.
+      if (/^From\s/i.test(t)) {
+        var parts = t.split(/:|\s+with\s+/i);
+        return parts.length > 1 ? stripQuotes(parts[parts.length - 1]) : title;
+      }
+      t = t.replace(/^In\s+The\s+Making\s+Of:\s*/i, "");
       t = t.replace(/^The\s+Making\s+(Of|of)\s+/i, "");
-      // Drop everything after a colon or " with " or " of "
+      // Drop everything after a colon, " with " or " from ".
       t = t.split(/:|\s+with\s+|\s+from\s+/i)[0];
-      // Strip surrounding quotes/whitespace
-      t = t.replace(/^["“”'\s]+|["“”'\s]+$/g, "");
+      // "Name of Company" (lowercase "of" only, like the Python rule).
+      t = t.split(/\s+of\s+/)[0];
+      t = stripQuotes(t);
       return t || title;
     }
 
@@ -2171,7 +2354,8 @@
       if (!episodes || !episodes.length) return;
 
       // Figure out total count for issue numbering relative to the catalog.
-      var total = (window.EPISODES && window.EPISODES.length) || episodes.length;
+      // episodes already includes every local entry (plus any live additions).
+      var total = episodes.length;
       // When live data overrides, we only have the most recent entries.
       // Map them onto descending issue numbers starting from total.
       episodes.forEach(function(ep, i) { ep._issue = total - i; });
@@ -2199,18 +2383,21 @@
       var de = document.querySelector("[data-fe-desc]");      if (de) de.textContent = trimText(ep.description || "", 400);
       var iss= document.querySelector("[data-fe-issue]");     if (iss) iss.textContent = pad(ep._issue || "--");
       var links = ep.links || {};
-      setHref("[data-fe-link-spotify]", links.spotify || SHOW_LINKS.spotify);
-      setHref("[data-fe-link-apple]",   links.apple   || SHOW_LINKS.apple);
-      setHref("[data-fe-link-youtube]", links.youtube || SHOW_LINKS.youtube);
+      setHref("[data-fe-link-spotify]", safeUrl(links.spotify) || SHOW_LINKS.spotify);
+      setHref("[data-fe-link-apple]",   safeUrl(links.apple)   || SHOW_LINKS.apple);
+      setHref("[data-fe-link-youtube]", safeUrl(links.youtube) || SHOW_LINKS.youtube);
 
       // Wire the "Read the full issue" link to the per-episode page.
       var readLink = document.querySelector("[data-fe-read-link]");
-      if (readLink) readLink.setAttribute("href", episodePageHref(ep));
+      if (readLink) {
+        readLink.setAttribute("href", readHref(ep));
+        if (!hasLocalPage(ep)) { readLink.setAttribute("target", "_blank"); readLink.setAttribute("rel", "noopener"); }
+      }
 
       // Inline Spotify player. Prefer per-episode embed; fall back to show.
       var embedSlot = document.querySelector("[data-fe-spotify-embed]");
       if (embedSlot) {
-        var spURL = links.spotify || SHOW_LINKS.spotify;
+        var spURL = safeUrl(links.spotify) || SHOW_LINKS.spotify;
         var epMatch = spURL && spURL.match(/episode\/([a-zA-Z0-9]+)/);
         var showMatch = spURL && spURL.match(/show\/([a-zA-Z0-9]+)/);
         var src = "";
@@ -2249,21 +2436,21 @@
         var links = ep.links || {};
         var corner = ep.tag === "first" ? "01" : (ep.tag === "press" ? "II" : "");
         var inUrl = (ep.guestLinkedIn || "").trim();
+        var who = displayGuest(ep);
         i += 1;
-        var pageHref = episodePageHref(ep);
         return '<article class="pin">' +
           (corner ? '<span class="pin-corner" aria-hidden="true">' + corner + '</span>' : '') +
           '<div class="pin-tag">' + t.icon + escHtml(t.label) + '</div>' +
           '<div class="pin-date">' + escHtml(ep.dateLabel || "") + '</div>' +
-          '<h3><a class="ep-title-link" href="' + pageHref + '">' + escHtml(ep.title || "") + '</a></h3>' +
+          '<h3><a class="ep-title-link" ' + linkAttrs(ep) + '>' + escHtml(ep.title || "") + '</a></h3>' +
           '<p>' + escHtml(trimText(ep.description || "", 400)) + '</p>' +
           '<div class="ep-platforms">' +
-            pill('is-spotify', 'Spotify',  links.spotify || SHOW_LINKS.spotify, 'spotify') +
-            pill('is-apple',   'Apple',    links.apple   || SHOW_LINKS.apple,   'apple') +
-            pill('is-youtube', 'YouTube',  links.youtube || SHOW_LINKS.youtube, 'youtube') +
-            (inUrl ? pill('is-linkedin', 'Connect', inUrl, 'linkedin') : '') +
+            pill('is-spotify', 'Spotify',  links.spotify || SHOW_LINKS.spotify, 'spotify', who) +
+            pill('is-apple',   'Apple',    links.apple   || SHOW_LINKS.apple,   'apple', who) +
+            pill('is-youtube', 'YouTube',  links.youtube || SHOW_LINKS.youtube, 'youtube', who) +
+            (inUrl ? pill('is-linkedin', 'Connect', inUrl, 'linkedin', who) : '') +
           '</div>' +
-          '<a class="ep-read" href="' + pageHref + '">Read the full issue <span aria-hidden="true">&rarr;</span></a>' +
+          '<a class="ep-read" ' + linkAttrs(ep) + ' aria-label="' + escHtml('Read the full issue: ' + (ep.title || "")) + '">Read the full issue <span aria-hidden="true">&rarr;</span></a>' +
           '</article>';
       }).join('');
     }
@@ -2271,7 +2458,8 @@
     function paintRecent(list) {
       var container = document.getElementById('eps-container');
       if (!container) return;
-      if (!list.length) { container.innerHTML = ''; return; }
+      // Never blank the grid: keep the static fallback if there is nothing to show.
+      if (!list.length) return;
 
       container.innerHTML = list.map(function(ep, i) {
         var lastIdx = list.length - 1;
@@ -2280,28 +2468,30 @@
         var links = ep.links || {};
         var issueNo = pad(ep._issue || (lastIdx - i + 1));
         var inUrl = (ep.guestLinkedIn || "").trim();
-        var pageHref = episodePageHref(ep);
+        var who = displayGuest(ep);
         return '<article class="ep fade-up"' + span + '>' +
           '<span class="ep-numeral" aria-hidden="true">' + issueNo + '</span>' +
           '<div class="ep-issue">Issue No. ' + issueNo + '</div>' +
           '<div class="ep-num">' + escHtml(ep.dateLabel) + '</div>' +
-          '<h3><a class="ep-title-link" href="' + pageHref + '">' + escHtml(ep.title) + '</a></h3>' +
+          '<h3><a class="ep-title-link" ' + linkAttrs(ep) + '>' + escHtml(ep.title) + '</a></h3>' +
           '<p>' + escHtml(trimText(ep.description, 400)) + '</p>' +
           '<div class="ep-meta"><span>' + escHtml(ep.duration) + '</span><span>Full episode</span></div>' +
           '<div class="ep-platforms">' +
-            pill('is-spotify', 'Spotify',  links.spotify || SHOW_LINKS.spotify, 'spotify') +
-            pill('is-apple',   'Apple',    links.apple   || SHOW_LINKS.apple,   'apple') +
-            pill('is-youtube', 'YouTube',  links.youtube || SHOW_LINKS.youtube, 'youtube') +
-            (inUrl ? pill('is-linkedin', 'Connect', inUrl, 'linkedin') : '') +
+            pill('is-spotify', 'Spotify',  links.spotify || SHOW_LINKS.spotify, 'spotify', who) +
+            pill('is-apple',   'Apple',    links.apple   || SHOW_LINKS.apple,   'apple', who) +
+            pill('is-youtube', 'YouTube',  links.youtube || SHOW_LINKS.youtube, 'youtube', who) +
+            (inUrl ? pill('is-linkedin', 'Connect', inUrl, 'linkedin', who) : '') +
           '</div>' +
-          '<a class="ep-read" href="' + pageHref + '">Read the full issue <span aria-hidden="true">&rarr;</span></a>' +
+          '<a class="ep-read" ' + linkAttrs(ep) + ' aria-label="' + escHtml('Read the full issue: ' + (ep.title || "")) + '">Read the full issue <span aria-hidden="true">&rarr;</span></a>' +
           '</article>';
       }).join('');
 
-      // If there's no IntersectionObserver, just reveal them right away.
-      if (!('IntersectionObserver' in window)) {
-        document.querySelectorAll('.ep.fade-up').forEach(function(el){ el.classList.add('is-in'); });
-      }
+      // Reveal the new cards. On first paint the fade-up observer (defined
+      // later) picks them up itself; on a later re-render (live feed) it has
+      // already run, so hand them over, or show them if there is no observer.
+      var cards = Array.prototype.slice.call(container.querySelectorAll('.ep.fade-up'));
+      if (typeof window.__tmoObserveFade === 'function') window.__tmoObserveFade(cards);
+      else if (!('IntersectionObserver' in window)) cards.forEach(function(el){ el.classList.add('is-in'); });
     }
 
     /* ---------- MARQUEE: build from data ---------- */
@@ -2313,27 +2503,29 @@
       var seen = {};
       var guests = [];
       eps.forEach(function(ep) {
-        var name = ep.guest || extractGuestName(ep.title || "");
+        var name = displayGuest(ep);
         if (!name || seen[name]) return;
         seen[name] = true;
         // Each name goes to that guest's episode page on this site, where
         // their own episode player and full write-up live.
-        guests.push({ name: name, url: episodePageHref(ep) });
+        guests.push({ name: name, ep: ep });
       });
 
-      function buildRun() {
-        var html = ['<span class="marquee-label">Past Guests</span>'];
+      // The second run only exists for the seamless loop, so it is hidden
+      // from assistive tech and removed from the tab order.
+      function buildRun(isDuplicate) {
+        var hide = isDuplicate ? ' aria-hidden="true"' : '';
+        var html = ['<span class="marquee-label"' + hide + '>Past Guests</span>'];
         guests.forEach(function(g) {
           html.push(
-            '<a class="marquee-name" href="' + g.url + '" ' +
-            'aria-label="Listen to the episode with ' + escHtml(g.name) + '">' +
+            '<a class="marquee-name" ' + linkAttrs(g.ep) +
+            (isDuplicate ? ' aria-hidden="true" tabindex="-1"' : ' aria-label="' + escHtml('Listen to the episode with ' + g.name) + '"') + '>' +
             escHtml(g.name) + '</a>'
           );
         });
         return html.join('');
       }
-      // Duplicate the run so the CSS scroll loop is seamless.
-      track.innerHTML = buildRun() + buildRun();
+      track.innerHTML = buildRun(false) + buildRun(true);
     }
 
     /* ---------- STATS UPDATE FROM DATA ---------- */
@@ -2392,8 +2584,9 @@
           "@type": "PodcastEpisode",
           "name": ep.title || "",
           "datePublished": ep.date || "",
-          "description": ep.description || "",
-          "url": (ep.links && (ep.links.apple || ep.links.spotify)) || ""
+          "description": trimText(ep.description || "", 300),
+          "url": hasLocalPage(ep) ? SITE_ORIGIN + episodePageHref(ep) : readHref(ep),
+          "partOfSeries": { "@id": SITE_ORIGIN + "/#podcast" }
         };
       });
       var schema = {
@@ -2411,10 +2604,10 @@
     }
 
     /* ---------- BOOT ---------- */
-    // episodes.js is the source of truth. A scheduled task keeps it in
-    // sync with Spotify, Apple, and YouTube. We used to try a live Apple
-    // fetch and override on top, but Apple's feed runs weeks behind, so
-    // it was wiping recent episodes off the page. The override is off.
+    // episodes.js is the source of truth. A GitHub Action keeps it in sync
+    // with the show RSS. The live fetch below can only ADD an episode newer
+    // than the newest local one; it can never replace, reorder, or shrink
+    // the list, and any failure leaves the episodes.js render untouched.
     function boot() {
       var local = (window.EPISODES || []).slice();
       renderAll(local);
@@ -2425,7 +2618,7 @@
       // Optional safety net: if the live feed somehow has a title that
       // isn't in episodes.js yet, prepend it. Never replace, never reorder.
       tryLiveFetch().then(function(live) {
-        if (!live || !live.length) return;
+        if (!live || !live.length || !local.length) return;
         // Normalize titles before comparing so the feed's smart quotes,
         // accents, and punctuation don't read as a "new" episode and create a
         // duplicate. Straight vs curly quotes on "Laundromat Millionaire" was
@@ -2440,16 +2633,25 @@
         local.forEach(function(ep){
           if (ep && ep.title) have[normTitle(ep.title)] = true;
         });
+        var newest = String(local[0].date || "");
         var additions = live.filter(function(ep){
-          return ep && ep.title && !have[normTitle(ep.title)];
-        });
+          return ep && ep.title && !have[normTitle(ep.title)] &&
+            ep.date && (!newest || ep.date >= newest);
+        }).slice(0, MAX_LIVE_ADDITIONS);
         if (!additions.length) return;
         var merged = additions.concat(local);
-        renderAll(merged);
-        updateStats(merged);
-        paintMarquee(merged);
-        injectEpisodeSchema(merged);
-      });
+        try {
+          renderAll(merged);
+          updateStats(merged);
+          paintMarquee(merged);
+          injectEpisodeSchema(merged);
+        } catch (e) {
+          // Fall back to the list from episodes.js if anything goes wrong.
+          renderAll(local);
+          paintMarquee(local);
+          injectEpisodeSchema(local);
+        }
+      }).catch(function() { /* keep the episodes.js render */ });
     }
     boot();
   })();
@@ -2469,10 +2671,17 @@
   (function() {
     var pill = document.getElementById('sticky-listen');
     var hero = document.querySelector('header.hero');
+    // Hidden while the guest form is on screen so it never covers the submit button.
+    var guestForm = document.getElementById('guest-request');
     if (!pill || !hero) return;
+    function isFormInView() {
+      if (!guestForm) return false;
+      var r = guestForm.getBoundingClientRect();
+      return r.top < window.innerHeight && r.bottom > 0;
+    }
     function onScroll() {
       var heroBottom = hero.getBoundingClientRect().bottom;
-      if (heroBottom < 0) pill.classList.add('is-visible');
+      if (heroBottom < 0 && !isFormInView()) pill.classList.add('is-visible');
       else pill.classList.remove('is-visible');
     }
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -2494,6 +2703,8 @@
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
     document.querySelectorAll('.fade-up').forEach(function(el){ io.observe(el); });
+    // Cards re-rendered later (live feed) are handed over through this hook.
+    window.__tmoObserveFade = function(nodes) { nodes.forEach(function(el){ io.observe(el); }); };
     // Also observe any dynamically rendered episode cards.
     setTimeout(function(){
       document.querySelectorAll('.ep.fade-up:not(.is-in)').forEach(function(el){ io.observe(el); });
@@ -2526,8 +2737,15 @@
         Array.prototype.slice.call(node.childNodes).forEach(wrapWords);
       }
     }
+    // Screen readers get the sentence once instead of word-by-word spans.
+    var labelSrc = h.cloneNode(true);
+    Array.prototype.slice.call(labelSrc.querySelectorAll('br')).forEach(function(b) {
+      b.parentNode.replaceChild(document.createTextNode(' '), b);
+    });
+    h.setAttribute('aria-label', labelSrc.textContent.replace(/\s+/g, ' ').trim());
     Array.prototype.slice.call(h.childNodes).forEach(wrapWords);
     var words = h.querySelectorAll('.word');
+    words.forEach(function(w) { w.setAttribute('aria-hidden', 'true'); });
     words.forEach(function(w, i) { w.style.animationDelay = (0.18 + i * 0.06) + 's'; });
     // Reveal after a tiny delay so the page paints first
     requestAnimationFrame(function() {
@@ -2565,6 +2783,8 @@
 
   /* ---------- MAGNETIC CTA HOVER ---------- */
   (function() {
+    if (window.matchMedia && (matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        !matchMedia('(hover: hover)').matches)) return;
     var els = document.querySelectorAll('.magnetic, .platform, .ep-platform, .pin');
     if (!els.length) return;
     var FACTOR = 0.18;
@@ -2578,6 +2798,168 @@
       el.addEventListener('mouseleave', function() {
         el.style.transform = '';
       });
+    });
+  })();
+
+  /* ---------- GUEST REQUEST FORM ---------- */
+  // Progressive enhancement: without JS the <noscript> note points to
+  // LinkedIn. With JS the form POSTs JSON to /api/guest-request.
+  (function() {
+    var form = document.getElementById('guest-form');
+    if (!form || !window.fetch || !window.JSON) return;
+
+    var ENDPOINT = '/api/guest-request';
+    var LINKEDIN_URL = 'https://www.linkedin.com/in/jack-pitts';
+    var LIMITS = { name: 100, email: 254, companyRole: 150, link: 300, storyMin: 20, storyMax: 1500 };
+    var FIELDS = ['name', 'email', 'companyRole', 'link', 'story'];
+    var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    var NETWORK_ERROR = "Couldn't send that. Please try again, or ";
+
+    var btn = form.querySelector('.gr-submit');
+    var status = form.querySelector('.gr-status');
+    var btnLabel = btn ? btn.textContent : '';
+    var tField = form.querySelector('input[name="t"]');
+    if (tField) tField.value = String(Date.now());
+
+    function field(name) { return form.elements[name]; }
+    function value(name) { var el = field(name); return el ? String(el.value || '').trim() : ''; }
+
+    function setError(name, msg) {
+      var el = field(name);
+      var err = document.getElementById('gr-err-' + name);
+      if (err) err.textContent = msg || '';
+      if (!el) return;
+      if (msg) el.setAttribute('aria-invalid', 'true');
+      else el.removeAttribute('aria-invalid');
+    }
+
+    function setStatus(msg, isError, withLinkedIn) {
+      if (!status) return;
+      status.textContent = msg || '';
+      status.className = 'gr-status' + (isError ? ' is-error' : '');
+      if (withLinkedIn) {
+        var a = document.createElement('a');
+        a.href = LINKEDIN_URL; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = 'message me on LinkedIn';
+        status.appendChild(a);
+        status.appendChild(document.createTextNode('.'));
+      }
+    }
+
+    // Accept bare domains and linkedin.com/in/... by adding https://.
+    function normalizeLink(raw) {
+      if (!raw) return '';
+      var v = /^https?:\/\//i.test(raw) ? raw : 'https://' + raw.replace(/^\/+/, '');
+      try {
+        var u = new URL(v);
+        if ((u.protocol !== 'http:' && u.protocol !== 'https:') || u.hostname.indexOf('.') === -1) return null;
+        return v;
+      } catch (e) { return null; }
+    }
+
+    function validate(data) {
+      var errors = {};
+      if (!data.name) errors.name = 'Please add your name.';
+      else if (data.name.length > LIMITS.name) errors.name = 'Please keep your name under ' + LIMITS.name + ' characters.';
+      if (!data.email || data.email.length > LIMITS.email || !EMAIL_RE.test(data.email)) errors.email = 'Please enter a valid email address.';
+      if (!data.companyRole) errors.companyRole = 'Please add your company and role.';
+      else if (data.companyRole.length > LIMITS.companyRole) errors.companyRole = 'Please keep this under ' + LIMITS.companyRole + ' characters.';
+      if (data.link === null || (data.link && data.link.length > LIMITS.link)) errors.link = 'Please enter a website or LinkedIn address, like yourcompany.com.';
+      if (data.story.length < LIMITS.storyMin) errors.story = 'Please share a few sentences (at least ' + LIMITS.storyMin + ' characters).';
+      else if (data.story.length > LIMITS.storyMax) errors.story = 'Please keep your story under ' + LIMITS.storyMax + ' characters.';
+      return errors;
+    }
+
+    function setBusy(isBusy) {
+      if (!btn) return;
+      btn.disabled = isBusy;
+      btn.textContent = isBusy ? 'Sending...' : btnLabel;
+      form.setAttribute('aria-busy', isBusy ? 'true' : 'false');
+    }
+
+    function showSuccess(name) {
+      var first = String(name || '').split(/\s+/)[0] || 'there';
+      var box = document.createElement('div');
+      box.className = 'gr-success';
+      box.setAttribute('role', 'status');
+      box.setAttribute('tabindex', '-1');
+      var p = document.createElement('p');
+      p.textContent = 'Thanks, ' + first + '. Your request is in. I read every one myself and will reply by email if it looks like a good fit.';
+      box.appendChild(p);
+      form.parentNode.replaceChild(box, form);
+      box.focus();
+    }
+
+    FIELDS.forEach(function(name) {
+      var el = field(name);
+      if (el) el.addEventListener('input', function() { if (el.getAttribute('aria-invalid')) setError(name, ''); });
+    });
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (btn && btn.disabled) return;
+      FIELDS.forEach(function(n) { setError(n, ''); });
+      setStatus('');
+
+      var data = {
+        name: value('name'),
+        email: value('email'),
+        companyRole: value('companyRole'),
+        link: normalizeLink(value('link')),
+        story: value('story')
+      };
+      var errors = validate(data);
+      var firstBad = FIELDS.filter(function(n) { return errors[n]; })[0];
+      if (firstBad) {
+        FIELDS.forEach(function(n) { if (errors[n]) setError(n, errors[n]); });
+        setStatus('Please check the highlighted fields.', true);
+        field(firstBad).focus();
+        return;
+      }
+
+      var payload = {
+        name: data.name,
+        email: data.email,
+        companyRole: data.companyRole,
+        link: data.link || '',
+        story: data.story,
+        nickname: field('nickname') ? field('nickname').value : '',
+        t: tField ? Number(tField.value) || 0 : 0
+      };
+
+      setBusy(true);
+      fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(payload)
+      })
+        .then(function(r) {
+          return r.json().catch(function() { return {}; }).then(function(body) {
+            return { status: r.status, ok: r.ok, body: body || {} };
+          });
+        })
+        .then(function(res) {
+          if (res.ok && res.body.ok) { showSuccess(data.name); return; }
+          setBusy(false);
+          var msg = typeof res.body.error === 'string' ? res.body.error : '';
+          var bad = typeof res.body.field === 'string' && FIELDS.indexOf(res.body.field) > -1 ? res.body.field : '';
+          if (res.status === 400 && bad) {
+            setError(bad, msg || 'Please check this field.');
+            setStatus('Please check the highlighted field.', true);
+            field(bad).focus();
+          } else if (res.status === 429) {
+            setStatus((msg || "You've sent a few requests in a row. Please wait a little and try again.") + ' You can also ', true, true);
+          } else if (msg) {
+            setStatus(msg + ' You can also ', true, true);
+          } else {
+            setStatus(NETWORK_ERROR, true, true);
+          }
+        })
+        .catch(function() {
+          setBusy(false);
+          setStatus(NETWORK_ERROR, true, true);
+        });
     });
   })();
 

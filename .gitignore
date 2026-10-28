@@ -23,3 +23,7 @@ venv/
 *.log
 *.tmp
 .gstack/
+
+# Cloudflare Worker local dev
+.wrangler/
+.dev.vars

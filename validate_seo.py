@@ -15,6 +15,10 @@ the following is true, because each one costs real Search Console coverage:
   * a page carries noindex or nofollow
   * an internal link points at a missing file or at a redirecting `.html` URL
   * robots.txt does not allow crawling or does not advertise the sitemap
+  * any site page links the retired public calendar or the private booking
+    host, contains an em dash, has other than exactly one <h1>, or carries
+    JSON-LD that does not parse
+  * an episodes.js guest is the whole episode title or contains "|"
 
 Run: python3 validate_seo.py
 """
@@ -50,6 +54,14 @@ DESC_RE = re.compile(r'<meta\s+name="description"\s+content="(.*?)"', re.S | re.
 ROBOTS_META_RE = re.compile(r'<meta\s+name="robots"\s+content="(.*?)"', re.I)
 CANONICAL_RE = re.compile(r'<link\s+rel="canonical"\s+href="(.*?)"', re.I)
 HREF_RE = re.compile(r'href="([^"]+)"')
+H1_RE = re.compile(r"<h1\b", re.I)
+EM_DASH = "\u2014"
+
+# Hosts that must never appear on the site: the retired public Google
+# appointment calendar, and the private booking host (guests now apply through
+# the form at /#guest-request). Split so a repo-wide grep for either host only
+# finds real occurrences, never this rule.
+FORBIDDEN_HOSTS = ("calendar.app" + ".google", "helmiq" + ".net")
 
 # The homepage's client-side renderer builds hrefs by string concatenation
 # (`'<a href="' + pageHref + '">'`). Those are code, not markup, so they are
@@ -143,7 +155,7 @@ def check_episode_slugs(errors: list[str], episodes: list[dict]) -> None:
         if slug in seen:
             errors.append(
                 f"episodes.js: '{title}' and '{seen[slug]}' both slugify to "
-                f"'{slug}' — one would overwrite the other"
+                f"'{slug}', so one would overwrite the other"
             )
         else:
             seen[slug] = title
@@ -152,6 +164,44 @@ def check_episode_slugs(errors: list[str], episodes: list[dict]) -> None:
                 f"episodes.js: '{title}' produced the fallback slug 'episode' "
                 f"(no usable ASCII in the guest name); set a `guest` value"
             )
+
+
+def check_episode_guests(errors: list[str], episodes: list[dict]) -> None:
+    """The guest field must be a name, not the episode title.
+
+    The sync used to copy a whole "Topic | Guest" title into `guest`, which
+    then showed as the guest name on the marquee, guest card and share card.
+    """
+    for ep in episodes:
+        guest = (ep.get("guest") or "").strip()
+        title = (ep.get("title") or "").strip()
+        if not guest:
+            continue
+        if guest == title:
+            errors.append(f"episodes.js: guest is the whole title for '{title}'; set the guest's name")
+        elif "|" in guest:
+            errors.append(f"episodes.js: guest '{guest}' contains '|'; set the guest's name")
+
+
+def site_html_files() -> list[Path]:
+    """Every HTML page the site serves, including the non-indexed 404."""
+    files = [ROOT / n for n in ("index.html", "episodes.html", "articles.html", "privacy.html", "terms.html", "404.html")]
+    files += sorted((ROOT / "articles").glob("*.html"))
+    files += sorted((ROOT / "episodes").glob("*.html"))
+    return [f for f in files if f.is_file()]
+
+
+def check_site_html(errors: list[str], rel: str, html: str) -> None:
+    """Pure: house rules that apply to every served page, indexed or not."""
+    lowered = html.lower()
+    for host in FORBIDDEN_HOSTS:
+        if host in lowered:
+            errors.append(f"{rel}: contains '{host}' (guest CTAs must point to /#guest-request)")
+    if EM_DASH in html:
+        errors.append(f"{rel}: contains an em dash (banned by house style)")
+    h1_count = len(H1_RE.findall(SCRIPT_STYLE_RE.sub("", html)))
+    if h1_count != 1:
+        errors.append(f"{rel}: has {h1_count} <h1> elements, expected exactly 1")
 
 
 def check_error_page(errors: list[str]) -> None:
@@ -329,7 +379,17 @@ def run_checks() -> list[str]:
     check_robots(errors)
     check_sitemap(errors, paths)
     check_episode_slugs(errors, episodes)
+    check_episode_guests(errors, episodes)
     check_error_page(errors)
+
+    # Public pages get their JSON-LD parsed in check_page; parse the rest here.
+    public_files = {source_file_for(p).resolve() for p in paths}
+    for file in site_html_files():
+        rel = str(file.relative_to(ROOT))
+        html = read(file)
+        check_site_html(errors, rel, html)
+        if file.resolve() not in public_files:
+            check_structured_data(errors, rel, html)
 
     titles: dict[str, list[str]] = {}
     descs: dict[str, list[str]] = {}

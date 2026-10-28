@@ -14,10 +14,14 @@ URL (../share-cards/<slug>.png) always matches.
 import json
 import re
 from html import escape
+from urllib.parse import quote
 
 from seo_urls import BASE_URL as SITE_URL
 from seo_urls import ROOT, article_pages, episode_path, episode_slug, to_url
+from seo_titles import GUEST_LINES, SEO_TITLES
 from sync_latest_episode import truncate_at_word
+
+from episode_page_template import CSS, PAGE_TMPL  # noqa: F401  (CSS is re-exported for the archive)
 
 EPISODES_JS = ROOT / "episodes.js"
 OUT_DIR = ROOT / "episodes"
@@ -33,7 +37,28 @@ APPLE_PODCAST_ID = "1853933144"
 SHOW_YT = "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
 JACK_LI = "https://www.linkedin.com/in/jack-pitts"
 JACK_SITE = "https://thejackpitts.com/"  # the person's canonical page; LinkedIn is a sameAs
-BOOK_CAL = "https://calendar.app.google/8s9JEAriAqG2qS7MA"
+# Every guest CTA goes to the request form on the homepage, same tab.
+GUEST_REQUEST = "/#guest-request"
+META_DESC_LIMIT = 160
+# A sentence end earlier than this makes a stub description (Google shows
+# ~155 chars), so cut at a word boundary instead.
+META_DESC_SENTENCE_FLOOR = 110
+FALLBACK_DESCRIPTION = "Jack talks with a business owner about how they got started and how they grew."
+
+# Feed descriptions open with show boilerplate ("In this episode of The Making
+# Of, Hosted by Jack Pitts, I sit down with ..."). It eats half the snippet
+# before the guest's company appears, so meta descriptions drop the show-name
+# clause and keep the rest as a full sentence, with "I" named as Jack Pitts.
+BOILERPLATE_LEAD_RE = re.compile(
+    r"^(?:in|on)\s+this\s+(?:episode|conversation)"
+    r"(?:\s+of\s+the\s+making\s+of(?:\s*,?\s*hosted\s+by\s+jack\s+pitts)?)?\s*,\s*",
+    re.I,
+)
+FIRST_PERSON_LEAD_RE = re.compile(r"^I\s+(sit|sat)\s+down\s+with", re.I)
+# Words that mark a guest string as a company or a title rather than a person,
+# so it is not emitted as a schema.org Person.
+NON_PERSON_WORDS = {"ai", "inc", "llc", "co", "group", "holdings", "company", "of", "the"}
+PERSON_NAME_RE = re.compile(r"^[A-Z][\w'’.-]+(?: [A-Z][\w'’.-]+){1,2}$")
 
 
 def load_episodes():
@@ -74,6 +99,81 @@ def split_title(title):
     return title.strip(), ""
 
 
+def seo_title_for(ep):
+    """Search title: episodes.js seoTitle, else seo_titles.py, else the published title."""
+    return (ep.get("seoTitle") or "").strip() or SEO_TITLES.get(episode_slug(ep)) or ep.get("title", "")
+
+
+def fit_description(text, limit=META_DESC_LIMIT, floor=META_DESC_SENTENCE_FLOOR):
+    """Trim to at most `limit` chars: a full sentence if one ends late enough,
+    otherwise the last whole word plus an ellipsis."""
+    text = re.sub(r"\s+", " ", text or "").strip()
+    if len(text) <= limit:
+        return text
+    cut = text[:limit]
+    sentence_ends = [m.end() for m in re.finditer(r"[.!?](?=\s|$)", cut)]
+    if sentence_ends and sentence_ends[-1] >= floor:
+        return cut[: sentence_ends[-1]]
+    cut = cut[: limit - 1]
+    if " " in cut:
+        cut = cut[: cut.rfind(" ")]
+    return cut.rstrip(" ,;:.-") + "…"
+
+
+def meta_description_for(ep):
+    """Meta description that opens with the episode, not the show boilerplate."""
+    override = (ep.get("metaDescription") or "").strip()
+    if override:
+        return fit_description(override)
+    text = (ep.get("description") or "").strip()
+    stripped = BOILERPLATE_LEAD_RE.sub("", text)
+    if stripped and stripped != text:
+        text = stripped[0].upper() + stripped[1:]
+    # Out of context, a search snippet's "I" is nobody, so name the host.
+    text = FIRST_PERSON_LEAD_RE.sub(
+        lambda m: "Jack Pitts sat down with" if m.group(1).lower() == "sat" else "Jack Pitts sits down with",
+        text,
+    )
+    return fit_description(text or FALLBACK_DESCRIPTION)
+
+
+def guest_people(ep):
+    """Guest names that look like people, for schema.org Person entities.
+
+    "Rick Franco & Mike Trott" gives two people; "Concentrate AI" gives none.
+    A guest string that is really the episode title gives none either.
+    """
+    guest = (ep.get("guest") or "").strip()
+    if not guest or guest == (ep.get("title") or "").strip() or "|" in guest:
+        return []
+    parts = [p.strip() for p in re.split(r"\s+(?:&|and)\s+", guest) if p.strip()]
+    people = []
+    for part in parts:
+        words = {w.lower() for w in part.split()}
+        if PERSON_NAME_RE.match(part) and not (words & NON_PERSON_WORDS):
+            people.append(part)
+    return people
+
+
+def iso_duration(label):
+    """'1h 9m' -> 'PT1H9M', '39 min' -> 'PT39M'. None when not parseable."""
+    m = re.fullmatch(r"\s*(?:(\d+)\s*h)?\s*(?:(\d+)\s*m(?:in)?)?\s*", label or "", re.I)
+    if not m or not (m.group(1) or m.group(2)):
+        return None
+    hours = f"{int(m.group(1))}H" if m.group(1) else ""
+    minutes = f"{int(m.group(2))}M" if m.group(2) else ""
+    return f"PT{hours}{minutes}"
+
+
+def nowrap_hyphenated(html_text):
+    """Keep hyphenated words ("140-Person") on one line in big headlines.
+
+    Runs on already-escaped text that may contain <em> tags; neither tags nor
+    entities contain hyphens, so only words are wrapped.
+    """
+    return re.sub(r"\w+(?:-\w+)+", lambda m: f'<span class="nb">{m.group(0)}</span>', html_text)
+
+
 def spotify_embed_src(spotify_url):
     if not spotify_url:
         return None
@@ -90,359 +190,8 @@ def issue_label(n):
     return f"No. {n:02d}"
 
 
-CSS = r"""
-:root {
-  --cream: #f3e8cf;
-  --cream-deep: #ecd9a8;
-  --orange: #d87a2c;
-  --orange-dark: #934c13;
-  --ink: #14130f;
-  --ink-soft: #3a352b;
-  --line: rgba(20,19,15,0.12);
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: var(--cream); color: var(--ink); }
-body { font-family: 'Inter', system-ui, -apple-system, sans-serif; line-height: 1.55; }
-a { color: inherit; }
-img { max-width: 100%; display: block; }
-
-/* Paper grain, very subtle, magazine feel */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  pointer-events: none; z-index: 1;
-  opacity: 0.045; mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='nf'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23nf)'/%3E%3C/svg%3E");
-}
-body > * { position: relative; z-index: 2; }
-
-.wrap { max-width: 780px; margin: 0 auto; padding: 0 28px; }
-
-/* Top nav */
-.topnav {
-  border-bottom: 1px solid var(--line);
-  padding: 18px 0;
-  background: rgba(243,232,207,0.92);
-  backdrop-filter: blur(6px);
-  position: sticky; top: 0; z-index: 5;
-}
-.topnav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.topnav .mark {
-  font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px;
-  letter-spacing: -0.01em; color: var(--ink); text-decoration: none;
-}
-.topnav .mark span { color: var(--orange); font-style: italic; font-weight: 600; }
-.topnav .back {
-  text-decoration: none; color: var(--ink-soft);
-  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
-  font-weight: 600;
-  display: inline-flex; align-items: center; gap: 8px;
-}
-.topnav .back::before { content: "\2190"; color: var(--orange-dark); font-size: 16px; }
-.topnav .back:hover { color: var(--ink); }
-
-/* Masthead meta line under nav */
-.masthead {
-  padding: 56px 0 18px;
-  display: flex; flex-wrap: wrap; gap: 14px;
-  font-family: 'Inter', sans-serif;
-  font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--ink-soft); font-weight: 600;
-}
-.masthead .issue { color: var(--orange-dark); font-weight: 800; }
-.masthead .dot { width: 4px; height: 4px; background: var(--ink-soft); border-radius: 50%; opacity: 0.6; align-self: center; }
-
-/* Hero headline */
-.hero-title {
-  font-family: 'Fraunces', serif;
-  font-weight: 800; line-height: 1.02;
-  font-size: clamp(38px, 6.4vw, 76px);
-  letter-spacing: -0.025em;
-  margin: 0 0 18px;
-  color: var(--ink);
-}
-.hero-title em { font-style: italic; color: var(--orange-dark); font-weight: 700; }
-.hero-sub {
-  font-family: 'Fraunces', serif; font-weight: 500;
-  font-size: clamp(20px, 2.4vw, 30px);
-  line-height: 1.28; color: var(--ink-soft);
-  letter-spacing: -0.005em;
-  margin: 0 0 36px;
-  max-width: 660px;
-}
-/* Spotify player */
-.player {
-  margin: 0 0 28px;
-  border-radius: 14px; overflow: hidden;
-  box-shadow: 0 28px 60px -36px rgba(20,19,15,0.6);
-}
-.player iframe { display: block; width: 100%; border: 0; background: transparent; }
-
-/* Listen anywhere row */
-.listen-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 44px; }
-.listen-row a {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 16px; border-radius: 999px;
-  border: 1px solid var(--line); background: rgba(255,255,255,0.4);
-  text-decoration: none; color: var(--ink);
-  font-size: 13.5px; font-weight: 600; letter-spacing: 0.02em;
-  transition: transform .15s, background .15s, border-color .15s;
-}
-.listen-row a:hover { transform: translateY(-2px); background: var(--ink); color: var(--cream); border-color: var(--ink); }
-.listen-row a svg { width: 14px; height: 14px; }
-
-/* Section heading */
-.sec-eyebrow {
-  font-family: 'Fraunces', serif; font-style: italic; font-weight: 600;
-  font-size: 18px; color: var(--orange-dark); margin: 56px 0 12px;
-}
-.sec-rule { height: 1px; background: var(--line); margin: 0 0 28px; }
-
-/* Long body copy */
-.body p {
-  font-family: 'Fraunces', serif; font-weight: 400;
-  font-size: 20px; line-height: 1.62; color: var(--ink);
-  margin: 0 0 22px;
-  letter-spacing: -0.003em;
-}
-
-/* About the guest */
-.guest-card {
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 28px 26px;
-  background: rgba(236, 217, 168, 0.45);
-  margin: 14px 0 0;
-}
-.guest-card .gc-eyebrow {
-  font-family: 'Inter', sans-serif; font-size: 11.5px;
-  letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--ink-soft); font-weight: 700;
-  margin-bottom: 10px;
-}
-.guest-card h3 {
-  font-family: 'Fraunces', serif; font-weight: 800;
-  font-size: 30px; letter-spacing: -0.015em;
-  margin: 0 0 8px; color: var(--ink);
-}
-.guest-card p {
-  font-family: 'Fraunces', serif; font-size: 17px;
-  color: var(--ink-soft); margin: 0 0 18px; line-height: 1.5;
-}
-.guest-card .gc-cta {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: #0a66c2; color: #fff;
-  padding: 12px 20px; border-radius: 999px;
-  text-decoration: none; font-weight: 700; font-size: 14px;
-  letter-spacing: 0.01em;
-}
-.guest-card .gc-cta:hover { transform: translateY(-2px); }
-.guest-card .gc-cta svg { width: 16px; height: 16px; }
-
-/* More from the show */
-.related {
-  border-top: 1px solid var(--line);
-  margin-top: 70px;
-  padding-top: 36px;
-}
-.related h2 {
-  font-family: 'Fraunces', serif; font-weight: 800;
-  font-size: 30px; letter-spacing: -0.015em;
-  margin: 0 0 24px;
-}
-.related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
-.r-card {
-  border: 1px solid var(--line); border-radius: 12px;
-  padding: 18px 18px 20px; background: rgba(255,255,255,0.35);
-  text-decoration: none; color: var(--ink);
-  display: block;
-  transition: transform .15s, border-color .15s, background .15s;
-}
-.r-card:hover { transform: translateY(-3px); border-color: var(--orange); background: rgba(255,255,255,0.6); }
-.r-card .r-issue {
-  font-family: 'Inter', sans-serif; font-size: 11px;
-  letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700;
-  color: var(--orange-dark); margin-bottom: 8px;
-}
-.r-card .r-title {
-  font-family: 'Fraunces', serif; font-weight: 700;
-  font-size: 18px; line-height: 1.25; color: var(--ink);
-  margin: 0 0 10px; letter-spacing: -0.01em;
-}
-.r-card .r-dur {
-  font-size: 12px; color: var(--ink-soft);
-  font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
-}
-
-/* Related reading: links out to the guides */
-.read-list { display: flex; flex-direction: column; gap: 2px; }
-.read-list a {
-  display: block; text-decoration: none; color: var(--ink);
-  font-family: 'Fraunces', serif; font-weight: 600; font-size: 18px;
-  line-height: 1.35; letter-spacing: -0.01em;
-  padding: 15px 0; border-bottom: 1px solid var(--line);
-  transition: color .15s, padding-left .15s;
-}
-.read-list a:first-child { border-top: 1px solid var(--line); }
-.read-list a:hover { color: var(--orange-dark); padding-left: 8px; }
-.read-list a .read-arrow { color: var(--orange-dark); }
-
-/* CTA strip to book */
-.book-strip {
-  margin: 70px 0 50px;
-  padding: 36px 32px;
-  background: var(--ink); color: var(--cream);
-  border-radius: 18px;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 28px; flex-wrap: wrap;
-}
-.book-strip h3 {
-  font-family: 'Fraunces', serif; font-weight: 800;
-  font-size: 24px; margin: 0 0 6px; letter-spacing: -0.01em;
-  color: var(--cream);
-}
-.book-strip h3 em { color: var(--orange); font-style: italic; }
-.book-strip p { margin: 0; font-size: 14.5px; color: rgba(243,232,207,0.78); max-width: 460px; }
-.book-strip a {
-  background: var(--orange); color: var(--ink);
-  padding: 14px 22px; border-radius: 999px;
-  font-weight: 700; text-decoration: none; font-size: 14px;
-  letter-spacing: 0.01em; white-space: nowrap;
-  transition: transform .15s, background .15s;
-}
-.book-strip a:hover { transform: translateY(-2px); background: #ffb361; }
-
-footer {
-  background: var(--ink); color: var(--cream);
-  padding: 40px 0 36px; margin-top: 30px;
-}
-footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
-footer .mark { font-family: 'Fraunces', serif; font-weight: 800; font-size: 18px; }
-footer .mark span { color: var(--orange); font-style: italic; font-weight: 600; }
-footer small { color: rgba(243,232,207,0.55); font-size: 12px; }
-
-@media (max-width: 720px) {
-  .related-grid { grid-template-columns: 1fr; }
-  .masthead { padding-top: 40px; }
-  .book-strip { padding: 28px 22px; }
-}
-"""
-
-
-PAGE_TMPL = """<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="theme-color" content="#f3e8cf" />
-<title>{page_title}</title>
-<meta name="description" content="{meta_desc}" />
-<link rel="canonical" href="{canonical}" />
-<meta property="og:type" content="article" />
-<meta property="og:site_name" content="The Making Of Hosted By Jack Pitts" />
-<meta property="og:title" content="{title_full}" />
-<meta property="og:description" content="{meta_desc}" />
-<meta property="og:url" content="{canonical}" />
-<meta property="og:image" content="{share_card_url}" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:title" content="{title_full}" />
-<meta name="twitter:description" content="{meta_desc}" />
-<meta name="twitter:image" content="{share_card_url}" />
-<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<script type="application/ld+json">{json_ld}</script>
-<style>{css}</style>
-</head>
-<body>
-
-<nav class="topnav">
-  <div class="wrap">
-    <a class="mark" href="/">The Making <span>Of</span> Hosted By Jack Pitts</a>
-    <a class="back" href="/episodes">All episodes</a>
-  </div>
-</nav>
-
-<main class="wrap">
-  <div class="masthead">
-    <span class="issue">ISSUE {issue}</span>
-    <span class="dot"></span>
-    <span>{date_label}</span>
-    <span class="dot"></span>
-    <span>{duration}</span>
-    <span class="dot"></span>
-    <span>HOSTED BY JACK PITTS</span>
-  </div>
-
-  <h1 class="hero-title">{headline_html}</h1>
-  {subhead_block}
-
-  <div class="player" aria-label="Spotify player">
-    {player_html}
-  </div>
-
-  <div class="listen-row">
-    <a href="{spotify}" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 100 24 12 12 0 000-24zm5.52 17.3a.75.75 0 01-1.03.25c-2.82-1.72-6.37-2.11-10.55-1.16a.75.75 0 01-.33-1.46c4.58-1.04 8.51-.6 11.66 1.34.35.21.46.68.25 1.03zm1.47-3.27a.94.94 0 01-1.29.31c-3.23-1.98-8.15-2.55-11.97-1.4a.94.94 0 11-.55-1.8c4.36-1.31 9.79-.67 13.5 1.6.44.27.58.85.31 1.29zm.13-3.4C15.25 8.4 8.8 8.18 5.1 9.3a1.12 1.12 0 11-.66-2.16c4.25-1.29 11.37-1.04 15.85 1.62a1.12 1.12 0 11-1.17 1.91z"/></svg>
-      Listen on Spotify
-    </a>
-    <a href="{apple}" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1a4 4 0 00-4 4v6a4 4 0 008 0V5a4 4 0 00-4-4zm6 10a1 1 0 00-2 0 4 4 0 01-8 0 1 1 0 00-2 0 6 6 0 005 5.91V20H9a1 1 0 000 2h6a1 1 0 000-2h-2v-3.09A6 6 0 0018 11z"/></svg>
-      Apple Podcasts
-    </a>
-    <a href="{youtube}" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.6 3.6 12 3.6 12 3.6s-7.6 0-9.4.5A3 3 0 00.5 6.2C0 8 0 12 0 12s0 4 .5 5.8a3 3 0 002.1 2.1c1.8.5 9.4.5 9.4.5s7.6 0 9.4-.5a3 3 0 002.1-2.1C24 16 24 12 24 12s0-4-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg>
-      YouTube
-    </a>
-  </div>
-
-  <div class="sec-eyebrow">On this episode</div>
-  <div class="sec-rule"></div>
-  <div class="body">
-    <p>{description_long}</p>
-  </div>
-
-  {guest_block}
-
-  <section class="related" aria-label="More from the show">
-    <h2>More from the show</h2>
-    <div class="related-grid">
-      {related_cards}
-    </div>
-  </section>
-
-  <section class="related" aria-label="Related reading">
-    <h2>Related reading</h2>
-    <div class="read-list">
-      {related_reading}
-    </div>
-  </section>
-
-  <aside class="book-strip" aria-label="Be a guest">
-    <div>
-      <h3>Have a story like this? <em>Come on the show.</em></h3>
-      <p>Sixty to seventy-five minutes, remote, no prep deck. Pick a time and we'll figure out the angle together.</p>
-    </div>
-    <a href="{book_cal}" target="_blank" rel="noopener">Book a guest call</a>
-  </aside>
-</main>
-
-<footer>
-  <div class="wrap">
-    <div class="mark">The Making <span>Of</span> Hosted By Jack Pitts</div>
-    <small>&copy; 2026 <a href="{jack_site}" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: underline;">Jack Pitts</a>. Every conversation is a long one. Have a story? <a href="{book_cal}" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: underline;">Come on the show.</a></small>
-  </div>
-</footer>
-
-</body>
-</html>
-"""
-
-
 def build_player(ep):
+    """The embed for this episode and the accessible name of its wrapper."""
     spotify_url = (ep.get("links") or {}).get("spotify") or SHOW_SPOTIFY
     embed = spotify_embed_src(spotify_url)
 
@@ -453,7 +202,7 @@ def build_player(ep):
     is_episode_embed = bool(embed and "/embed/episode/" in embed)
     apple_id = str(ep.get("appleEpisodeId") or "").strip()
     if not is_episode_embed and apple_id:
-        return (
+        return "Apple Podcasts player", (
             f'<iframe title="Play this episode on Apple Podcasts" '
             f'src="https://embed.podcasts.apple.com/us/podcast/id{APPLE_PODCAST_ID}?i={apple_id}&amp;theme=auto" '
             f'height="175" frameBorder="0" '
@@ -463,8 +212,8 @@ def build_player(ep):
         )
 
     if not embed:
-        return ""
-    return (
+        return "Episode player", ""
+    return "Spotify player", (
         f'<iframe title="Play this episode on Spotify" src="{embed}" '
         f'height="232" frameBorder="0" allowfullscreen="" '
         f'allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" '
@@ -472,7 +221,16 @@ def build_player(ep):
     )
 
 
-def build_guest_block(ep):
+def guest_line_for(ep, issue_no):
+    """One line for the guest card: a factual line from seo_titles.GUEST_LINES,
+    else a short neutral line. Never generated from a template of claims."""
+    line = (ep.get("guestLine") or "").strip() or GUEST_LINES.get(episode_slug(ep))
+    if line:
+        return line
+    return f"Jack's guest on Issue {issue_label(issue_no)}. Listen to the full conversation using the links above."
+
+
+def build_guest_block(ep, issue_no):
     name = (ep.get("guest") or "").strip()
     li = (ep.get("guestLinkedIn") or "").strip()
     if not name:
@@ -487,15 +245,61 @@ def build_guest_block(ep):
         )
     else:
         cta = ""
-    pitch = f"This episode's guest. {escape(name)} sat down with Jack to walk through the path, the false starts, and what actually compounded."
+    pitch = escape(guest_line_for(ep, issue_no))
     return (
         '<div class="guest-card">'
         '<div class="gc-eyebrow">About the guest</div>'
-        f'<h3>{escape(name)}</h3>'
+        f'<h2>{escape(name)}</h2>'
         f'<p>{pitch}</p>'
         f'{cta}'
         '</div>'
     )
+
+
+def build_share_row(canonical, social_title, guest_label):
+    """Plain share links plus a copy-link button. No third-party scripts."""
+    url = quote(canonical, safe="")
+    text = quote(social_title, safe="")
+    subject = quote(f"Worth a listen: {social_title}", safe="")
+    body = quote(f"Thought you'd like this episode of {SITE} with {guest_label}:\n\n{canonical}", safe="")
+    return (
+        '<div class="share-row" role="group" aria-label="Share this episode">\n'
+        '    <span class="share-label">Share</span>\n'
+        f'    <a href="https://www.linkedin.com/sharing/share-offsite/?url={url}" target="_blank" rel="noopener">LinkedIn</a>\n'
+        f'    <a href="https://twitter.com/intent/tweet?url={url}&amp;text={text}" target="_blank" rel="noopener">X</a>\n'
+        f'    <a href="mailto:?subject={subject}&amp;body={body}">Email</a>\n'
+        f'    <button type="button" data-copy-link="{escape(canonical)}" hidden>Copy link</button>\n'
+        '    <span class="share-status" data-copy-status aria-live="polite"></span>\n'
+        '  </div>'
+    )
+
+
+# Shown only when JS runs (the button starts hidden). Uses the async clipboard
+# API, falls back to a prompt the reader can copy from.
+SHARE_SCRIPT = """<script>
+(function () {
+  var btn = document.querySelector("[data-copy-link]");
+  var status = document.querySelector("[data-copy-status]");
+  if (!btn) return;
+  btn.hidden = false;
+  function say(msg) {
+    if (!status) return;
+    status.textContent = msg;
+    setTimeout(function () { status.textContent = ""; }, 2500);
+  }
+  btn.addEventListener("click", function () {
+    var link = btn.getAttribute("data-copy-link");
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(link).then(
+        function () { say("Link copied"); },
+        function () { window.prompt("Copy this link:", link); }
+      );
+    } else {
+      window.prompt("Copy this link:", link);
+    }
+  });
+})();
+</script>"""
 
 
 def build_related_cards(all_eps, current_idx, total):
@@ -565,34 +369,72 @@ def json_ld_script(payload):
 
 def json_ld_for(ep, issue_no, slug):
     canonical = to_url(episode_path(ep))
+    links = ep.get("links") or {}
     # Word-safe, not a raw slice: a hard [:500] cut 15 of 16 pages mid-word, so
     # the structured data contradicted the full text rendered on the same page.
     description = truncate_at_word(ep.get("description") or "", 500)
+    host = {"@type": "Person", "name": "Jack Pitts", "url": JACK_SITE, "sameAs": [JACK_LI]}
     obj = {
         "@context": "https://schema.org",
         "@type": "PodcastEpisode",
+        "@id": canonical,
         "name": ep.get("title", ""),
         "description": description,
         "url": canonical,
-        "datePublished": ep.get("date", ""),
         "image": f"{SITE_URL}/share-cards/{slug}.png",
-        "associatedMedia": [
-            {"@type": "AudioObject", "contentUrl": (ep.get("links") or {}).get("spotify", SHOW_SPOTIFY)}
-        ],
         "partOfSeries": {
             "@type": "PodcastSeries",
             "name": SITE,
             "url": to_url("/"),
         },
-        "author": {"@type": "Person", "name": "Jack Pitts", "url": JACK_SITE, "sameAs": [JACK_LI]},
+        "author": host,
     }
+    if ep.get("date"):
+        obj["datePublished"] = ep["date"]
+
+    # Only per-episode platform pages are "the same thing" as this page. Most
+    # episodes carry the show-level Spotify/YouTube URL, which is not.
+    same_as = []
+    apple = links.get("apple") or ""
+    if "?i=" in apple or "&i=" in apple:
+        same_as.append(apple)
+    spotify = links.get("spotify") or ""
+    if "/episode/" in spotify:
+        same_as.append(spotify)
+    if same_as:
+        obj["sameAs"] = same_as
+
+    # The audio itself: duration from the data, and the per-episode embed.
+    # No contentUrl, because none of the links on file is an audio file.
+    duration = iso_duration(ep.get("duration", ""))
+    apple_id = str(ep.get("appleEpisodeId") or "").strip()
+    embed = None
+    if "/episode/" in spotify:
+        embed = spotify_embed_src(spotify)
+    elif apple_id:
+        embed = f"https://embed.podcasts.apple.com/us/podcast/id{APPLE_PODCAST_ID}?i={apple_id}"
+    if duration or embed:
+        media = {"@type": "AudioObject"}
+        if duration:
+            media["duration"] = duration
+        if embed:
+            media["embedUrl"] = embed
+        obj["associatedMedia"] = media
+    if duration:
+        obj["timeRequired"] = duration
+
+    people = guest_people(ep)
+    if people:
+        obj["actor"] = [{"@type": "Person", "name": n} for n in people]
+
+    crumb_name = " & ".join(people) if people else ep.get("title", "")
     breadcrumbs = {
         "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "itemListElement": [
             {"@type": "ListItem", "position": 1, "name": SITE, "item": to_url("/")},
             {"@type": "ListItem", "position": 2, "name": "Episodes", "item": to_url("/episodes")},
-            {"@type": "ListItem", "position": 3, "name": ep.get("title", ""), "item": canonical},
+            {"@type": "ListItem", "position": 3, "name": crumb_name, "item": canonical},
         ],
     }
     return json_ld_script([obj, breadcrumbs])
@@ -603,11 +445,12 @@ def long_description_for(ep):
     Pages stay clean even when only one sentence is on file."""
     desc = (ep.get("description") or "").strip()
     if not desc:
-        return "A conversation about what it actually takes to build something real."
+        return FALLBACK_DESCRIPTION
     return desc
 
 
-def render_page(idx, ep, all_eps, total):
+def build_page_html(idx, ep, all_eps, total):
+    """The full HTML for one episode page. Pure, so tests can inspect it."""
     slug = episode_slug(ep)
     issue_no = total - idx
     title = ep.get("title", "")
@@ -615,19 +458,23 @@ def render_page(idx, ep, all_eps, total):
     guest = ep.get("guest") or ""
     headline_html = escape(head)
     # If it's a "The Making Of NAME" pattern, italicize the name for visual rhythm
-    if guest and guest in head:
+    if guest and guest in head and guest != head:
         headline_html = escape(head).replace(escape(guest), f"<em>{escape(guest)}</em>")
-    subhead_block = f'<p class="hero-sub">{escape(sub)}</p>' if sub else ""
+    headline_html = nowrap_hyphenated(headline_html)
+    subhead_block = f'<p class="hero-sub">{nowrap_hyphenated(escape(sub))}</p>' if sub else ""
 
     description_long = escape(long_description_for(ep))
 
     links = ep.get("links") or {}
     canonical = to_url(episode_path(ep))
+    social_title = seo_title_for(ep)
+    guest_label = guest or title
+    player_label, player_html = build_player(ep)
 
     page = PAGE_TMPL.format(
-        page_title=escape(page_title(title)),
-        title_full=escape(title),
-        meta_desc=escape(truncate_at_word(ep.get("description", ""), 160)),
+        page_title=escape(page_title(social_title)),
+        social_title=escape(social_title),
+        meta_desc=escape(meta_description_for(ep)),
         canonical=canonical,
         share_card_url=f"{SITE_URL}/share-cards/{slug}.png",
         json_ld=json_ld_for(ep, issue_no, slug),
@@ -637,12 +484,16 @@ def render_page(idx, ep, all_eps, total):
         duration=escape(ep.get("duration", "")),
         headline_html=headline_html,
         subhead_block=subhead_block,
-        player_html=build_player(ep),
+        player_label=player_label,
+        player_html=player_html,
+        guest_label=escape(guest_label),
+        share_row=build_share_row(canonical, social_title, guest_label),
+        share_script=SHARE_SCRIPT,
         spotify=escape(links.get("spotify") or SHOW_SPOTIFY),
         apple=escape(links.get("apple") or SHOW_APPLE),
         youtube=escape(links.get("youtube") or SHOW_YT),
         description_long=description_long,
-        guest_block=build_guest_block(ep),
+        guest_block=build_guest_block(ep, issue_no),
         slug=slug,
         # `or` not dict.get(k, default): an empty-string or null link is present
         # as a key, so get()'s default never fires and the page ships href=""
@@ -650,12 +501,15 @@ def render_page(idx, ep, all_eps, total):
         # and a quote in a URL would inject an arbitrary attribute.
         related_cards=build_related_cards(all_eps, idx, total),
         related_reading=build_related_reading(idx),
-        book_cal=BOOK_CAL,
+        guest_request=GUEST_REQUEST,
         jack_site=JACK_SITE,
     )
+    return page
 
-    out = OUT_DIR / f"{slug}.html"
-    out.write_text(page, encoding="utf-8")
+
+def render_page(idx, ep, all_eps, total):
+    out = OUT_DIR / f"{episode_slug(ep)}.html"
+    out.write_text(build_page_html(idx, ep, all_eps, total), encoding="utf-8")
     return out
 
 

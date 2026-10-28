@@ -164,6 +164,9 @@ def render_card(ep, out_path):
     subhead = ""
     if ":" in title:
         subhead = title.split(":", 1)[1].strip()
+    elif " | " in title and headline != title:
+        # "Topic | Guest" titles: the guest is already the headline.
+        subhead = title.split(" | ", 1)[0].strip()
     elif title and guest and title != headline:
         subhead = title
     if subhead:

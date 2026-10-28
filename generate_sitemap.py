@@ -35,6 +35,10 @@ from seo_urls import (
 EPISODES_JS = ROOT / "episodes.js"
 SITEMAP_XML = ROOT / "sitemap.xml"
 
+# The privacy policy and terms carry their own "Last updated" date. Bump this
+# whenever either page changes so the sitemap lastmod stays truthful.
+LEGAL_PAGES_LASTMOD = {"/privacy": "2026-10-28", "/terms": "2026-10-28"}
+
 
 def load_episodes() -> list[dict]:
     text = EPISODES_JS.read_text(encoding="utf-8")
@@ -70,6 +74,8 @@ def build_lastmods(episodes: list[dict]) -> dict[str, str]:
             article_dates.append(date)
     if article_dates:
         lastmods["/articles"] = max(article_dates)
+
+    lastmods.update(LEGAL_PAGES_LASTMOD)
 
     return lastmods
 

@@ -62,6 +62,13 @@ python3 generate_sitemap.py
 python3 validate_seo.py               # must print "all checks green"
 ```
 
+Tests:
+
+```bash
+python3 -m unittest discover tests
+node --test tests/worker/*.test.mjs   # guest-request Worker (list files; the bare folder fails on Node 22+)
+```
+
 ### Adding an article
 
 Drop a new `articles/<slug>.html` in place, then run `python3 generate_sitemap.py`
