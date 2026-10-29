@@ -37,6 +37,24 @@
 
 window.EPISODES = [
   {
+    "date": "2026-10-29",
+    "dateLabel": "October 29, 2026",
+    "title": "Melissa Banko: The Reality of Building a Business and Raising a Family",
+    "guest": "Melissa Banko",
+    "slug": "melissa-banko",
+    "description": "Melissa Banko started Banko Design in a spare bedroom in 2014 and built it into a multi-brand organization serving senior living, multifamily, and private club clients across the country. But along the way, she learned that bigger isn't always better. Melissa, founder of Banko Design and CEO of BD Studio Collection, joins Jack Pitts to talk about entrepreneurship, leadership, acquisitions, and what it really takes to build a sustainable business. They discuss how she found her first clients, built her team, acquired other design firms, and eventually realized that growth doesn't always mean success. Melissa also shares the lessons she's learned about company culture, knowing when to scale back, and balancing running a business with raising a family. From the early days of working late nights with her daughter coloring under her desk to leading a portfolio of companies, Melissa shares what she's learned about building a business on her own terms. Learn more about Melissa and her businesses: Banko Design: https://bankodesign.com BD Studio Collection: https://www.bdstudiocollection.com Melissa on Instagram: https://www.instagram.com/msbbymelissa/ Enjoyed the episode? Follow The Making Of Hosted By Jack Pitts on Spotify or Apple Podcasts, leave a five-star rating, and share it with a friend!",
+    "duration": "1h 2m",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/melissa-banko-the-reality-of-building-a/id1853933144?i=1000798702938&uo=4",
+      "youtube": "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+    },
+    "guid": "a7b047ee-37f7-4949-9902-481ff3abc9fb",
+    "appleEpisodeId": "1000798702938",
+    "appleDescription": "Melissa Banko started Banko Design in a spare bedroom in 2014 and built it into a multi-brand organization serving senior living, multifamily, and private club clients across the country. But along the way, she learned that bigger isn't always better. Melissa, founder of Banko Design and CEO of BD Studio Collection, joins Jack Pitts to talk about entrepreneurship, leadership, acquisitions, and what it really takes to build a sustainable business. They discuss how she found her first clients, built her team, acquired other design firms, and eventually realized that growth doesn't always mean success. Melissa also shares the lessons she's learned about company culture, knowing when to scale back, and balancing running a business with raising a family. From the early days of working late nights with her daughter coloring under her desk to leading a portfolio of companies, Melissa shares what she's learned about building a business on her own terms. Learn more about Melissa and her businesses: Banko Design: https://bankodesign.com BD Studio Collection: https://www.bdstudiocollection.com Melissa on Instagram: https://www.instagram.com/msbbymelissa/ Enjoyed the episode? Follow The Making Of Hosted By Jack Pitts on Spotify or Apple Podcasts, leave a five-star rating, and share it with a friend!"
+  },
+  {
     "date": "2026-10-08",
     "dateLabel": "October 8, 2026",
     "title": "From Selling Ice to Building a 140-Person Pet Care Business | Scott Burnley",
