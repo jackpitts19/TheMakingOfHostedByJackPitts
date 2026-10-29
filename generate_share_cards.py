@@ -377,7 +377,13 @@ def new_canvas():
 
 
 def save(canvas, out_path):
-    canvas.save(out_path, "PNG", optimize=True)
+    # A dithered 256-colour palette halves the file (about 220 KB -> 110 KB)
+    # with no visible banding, keeping cards well under the ~300 KB size some
+    # apps (WhatsApp) skip for link previews.
+    paletted = canvas.convert("RGB").quantize(
+        colors=256, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG
+    )
+    paletted.save(out_path, "PNG", optimize=True)
     return out_path
 
 
