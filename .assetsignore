@@ -21,6 +21,10 @@ tests
 episodes.json
 tmo-podcast.skill
 
+# Share-card fonts are only read by generate_share_cards.py; the site loads
+# its web fonts from Google Fonts.
+fonts
+
 # Worker source and tooling: the assets directory is the repo root, so without
 # these the Worker code would be publicly downloadable. _headers must NOT be
 # listed here; Cloudflare reads it from the assets directory (it is not served).

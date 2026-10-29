@@ -15,10 +15,11 @@ Live site: https://themakingofhostedbyjackpitts.com
 - `episodes/`: one polished, magazine-style page per episode.
 - `episodes.html`: the episode archive served at `/episodes`.
 - `articles.html`, `articles/`: the article archive and the articles themselves.
-- `share-cards/`: branded 1200x630 PNG share cards, one per episode, plus a `latest.png` for OG.
+- `share-cards/`: branded 1200x630 PNG link-preview cards: one per episode (that page's `og:image`), `latest.png` (newest episode), and `show.png` (the `og:image` for every page that is not an episode).
+- `fonts/`: Newsreader and Libre Franklin as static TTFs, vendored so the share cards render the same on a Mac and in CI. Instanced from the variable fonts in github.com/google/fonts (`ofl/newsreader`, `ofl/librefranklin`) with fontTools' `varLib.instancer` (Newsreader opsz 72 at wght 600 and italic wght 500; Libre Franklin wght 500 and 600). SIL Open Font License; each family's `OFL.txt` sits beside it. Build-only, listed in `.assetsignore`. `fonts/kerning.json` holds each font's pair kerning, exported from its GPOS table by `fonts/bake_kern.py` (needs fontTools; re-run only if the fonts change). The cards need it because Pillow's BASIC layout engine, used so output is identical on every machine, does not kern.
 - `sitemap.xml`, `robots.txt`: generated crawl surface. Do not hand-edit `sitemap.xml`.
 - `seo_urls.py`: **single source of truth for public URLs.** Every generator imports it.
-- `generate_share_cards.py`: regenerates the share cards from `episodes.js`.
+- `generate_share_cards.py`: regenerates the share cards from `episodes.js`. Type setting (fonts, kerning, ligatures) lives in `card_type.py`.
 - `generate_episode_pages.py`: regenerates the per-episode HTML pages from `episodes.js`.
 - `generate_episode_archive.py`: regenerates `episodes.html` from `episodes.js`.
 - `update_home_fallback.py`: refreshes the homepage's no-JS fallback markup.
@@ -82,4 +83,4 @@ directory, so there is no URL list to update. CI does this on every push too.
 
 - The show's full name is "The Making Of Hosted By Jack Pitts". Never abbreviate in copy.
 - No em dashes anywhere. Use periods, commas, or "and".
-- Palette: cream `#f3e8cf`, orange `#d87a2c`, ink `#14130f`. Fraunces serif + Inter.
+- Palette: cream `#f3e8cf`, orange `#d87a2c`, brown `#8a521f`, ink `#14130f`. Newsreader for headings and reading, Libre Franklin for labels and UI.

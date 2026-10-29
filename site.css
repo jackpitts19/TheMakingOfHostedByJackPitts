@@ -101,6 +101,12 @@ body::after {
 }
 .masthead-meta .dot { width: 4px; height: 4px; background: var(--orange); border-radius: 50%; }
 .masthead-meta strong { font-weight: 700; color: var(--ink); letter-spacing: 0.12em; }
+/* Narrow screens: the cadence line gets its own row, so no separator dot dangles at a line end. */
+@media (max-width: 640px) {
+  .masthead-meta { row-gap: 6px; }
+  .masthead-meta .dot:nth-last-child(2) { display: none; }
+  .masthead-meta > span:last-child { flex-basis: 100%; }
+}
 
 /* ---------- NOW-PLAYING BARS (animated audio bars) ---------- */
 .bars { display: inline-flex; align-items: flex-end; gap: 2.5px; height: 14px; }
@@ -483,8 +489,8 @@ h1 .word.is-in { animation: wordReveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwa
 .fe-grid {
   position: relative; z-index: 1;
   display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 48px;
+  grid-template-columns: minmax(0, 1fr) 210px;
+  gap: 40px;
   align-items: center;
 }
 .fe-meta {
@@ -503,9 +509,10 @@ h1 .word.is-in { animation: wordReveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwa
 .fe-meta .dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(243,232,207,0.4); }
 .fe-title {
   font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
-  font-size: clamp(34px, 4.6vw, 58px);
-  line-height: 1.08; letter-spacing: -0.01em;
+  font-size: clamp(32px, 3.9vw, 48px);
+  line-height: 1.1; letter-spacing: -0.01em;
   margin: 0 0 18px; color: var(--cream);
+  text-wrap: balance;
 }
 .fe-title em { font-style: italic; color: var(--orange); font-weight: 700; }
 .fe-desc {
@@ -534,7 +541,7 @@ h1 .word.is-in { animation: wordReveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwa
 .fe-cta-row .btn-line svg { width: 14px; height: 14px; }
 .fe-aside {
   border-left: 1px solid rgba(243,232,207,0.18);
-  padding-left: 36px;
+  padding-left: 32px;
 }
 .fe-aside .fe-tag {
   font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif; font-weight: 700;

@@ -32,6 +32,11 @@ ARTICLES_DIR = ROOT / "articles"
 
 BASE_URL = "https://themakingofhostedbyjackpitts.com"
 
+# Link-preview image for every page that is not an episode (episode pages use
+# their own share-cards/<slug>.png). generate_share_cards.py writes the file.
+SHOW_CARD_URL = f"{BASE_URL}/share-cards/show.png"
+SHOW_CARD_ALT = "The Making Of Hosted By Jack Pitts, an entrepreneurship podcast"
+
 # Public, canonical, indexable pages that are not generated from episode or
 # article data. Each entry is a site-root-relative path whose source file is
 # resolved by `source_file_for()`.

@@ -305,10 +305,12 @@ PAGE_TMPL = """<!doctype html>
 <meta property="og:image" content="{share_card_url}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="{share_card_alt}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="{social_title}" />
 <meta name="twitter:description" content="{meta_desc}" />
 <meta name="twitter:image" content="{share_card_url}" />
+<meta name="twitter:image:alt" content="{share_card_alt}" />
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

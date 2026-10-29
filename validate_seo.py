@@ -18,6 +18,10 @@ the following is true, because each one costs real Search Console coverage:
   * any site page links the retired public calendar or the private booking
     host, has a form posting to /api/, contains an em dash, has other than exactly one <h1>, or carries
     JSON-LD that does not parse
+  * any site page lacks a large link-preview image: og:image (with width,
+    height and alt) must be a file in this repo whose real pixel size matches
+    the declared one, twitter:card must be summary_large_image, and
+    twitter:image must match og:image
   * an episodes.js guest is the whole episode title or contains "|"
 
 Run: python3 validate_seo.py
@@ -76,6 +80,9 @@ FORBIDDEN_HOSTS = ("calendar.app" + ".google", "helmiq" + ".net")
 # stripped before link checking -- otherwise every JS template reads as a
 # broken link. The no-JS fallback markup they mirror is still checked.
 SCRIPT_STYLE_RE = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.S | re.I)
+META_RE = re.compile(r'<meta\s+(?:property|name)="([^"]+)"\s+content="([^"]*)"', re.I)
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
 JSON_LD_RE = re.compile(
     r'<script type="application/ld\+json">(.*?)</script>', re.S | re.I
 )
@@ -212,6 +219,56 @@ def check_site_html(errors: list[str], rel: str, html: str) -> None:
     h1_count = len(H1_RE.findall(SCRIPT_STYLE_RE.sub("", html)))
     if h1_count != 1:
         errors.append(f"{rel}: has {h1_count} <h1> elements, expected exactly 1")
+
+
+def png_size(path: Path) -> tuple[int, int] | None:
+    """(width, height) from a PNG's IHDR chunk, or None if not a PNG."""
+    with path.open("rb") as fh:
+        head = fh.read(24)
+    if len(head) < 24 or not head.startswith(PNG_SIGNATURE):
+        return None
+    return int.from_bytes(head[16:20], "big"), int.from_bytes(head[20:24], "big")
+
+
+def _repo_image_size(url: str) -> tuple[int, int] | None | bool:
+    """False if the URL has no file in the repo, else its PNG size (or None)."""
+    file = ROOT / url[len(BASE_URL):].lstrip("/")
+    if not file.is_file():
+        return False
+    return png_size(file)
+
+
+def check_social_image(errors: list[str], rel: str, html: str, image_size=_repo_image_size) -> None:
+    """Pure: every page needs a real, correctly sized link-preview image.
+
+    A missing or mis-sized og:image is invisible on the site itself and only
+    shows up as a blank or cropped preview once someone shares the link.
+    """
+    meta = {}
+    for key, value in META_RE.findall(html):
+        meta.setdefault(key.lower(), value.strip())
+    image = meta.get("og:image", "")
+    if not image:
+        errors.append(f"{rel}: missing og:image")
+        return
+    for key in ("og:image:width", "og:image:height", "og:image:alt"):
+        if not meta.get(key):
+            errors.append(f"{rel}: missing {key}")
+    if meta.get("twitter:card") != "summary_large_image":
+        errors.append(f"{rel}: twitter:card should be summary_large_image")
+    if meta.get("twitter:image") != image:
+        errors.append(f"{rel}: twitter:image does not match og:image")
+    if not image.startswith(BASE_URL + "/"):
+        errors.append(f"{rel}: og:image is not hosted on this site: {image}")
+        return
+    size = image_size(image)
+    if size is False:
+        errors.append(f"{rel}: og:image file does not exist in the repo: {image}")
+    elif size and (str(size[0]), str(size[1])) != (meta.get("og:image:width"), meta.get("og:image:height")):
+        errors.append(
+            f"{rel}: og:image is {size[0]}x{size[1]} but the page declares "
+            f"{meta.get('og:image:width')}x{meta.get('og:image:height')}"
+        )
 
 
 def check_error_page(errors: list[str]) -> None:
@@ -398,6 +455,7 @@ def run_checks() -> list[str]:
         rel = str(file.relative_to(ROOT))
         html = read(file)
         check_site_html(errors, rel, html)
+        check_social_image(errors, rel, html)
         if file.resolve() not in public_files:
             check_structured_data(errors, rel, html)
 

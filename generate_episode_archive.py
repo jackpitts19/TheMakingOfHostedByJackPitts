@@ -30,7 +30,7 @@ from generate_episode_pages import (
     load_episodes,
     nowrap_hyphenated,
 )
-from seo_urls import BASE_URL, ROOT, episode_path, to_url
+from seo_urls import ROOT, SHOW_CARD_ALT, SHOW_CARD_URL, episode_path, to_url
 from site_nav import footer_html, topnav_html
 from sync_latest_episode import card_blurb
 
@@ -96,10 +96,12 @@ PAGE_TMPL = """<!doctype html>
 <meta property="og:image" content="{og_image}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="{og_image_alt}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="{page_title}" />
 <meta name="twitter:description" content="{page_desc}" />
 <meta name="twitter:image" content="{og_image}" />
+<meta name="twitter:image:alt" content="{og_image_alt}" />
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -204,13 +206,13 @@ def build_json_ld(episodes: list[dict]) -> str:
 def build_page(episodes: list[dict]) -> str:
     total = len(episodes)
     rows = "\n".join(build_row(ep, total - i) for i, ep in enumerate(episodes))
-    newest_slug = episode_path(episodes[0]).rsplit("/", 1)[-1]
     return PAGE_TMPL.format(
         page_title=escape(PAGE_TITLE),
         page_desc=escape(PAGE_DESC),
         canonical=to_url("/episodes"),
         site=escape(SITE),
-        og_image=f"{BASE_URL}/share-cards/{newest_slug}.png",
+        og_image=SHOW_CARD_URL,
+        og_image_alt=escape(SHOW_CARD_ALT),
         json_ld=build_json_ld(episodes),
         css=CSS + ARCHIVE_CSS,
         count=total,

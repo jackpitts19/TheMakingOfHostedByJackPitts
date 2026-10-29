@@ -478,6 +478,7 @@ def build_page_html(idx, ep, all_eps, total):
         meta_desc=escape(meta_description_for(ep)),
         canonical=canonical,
         share_card_url=f"{SITE_URL}/share-cards/{slug}.png",
+        share_card_alt=escape(f"{guest_label} on {SITE}"),
         json_ld=json_ld_for(ep, issue_no, slug),
         css=CSS,
         issue=issue_label(issue_no),
