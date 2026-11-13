@@ -64,6 +64,13 @@ jobs:
         # next run fills the links in.
         run: python3 resolve_episode_links.py
 
+      - name: Link each episode to its own YouTube video
+        # New episodes arrive pointing at the channel page. This reads the
+        # channel's public uploads feed and fills in the episode's own watch URL
+        # once it is uploaded. Never overwrites a hand-set link; if YouTube is
+        # down it changes nothing and exits 0.
+        run: python3 resolve_youtube_links.py
+
       - name: Regenerate episode assets and homepage fallback
         # Always runs. The old `git diff --quiet episodes.js` gate compared the
         # worktree to the index, which is empty on a push trigger because the
@@ -85,6 +92,7 @@ jobs:
         run: |
           python3 generate_episode_archive.py
           python3 generate_sitemap.py
+          python3 generate_llms_txt.py
 
       - name: Validate indexable surface
         # Fails the run if any sitemap URL would 404 or redirect, a canonical is
@@ -96,14 +104,22 @@ jobs:
         # is a NEW untracked file, like a new episode page or share card, still
         # commits it.
         run: |
-          if [ -z "$(git status --porcelain -- index.html episodes.js sitemap.xml episodes.html episodes share-cards)" ]; then
+          if [ -z "$(git status --porcelain -- index.html episodes.js sitemap.xml llms.txt episodes.html episodes share-cards)" ]; then
             echo "No repo changes detected."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add index.html episodes.js sitemap.xml episodes.html episodes/*.html share-cards/*.png
+          git add index.html episodes.js sitemap.xml llms.txt episodes.html episodes/*.html share-cards/*.png
           git commit -m $'chore: sync latest episode assets\n\nCo-Authored-By: Oz <oz-agent@warp.dev>'
           # Pick up anything pushed while this run was working, then push.
           git pull --rebase origin main
           git push
+
+      - name: Check search and AI crawler access
+        # Last, after the commit, so it can never hold up an episode sync. A
+        # Cloudflare bot setting (Block AI bots, AI Labyrinth, bot fight mode,
+        # managed robots.txt) can silently shut out Google, Bing, ChatGPT,
+        # Claude or Perplexity. This turns the run red, and GitHub emails the
+        # owner, if any of them stops getting the real pages.
+        run: python3 check_crawler_access.py

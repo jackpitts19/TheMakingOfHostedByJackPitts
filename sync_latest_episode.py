@@ -105,16 +105,24 @@ def remove_em_dashes(text: str) -> str:
     return re.sub(r"\s*\u2014\s*", ", ", text)
 
 
+def remove_en_dashes(text: str) -> str:
+    """House style bans en dashes too. A numeric range reads as words
+    ("2008–2009" becomes "2008 to 2009"); any other en dash becomes a comma,
+    the same way remove_em_dashes treats em dashes."""
+    text = re.sub(r"(\d)\s*\u2013\s*(\d)", r"\1 to \2", text)
+    return re.sub(r"\s*\u2013\s*", ", ", text)
+
+
 def strip_tags(text: str) -> str:
     text = re.sub(r"<[^>]+>", " ", text or "")
     text = unescape(text)
-    # House style bans em dashes. This is the single funnel every Apple
+    # House style bans em and en dashes. This is the single funnel every Apple
     # description passes through on its way into episodes.js, so normalising
     # here is the only fix that survives: editing episodes.js by hand gets
     # reverted the next time resolve_episode_links.py upgrades a description
-    # from the feed. En dashes are left alone because they carry meaning in
-    # numeric ranges like "2008-2009".
+    # from the feed. Numeric ranges keep their meaning as "2008 to 2009".
     text = remove_em_dashes(text)
+    text = remove_en_dashes(text)
     text = re.sub(r"\s+", " ", text).strip()
     # Same reasoning: the show name is always written one way on the site.
     return normalize_show_name(text)
@@ -147,21 +155,32 @@ def truncate_at_word(text: str, limit: int = DESCRIPTION_LIMIT) -> str:
 
 
 # Feed descriptions often open with the same lead-in ("In this episode of The
-# Making Of Hosted By Jack Pitts, I sit down with ..."). Cards drop it at
-# display time so a row of cards does not repeat it; episodes.js keeps the
-# original text. Mirrors cardBlurb() in index.html.
+# Making Of Hosted By Jack Pitts, I sit down with ..."). Cards drop the show
+# clause so a row of cards does not repeat it, and name the host so the card
+# still reads as a full sentence ("Jack Pitts sits down with ..."), keeping the
+# verb's tense. episodes.js keeps the original text. Mirrors cardBlurb() in
+# index.html, and matches meta_description_for() in generate_episode_pages.py.
 _LEAD_IN_WITH_VERB = re.compile(
     r"^(?:in|on) this (?:episode|conversation)(?: of the making of hosted by jack pitts)?,\s*"
-    r"(?:host jack pitts|jack pitts|jack|i)\s+(?:sits down with|sit down with|sat down with|interviews)\s+",
+    r"(?:host jack pitts|jack pitts|jack|i)\s+(sits down with|sit down with|sat down with|interviews)\s+",
     re.I,
 )
 _LEAD_IN = re.compile(r"^(?:in|on) this (?:episode|conversation)(?: of the making of hosted by jack pitts)?,\s*", re.I)
 
 
+def _host_lead(verb: str) -> str:
+    verb = verb.lower()
+    if verb.startswith("sat"):
+        return "Jack Pitts sat down with "
+    if verb.startswith("sit"):
+        return "Jack Pitts sits down with "
+    return "Jack Pitts interviews "
+
+
 def card_blurb(text: str, limit: int = DESCRIPTION_LIMIT) -> str:
-    """Strip the stock feed lead-in, then trim like truncate_at_word."""
+    """Replace the stock feed lead-in with a short one, then trim like truncate_at_word."""
     text = (text or "").strip()
-    stripped = _LEAD_IN_WITH_VERB.sub("", text, count=1)
+    stripped = _LEAD_IN_WITH_VERB.sub(lambda m: _host_lead(m.group(1)), text, count=1)
     if stripped == text:
         stripped = _LEAD_IN.sub("", text, count=1)
     if stripped and stripped != text:
@@ -251,7 +270,7 @@ def discover_feed_url(fetch: Callable[[str], str] = fetch_text) -> str:
 
 def parse_feed_item(item: ET.Element) -> dict:
     """One RSS <item> as an episodes.js entry (slug pinned, guid stored)."""
-    title = remove_em_dashes((item.findtext("title") or "").strip())
+    title = remove_en_dashes(remove_em_dashes((item.findtext("title") or "").strip()))
     pub_date_raw = (item.findtext("pubDate") or "").strip()
     description = (item.findtext("description") or "").strip()
     itunes_summary = item.findtext(f"{ITUNES_NS}summary")

@@ -167,7 +167,7 @@ body::after {
   padding: 26px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  margin-top: 60px;
+  margin-top: 30px; /* with the section's 30px bottom padding, matches the page rhythm */
   position: relative;
   background: var(--cream-deep);
 }
@@ -244,6 +244,7 @@ a.marquee-name:hover::before { transform: scaleX(1); }
 
 /* ---------- STICKY NOW-PLAYING LISTEN PILL ---------- */
 .sticky-listen {
+  border: 1px solid rgba(243,232,207,0.18);
   position: fixed;
   bottom: 22px; right: 22px; z-index: 50;
   background: var(--ink); color: var(--cream);
@@ -284,6 +285,17 @@ a.marquee-name:hover::before { transform: scaleX(1); }
 h1 .word { display: inline-block; opacity: 0; transform: translateY(28px); }
 h1 .word.is-in { animation: wordReveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
 @keyframes wordReveal { to { opacity: 1; transform: translateY(0); } }
+/* The headline and lede are the largest paint above the fold, so they stay
+   visible from the first frame and only slide into place. Fading them in from
+   opacity 0 pushed Largest Contentful Paint back by up to a second. Smaller
+   hero items (masthead line, eyebrow, buttons) keep their fade. */
+h1 .word { opacity: 1; }
+h1 .word.is-in { animation-name: wordSlide; }
+@keyframes wordSlide { from { transform: translateY(28px); } to { transform: translateY(0); } }
+.hero-reveal.hero-reveal-4 { opacity: 1; animation-name: heroSlide; }
+@keyframes heroSlide { from { transform: translateY(22px); } to { transform: translateY(0); } }
+/* Inner pages: the first section is the page's main content, so no fade. */
+.page-first.fade-up { opacity: 1; transform: none; transition: none; }
 
 /* Magnetic CTAs use a wrapper transform to keep transitions smooth */
 .btn { will-change: transform; }
@@ -360,7 +372,12 @@ h1 .word.is-in { animation: wordReveal 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) forwa
   text-transform: uppercase; letter-spacing: 0.12em;
   color: var(--ink-soft);
 }
-.inside-issue .ii-by span { color: var(--ink); font-weight: 700; }
+.inside-issue .ii-by .ii-name { color: var(--ink); font-weight: 700; }
+/* On desktop the company drops whole onto the next line instead of
+   splitting mid-name ("RESORTS WORLD LAS / VEGAS"). */
+@media (min-width: 960px) {
+  .inside-issue .ii-co { white-space: nowrap; }
+}
 .inside-issue .ii-footer {
   margin-top: 38px;
   text-align: center;
@@ -645,7 +662,8 @@ nav {
   font-size: 18px;
   letter-spacing: 0.02em;
 }
-.nav-mark span { color: var(--orange); }
+.nav-mark span { color: var(--orange-dark); }
+.nav-mark { display: inline-block; padding: 4px 0; }
 .nav-links { display: flex; gap: 28px; font-size: 14px; font-weight: 500; }
 .nav-links a { color: var(--ink-soft); }
 .nav-links a:hover { color: var(--orange-dark); }
@@ -668,6 +686,9 @@ header.hero {
 }
 .hero-bg svg { width: 100%; height: 100%; }
 @media (max-width: 860px) { .hero-bg { display: none; } }
+/* Move the vertical bars into the empty gutter beside the headline, so they
+   no longer cross the masthead line and the eyebrow. */
+.hero-bg g:last-child { transform: translate(-300px, 120px); }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 10px;
   font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
@@ -825,6 +846,12 @@ h1 em { font-style: italic; color: var(--orange-dark); font-weight: 700; }
   transition: opacity .18s ease;
 }
 .platform:hover::after { opacity: 1; background: var(--ink); }
+/* Phones: four equal full-width buttons instead of a ragged wrap. */
+@media (max-width: 600px) {
+  .platforms { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .platform { justify-content: center; padding: 14px 16px; }
+  .platform::after { display: none; }
+}
 
 /* ---------- SECTION HEADER ---------- */
 section { padding: 40px 0; }
@@ -869,7 +896,7 @@ section { padding: 40px 0; }
   margin: 0;
   letter-spacing: -0.005em;
 }
-.ep p { margin: 0; color: var(--ink-soft); font-size: 15px; }
+.ep p { margin: 0; color: var(--ink-soft); font-size: 15px; max-width: 70ch; }
 .ep-meta {
   display: flex; gap: 14px; font-size: 13px;
   color: var(--ink-soft); font-weight: 500;
@@ -1204,7 +1231,9 @@ body > * { position: relative; z-index: 2; }
 
 /* ---------- PRESS KIT ---------- */
 .press-kit { margin: 0; padding-top: 24px; }
-.press-review { margin-top: 20px; max-width: 640px; }
+.press-review { margin-top: 20px; }
+.press-review blockquote { max-width: 40em; }
+.press-headline .q { color: var(--orange-dark); }
 .pk-email { margin: 12px 0 0; text-align: center; font-size: 13px; color: var(--ink-soft); }
 .pk-email span { display: block; margin-top: 2px; font-weight: 600; color: var(--ink); user-select: all; overflow-wrap: anywhere; }
 .pk-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
@@ -1228,8 +1257,9 @@ body > * { position: relative; z-index: 2; }
 .pk-cta .btn:hover { background: var(--orange-dark); color: var(--cream); transform: translateY(-1px); }
 
 /* ---------- FOOTER LINKS ---------- */
-footer .footer-links { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px 24px; padding: 6px 0 0; }
+footer .footer-links { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 0 20px; padding: 6px 0 0; }
 footer .footer-links a {
+  display: inline-block; padding: 12px 0;
   color: rgba(243,232,207,0.75); font-size: 13px; font-weight: 500;
   letter-spacing: 0.02em; text-decoration: none;
 }
@@ -1344,4 +1374,51 @@ a.nav-mark { color: var(--ink); text-decoration: none; }
     gap: 14px; font-size: 12.5px; padding-right: 0;
     -webkit-mask-image: none; mask-image: none;
   }
+}
+
+/* ---------- BE A GUEST: proof, roster, terms (for a guest's team) ---------- */
+.guests .guest-logistics { margin-bottom: 28px; }
+.guest-proof {
+  font-family: "Newsreader", Georgia, "Times New Roman", serif;
+  font-size: clamp(19px, 2vw, 22px); line-height: 1.4; color: var(--ink);
+  margin: 0 0 16px; max-width: 720px;
+}
+.guest-proof { text-wrap: balance; }
+.guest-proof strong { color: var(--orange-dark); white-space: nowrap; }
+.guest-roster {
+  list-style: none; margin: 0 0 48px; padding: 0;
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+}
+.guest-roster a {
+  display: flex; flex-direction: column; gap: 4px; height: 100%;
+  padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px;
+  background: rgba(255,255,255,0.28); text-decoration: none; color: var(--ink);
+  transition: border-color .15s, transform .15s;
+}
+.guest-roster a:hover { border-color: var(--orange-dark); transform: translateY(-1px); }
+.gr-name { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700; font-size: 17px; line-height: 1.2; }
+.gr-role { font-size: 13px; line-height: 1.4; color: var(--ink-soft); }
+.guest-terms-h {
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
+  font-size: clamp(24px, 3vw, 32px); letter-spacing: -0.01em; margin: 0 0 16px;
+}
+.guest-terms-h em { font-style: italic; color: var(--orange-dark); }
+.guest-terms {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 28px;
+  margin: 0 0 32px; padding: 0;
+}
+.guest-terms div { border-top: 2px solid var(--orange); padding-top: 10px; }
+.guest-terms dt { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange-dark); margin-bottom: 4px; }
+.guest-terms dd { margin: 0; font-size: 16px; line-height: 1.5; color: var(--ink); }
+.guest-host { font-size: 15px; line-height: 1.6; color: var(--ink-soft); max-width: 720px; margin: 0 0 32px; }
+.guest-host a { color: var(--orange-dark); font-weight: 600; }
+@media (max-width: 860px) {
+  .guest-roster { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guest-terms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .guest-terms { grid-template-columns: 1fr; }
+  .guest-roster a { padding: 12px; }
+  .gr-name { font-size: 15.5px; }
+  .gr-role { font-size: 12.5px; }
 }

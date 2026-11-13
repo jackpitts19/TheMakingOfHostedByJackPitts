@@ -18,7 +18,7 @@ from urllib.parse import quote
 
 from seo_urls import BASE_URL as SITE_URL
 from seo_urls import ROOT, article_pages, episode_path, episode_slug, to_url
-from seo_titles import GUEST_LINES, SEO_TITLES
+from seo_titles import GUEST_LINES, GUEST_ORGS, SEO_TITLES
 from sync_latest_episode import truncate_at_word
 
 from episode_page_template import CSS, PAGE_TMPL  # noqa: F401  (CSS is re-exported for the archive)
@@ -38,6 +38,10 @@ APPLE_PODCAST_ID = "1853933144"
 SHOW_YT = "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
 JACK_LI = "https://www.linkedin.com/in/jack-pitts"
 JACK_SITE = "https://thejackpitts.com/"  # the person's canonical page; LinkedIn is a sameAs
+# The same @ids about.html and index.html define, so every page's structured
+# data points at one show and one host instead of many unlinked copies.
+SERIES_ID = f"{SITE_URL}/#podcast"
+HOST_ID = f"{SITE_URL}/about#jack-pitts"
 # Every guest CTA goes to the /be-a-guest page, same tab (requests go by email).
 GUEST_REQUEST = GUEST_PAGE
 META_DESC_LIMIT = 160
@@ -92,12 +96,29 @@ def page_title(episode_title):
     return f"{title} | {SITE}"
 
 
+BARE_SHOW_HEAD_RE = re.compile(r"^(?:In\s+)?The\s+Making\s+Of$", re.I)
+
+
 def split_title(title):
-    """Pull the strong half ('The Making Of Alex Dixon') from the subtitle."""
+    """Pull the strong half ('The Making Of Alex Dixon') from the subtitle.
+
+    Two feed title shapes would otherwise make a poor headline:
+    "In The Making Of: Jesse Choe" puts a cut-down show name alone in the H1,
+    and "Topic | Guest" puts a raw pipe in it. Both become
+    "The Making Of <guest>", the pattern most episode titles already use, with
+    the topic (if any) as the subhead. Only words from the title are used.
+    """
+    title = (title or "").strip()
+    if " | " in title:
+        topic, name = title.rsplit(" | ", 1)
+        return f"The Making Of {name.strip()}", topic.strip()
     if ":" in title:
         head, sub = title.split(":", 1)
-        return head.strip(), sub.strip()
-    return title.strip(), ""
+        head, sub = head.strip(), sub.strip()
+        if BARE_SHOW_HEAD_RE.match(head) and sub:
+            return f"The Making Of {sub}", ""
+        return head, sub
+    return title, ""
 
 
 def seo_title_for(ep):
@@ -222,10 +243,15 @@ def build_player(ep):
     )
 
 
+def written_guest_line(ep):
+    """The hand-written guest line (episodes.js guestLine, else GUEST_LINES), or ""."""
+    return (ep.get("guestLine") or "").strip() or GUEST_LINES.get(episode_slug(ep), "")
+
+
 def guest_line_for(ep, issue_no):
     """One line for the guest card: a factual line from seo_titles.GUEST_LINES,
     else a short neutral line. Never generated from a template of claims."""
-    line = (ep.get("guestLine") or "").strip() or GUEST_LINES.get(episode_slug(ep))
+    line = written_guest_line(ep)
     if line:
         return line
     return f"Jack's guest on Issue {issue_label(issue_no)}. Listen with the links above."
@@ -374,7 +400,7 @@ def json_ld_for(ep, issue_no, slug):
     # Word-safe, not a raw slice: a hard [:500] cut 15 of 16 pages mid-word, so
     # the structured data contradicted the full text rendered on the same page.
     description = truncate_at_word(ep.get("description") or "", 500)
-    host = {"@type": "Person", "name": "Jack Pitts", "url": JACK_SITE, "sameAs": [JACK_LI]}
+    host = {"@type": "Person", "@id": HOST_ID, "name": "Jack Pitts", "url": JACK_SITE, "sameAs": [JACK_LI]}
     obj = {
         "@context": "https://schema.org",
         "@type": "PodcastEpisode",
@@ -385,6 +411,7 @@ def json_ld_for(ep, issue_no, slug):
         "image": f"{SITE_URL}/share-cards/{slug}.png",
         "partOfSeries": {
             "@type": "PodcastSeries",
+            "@id": SERIES_ID,
             "name": SITE,
             "url": to_url("/"),
         },
@@ -402,6 +429,9 @@ def json_ld_for(ep, issue_no, slug):
     spotify = links.get("spotify") or ""
     if "/episode/" in spotify:
         same_as.append(spotify)
+    youtube = links.get("youtube") or ""
+    if "youtube.com/watch?v=" in youtube:
+        same_as.append(youtube)
     if same_as:
         obj["sameAs"] = same_as
 
@@ -426,7 +456,7 @@ def json_ld_for(ep, issue_no, slug):
 
     people = guest_people(ep)
     if people:
-        obj["actor"] = [{"@type": "Person", "name": n} for n in people]
+        obj["actor"] = [guest_person(ep, n, len(people)) for n in people]
 
     crumb_name = " & ".join(people) if people else ep.get("title", "")
     breadcrumbs = {
@@ -439,6 +469,26 @@ def json_ld_for(ep, issue_no, slug):
         ],
     }
     return json_ld_script([obj, breadcrumbs])
+
+
+def guest_person(ep, name, count):
+    """A guest as a schema.org Person, with only facts the page shows.
+
+    The description is the visible guest-card line, and only when one was
+    written by hand (never the neutral fallback). LinkedIn is a sameAs only
+    for a single-guest episode, where it cannot belong to the wrong person.
+    """
+    person = {"@type": "Person", "name": name}
+    line = written_guest_line(ep)
+    if line and count == 1:
+        person["description"] = line
+    li = (ep.get("guestLinkedIn") or "").strip()
+    if li and count == 1:
+        person["sameAs"] = [li]
+    org = GUEST_ORGS.get(episode_slug(ep))
+    if org:
+        person["affiliation"] = {"@type": "Organization", "name": org}
+    return person
 
 
 def long_description_for(ep):
@@ -520,6 +570,11 @@ def main():
     eps = load_episodes()
     total = len(eps)
     print(f"Generating {total} episode pages...")
+    # A new episode ships with a neutral guest line rather than invented copy.
+    # Flag it in the Actions log so a person writes one from the description.
+    for ep in eps:
+        if not written_guest_line(ep):
+            print(f"::warning::No guest line for {episode_slug(ep)}; add one to seo_titles.GUEST_LINES")
     for idx, ep in enumerate(eps):
         path = render_page(idx, ep, eps, total)
         print(f"  wrote {path.name}")

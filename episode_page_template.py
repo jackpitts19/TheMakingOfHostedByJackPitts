@@ -67,13 +67,18 @@ body > * { position: relative; z-index: 2; }
 /* Masthead meta line under nav */
 .masthead {
   padding: 56px 0 18px;
-  display: flex; flex-wrap: wrap; gap: 14px;
+  display: flex; flex-wrap: wrap; gap: 6px 32px; overflow: hidden;
   font-family: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
   font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--ink-soft); font-weight: 600;
 }
 .masthead .issue { color: var(--orange-dark); font-weight: 700; }
-.masthead .dot { width: 4px; height: 4px; background: var(--ink-soft); border-radius: 50%; opacity: 0.6; align-self: center; }
+/* Each item draws a dot centred in the 32px gap to its left. The first item
+   on any line (wrapped or not) starts at the box edge, so its dot falls
+   outside the box and overflow:hidden clips it: no line starts or ends with
+   a stray dot, and items keep their real spacing. */
+.masthead > span { position: relative; }
+.masthead > span::before { content: ''; position: absolute; left: -18px; top: 50%; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: var(--ink-soft); opacity: 0.6; }
 
 /* Hero headline */
 .hero-title {
@@ -201,7 +206,7 @@ body > * { position: relative; z-index: 2; }
   border: 1px solid var(--line); border-radius: 12px;
   padding: 18px 18px 20px; background: rgba(255,255,255,0.35);
   text-decoration: none; color: var(--ink);
-  display: block;
+  display: flex; flex-direction: column;
   transition: transform .15s, border-color .15s, background .15s;
 }
 .r-card:hover { transform: translateY(-3px); border-color: var(--orange); background: rgba(255,255,255,0.6); }
@@ -215,7 +220,9 @@ body > * { position: relative; z-index: 2; }
   font-size: 18px; line-height: 1.25; color: var(--ink);
   margin: 0 0 10px; letter-spacing: -0.01em;
 }
+.r-card .r-title { text-wrap: balance; }
 .r-card .r-dur {
+  margin-top: auto; padding-top: 10px;
   font-size: 12px; color: var(--ink-soft);
   font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
 }
@@ -279,6 +286,12 @@ footer .foot-link { display: inline-block; padding: 14px 6px; margin: -14px 0; }
   .hero-title { line-height: 1.06; text-wrap: balance; }
   .hero-sub { text-wrap: balance; }
 }
+.guest-card h2, .related h2 { text-wrap: balance; }
+.body p { text-wrap: pretty; }
+@media (max-width: 600px) {
+  /* Keeps "Connect with ... on LinkedIn" from wrapping into an oval pill. */
+  .guest-card .gc-cta { font-size: 13px; padding: 12px 16px; }
+}
 @media (max-width: 480px) {
   .wrap { padding: 0 16px; }
 }
@@ -314,7 +327,7 @@ PAGE_TMPL = """<!doctype html>
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
 <script type="application/ld+json">{json_ld}</script>
 <style>{css}</style>
 </head>
@@ -325,11 +338,8 @@ PAGE_TMPL = """<!doctype html>
 <main class="wrap">
   <div class="masthead">
     <span class="issue">ISSUE {issue}</span>
-    <span class="dot"></span>
     <span>{date_label}</span>
-    <span class="dot"></span>
     <span>{duration}</span>
-    <span class="dot"></span>
     <span>HOSTED BY JACK PITTS</span>
   </div>
 

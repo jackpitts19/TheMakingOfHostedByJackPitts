@@ -20,6 +20,8 @@ GUEST_LINES
 """
 
 SEO_TITLES: dict[str, str] = {
+    "melissa-banko":
+        "Melissa Banko on Building Banko Design and Raising a Family",
     "from-selling-ice-to-building-a-140-person-pet-care-business-scott-burnley":
         "Scott Burnley: From Delivering Ice to Pet Station Country Club",
     "how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott":
@@ -55,6 +57,9 @@ SEO_TITLES: dict[str, str] = {
 }
 
 GUEST_LINES: dict[str, str] = {
+    "melissa-banko":
+        "Founder of Banko Design, which she started in a spare bedroom in 2014, "
+        "and CEO of BD Studio Collection.",
     "from-selling-ice-to-building-a-140-person-pet-care-business-scott-burnley":
         "Went from delivering bags of ice to helping build Pet Station Country "
         "Club into three locations with around 140 employees.",
@@ -110,4 +115,29 @@ GUEST_LINES: dict[str, str] = {
     "gary-dennis":
         "Co-founder and former CEO of Mammoth Holdings, one of the leading car "
         "wash platforms in the country.",
+}
+
+
+# The guest's company, for the PodcastEpisode schema (actor "affiliation").
+# Only companies named word for word in that episode's own description, and
+# only where the episode is clearly about one company. Several roles are
+# former roles, so this is "affiliation", never "worksFor".
+GUEST_ORGS: dict[str, str] = {
+    "melissa-banko": "Banko Design",
+    "from-selling-ice-to-building-a-140-person-pet-care-business-scott-burnley": "Pet Station Country Club",
+    "how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott": "Four Branches Bourbon",
+    "dave-moorman": "DynaSis",
+    "davies-hood-of-induron-protective-coatings": "Induron Protective Coatings",
+    "concentrate-ai": "Concentrate AI",
+    "nishank-gite": "Nirvana Robotics",
+    "alex-dixon": "Resorts World Las Vegas",
+    "david-sauers": "Royal Restrooms",
+    "jesse-choe": "Bidflow",
+    "niilo-pirttij-rvi": "Inven",
+    "kris-carlson": "The Fish Guys",
+    "ian-hicks": "King Industrial",
+    "robbie-ferman": "Sollevare Group",
+    "doug-taylor": "Taylor's Candy",
+    "adam-stevenson": "Grassroots Records",
+    "gary-dennis": "Mammoth Holdings",
 }
