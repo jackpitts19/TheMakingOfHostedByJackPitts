@@ -1015,7 +1015,7 @@ class LlmsTxtTests(unittest.TestCase):
         self.text = (Path(__file__).parent.parent / "llms.txt").read_text(encoding="utf-8")
 
     def test_carries_the_confirmed_show_facts(self):
-        for fact in ("2.5 billion", "every few weeks", "/be-a-guest", "November 2025"):
+        for fact in ("3.5 billion", "every few weeks", "/be-a-guest", "November 2025"):
             self.assertIn(fact, self.text)
 
     def test_episode_lines_say_who_the_guest_is(self):
