@@ -71,11 +71,11 @@ ARCHIVE_CSS = r"""
 .ep-row .row-title {
   font-family: "Newsreader", Georgia, "Times New Roman", serif; font-weight: 700;
   font-size: clamp(21px, 2.6vw, 27px); line-height: 1.24;
-  letter-spacing: -0.01em; margin: 0 0 9px;
+  letter-spacing: -0.01em; margin: 0 0 9px; text-wrap: balance;
 }
 .ep-row .row-desc {
   font-family: "Newsreader", Georgia, "Times New Roman", serif; font-size: 17px; line-height: 1.5;
-  color: var(--ink-soft); margin: 0; max-width: 680px;
+  color: var(--ink-soft); margin: 0; max-width: 680px; text-wrap: pretty;
 }
 """
 
@@ -105,7 +105,7 @@ PAGE_TMPL = """<!doctype html>
 <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23f3e8cf"/><text x="32" y="46" text-anchor="middle" font-family="Georgia,serif" font-weight="900" font-size="42" fill="%23d87a2c">M</text></svg>' />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400..700&family=Newsreader:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet" />
 <script type="application/ld+json">{json_ld}</script>
 <style>{css}</style>
 </head>
@@ -123,7 +123,7 @@ PAGE_TMPL = """<!doctype html>
   </div>
 
   <h1 class="hero-title">Every <em>episode</em>.</h1>
-  <p class="archive-intro">{count} interviews with business owners, newest first. Written guides for founders are in <a href="/articles">Articles</a>.</p>
+  <p class="archive-intro">{count} interviews with founders, owners, and operators, newest first. Written guides for founders are in <a href="/articles">Articles</a>.</p>
 
   <ul class="ep-list">
 {rows}
@@ -175,7 +175,7 @@ def build_json_ld(episodes: list[dict]) -> str:
         "name": "All Episodes",
         "description": PAGE_DESC,
         "url": canonical,
-        "isPartOf": {"@type": "PodcastSeries", "name": SITE, "url": to_url("/")},
+        "isPartOf": {"@type": "PodcastSeries", "@id": to_url("/") + "#podcast", "name": SITE, "url": to_url("/")},
         "mainEntity": {
             "@type": "ItemList",
             "numberOfItems": len(episodes),

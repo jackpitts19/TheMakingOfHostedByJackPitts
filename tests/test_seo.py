@@ -207,17 +207,21 @@ class HouseStyleTests(unittest.TestCase):
         )
 
     def test_no_em_dashes_in_shipped_pages(self):
+        # The owner bans em and en dashes. llms.txt is read by AI engines, so
+        # it is held to the same rule as the pages.
+        root = Path(__file__).parent.parent
         offenders = [
-            p.name for p in self._shipped_pages()
-            if "—" in p.read_text(encoding="utf-8")
+            p.name for p in [*self._shipped_pages(), root / "llms.txt"]
+            if "—" in p.read_text(encoding="utf-8") or "–" in p.read_text(encoding="utf-8")
         ]
-        self.assertEqual(offenders, [], "em dashes are banned by house style")
+        self.assertEqual(offenders, [], "em and en dashes are banned by house style")
 
     def test_no_em_dashes_in_episode_data(self):
-        # episodes.js feeds every generated page, so an em dash here spreads.
+        # episodes.js feeds every generated page, so a dash here spreads.
         # strip_tags() normalises them at ingestion; this guards the result.
         data = (Path(__file__).parent.parent / "episodes.js").read_text(encoding="utf-8")
         self.assertNotIn("—", data)
+        self.assertNotIn("–", data)
 
     def test_strip_tags_removes_em_dashes_from_feed_text(self):
         # Arrange: the shape Apple actually returns.
@@ -232,8 +236,13 @@ class HouseStyleTests(unittest.TestCase):
             "from humble beginnings, with a dad who was a mechanic, to Georgia Tech",
         )
 
-    def test_strip_tags_keeps_en_dashes_in_ranges(self):
-        self.assertIn("2008–2009", strip_tags("the 2008–2009 downturn"))
+    def test_strip_tags_writes_en_dash_ranges_as_words(self):
+        # Owner rule: no em or en dashes, so a range reads "2008 to 2009".
+        self.assertEqual(strip_tags("the 2008–2009 downturn"), "the 2008 to 2009 downturn")
+        self.assertEqual(strip_tags("90 – 100 hour weeks"), "90 to 100 hour weeks")
+
+    def test_strip_tags_turns_other_en_dashes_into_commas(self):
+        self.assertEqual(strip_tags("grit – and luck"), "grit, and luck")
 
 
 class DescriptionProvenanceTests(unittest.TestCase):
@@ -706,9 +715,14 @@ class LegalPagesTest(unittest.TestCase):
         self.assertIn(f"{BASE_URL}/terms</loc>", sitemap)
 
     def test_legal_pages_carry_the_effective_date_and_contact(self):
-        for name in ("privacy.html", "terms.html"):
-            html = self._read(name)
-            self.assertIn("Last updated: October 28, 2026", html)
+        # The visible "Last updated" date must match the sitemap lastmod, so
+        # editing a legal page means bumping one date in generate_sitemap.py.
+        from datetime import date
+        from generate_sitemap import LEGAL_PAGES_LASTMOD
+        for path, iso in LEGAL_PAGES_LASTMOD.items():
+            html = self._read(path.lstrip("/") + ".html")
+            d = date.fromisoformat(iso)
+            self.assertIn(f"Last updated: {d:%B} {d.day}, {d.year}", html)
             self.assertIn("mailto:jack@saltcreekadvisory.com", html)
         self.assertIn("State of Illinois", self._read("terms.html"))
 
@@ -865,14 +879,158 @@ class MultiPageSiteTests(unittest.TestCase):
 
 class CardBlurbTests(unittest.TestCase):
     def test_strips_stock_lead_in_and_capitalizes(self):
+        # The old version also removed the verb, leaving a fragment
+        # ("Jane Doe, founder of Doe Widgets."). The card now names the host.
         from sync_latest_episode import card_blurb
         text = "In this episode of The Making Of Hosted By Jack Pitts, I sit down with Jane Doe, founder of Doe Widgets."
-        self.assertEqual(card_blurb(text), "Jane Doe, founder of Doe Widgets.")
+        self.assertEqual(card_blurb(text), "Jack Pitts sits down with Jane Doe, founder of Doe Widgets.")
         self.assertEqual(card_blurb("In this episode, Jane Doe shares her story."), "Jane Doe shares her story.")
+
+    def test_keeps_the_verb_tense(self):
+        from sync_latest_episode import card_blurb
+        self.assertEqual(
+            card_blurb("On this episode of The Making Of Hosted By Jack Pitts, I sat down with Jane Doe of Acme."),
+            "Jack Pitts sat down with Jane Doe of Acme.",
+        )
+        self.assertEqual(
+            card_blurb("In this episode, Jack interviews Jane Doe, CEO of Acme."),
+            "Jack Pitts interviews Jane Doe, CEO of Acme.",
+        )
+
+    def test_no_card_starts_with_a_fragment(self):
+        # A blurb that opens "Name, title of Company, to ..." has lost its verb.
+        from sync_latest_episode import card_blurb
+        fragment = re.compile(r"^[^.]{0,120}?, (?:to \w+|who )")
+        bad = []
+        for ep in load_episodes():
+            blurb = card_blurb(ep.get("description", ""))
+            if fragment.match(blurb) and not re.match(r"^Jack Pitts (?:sits|sat) down with|^Jack Pitts interviews", blurb):
+                bad.append(ep.get("slug"))
+        self.assertEqual(bad, [])
+
+    @unittest.skipUnless(shutil.which("node"), "node is not installed")
+    def test_homepage_card_blurb_matches_python(self):
+        # index.html cardBlurb() mirrors card_blurb(); run both on real data.
+        import subprocess
+        from sync_latest_episode import card_blurb
+        html = (Path(__file__).parent.parent / "index.html").read_text(encoding="utf-8")
+        start = html.index("    function trimText(s, n) {")
+        end = html.index("    // Only http(s) URLs make it into an href.")
+        descs = [ep.get("description", "") for ep in load_episodes()]
+        script = html[start:end] + "\nprocess.stdout.write(JSON.stringify(" + json.dumps(descs) + ".map(function(d){ return cardBlurb(d, 400); })));"
+        out = subprocess.run(["node", "-e", script], capture_output=True, text=True, check=True).stdout
+        self.assertEqual(json.loads(out), [card_blurb(d, 400) for d in descs])
 
     def test_leaves_other_openings_alone(self):
         from sync_latest_episode import card_blurb
         self.assertEqual(card_blurb("Jane Doe went from A to B."), "Jane Doe went from A to B.")
+
+
+
+class EpisodeDataQualityTests(unittest.TestCase):
+    """Problems a visiting guest or an AI engine would quote word for word."""
+
+    # Real names with an inner capital, so they are not read as glued words.
+    CAMEL_OK = {"McKinsey", "AdRock", "DynaSis", "YouTube", "LinkedIn", "TikTok", "PwC", "iPhone", "SaaS"}
+
+    def test_no_list_items_glued_together(self):
+        # A flattened feed list reads "first self-serve washThe trip".
+        bad = []
+        for ep in load_episodes():
+            for word in re.findall(r"\b\w*[a-z][A-Z]\w*", ep.get("description", "")):
+                if word not in self.CAMEL_OK:
+                    bad.append(f"{ep.get('slug')}: {word}")
+        self.assertEqual(bad, [])
+
+    def test_youtube_links_are_the_channel_or_one_video(self):
+        channel = "https://www.youtube.com/channel/UC0Oo8G_-OHHekbC5kpyIRBg"
+        watch = re.compile(r"^https://www\.youtube\.com/watch\?v=[A-Za-z0-9_-]{11}$")
+        for ep in load_episodes():
+            yt = (ep.get("links") or {}).get("youtube") or channel
+            self.assertTrue(yt == channel or watch.match(yt), f"{ep.get('slug')}: {yt}")
+
+    def test_every_episode_has_a_written_guest_line(self):
+        # Not a hard rule for a brand-new episode (the sync prints a warning),
+        # but the shipped catalog should never show the neutral filler.
+        from generate_episode_pages import written_guest_line
+        missing = [ep.get("slug") for ep in load_episodes() if not written_guest_line(ep)]
+        self.assertEqual(missing, [])
+
+
+class EpisodeHeadlineTests(unittest.TestCase):
+    def _h1s(self):
+        eps = load_episodes()
+        out = {}
+        for i, ep in enumerate(eps):
+            html = build_page_html(i, ep, eps, len(eps))
+            out[ep.get("slug")] = re.search(r'<h1 class="hero-title">(.*?)</h1>', html, re.S).group(1)
+        return out
+
+    def test_bare_show_name_title_gets_the_guest_in_the_headline(self):
+        h1 = self._h1s()["jesse-choe"]
+        self.assertIn("Jesse Choe", h1)
+        self.assertNotIn("In The Making Of", h1)
+
+    def test_headlines_have_no_pipe_or_dash_and_are_unique(self):
+        h1s = self._h1s()
+        for slug, h1 in h1s.items():
+            self.assertNotIn("|", h1, slug)
+            self.assertNotRegex(h1, "[\u2013\u2014]", slug)
+            self.assertNotRegex(h1, r"^(?:In )?The Making Of$", slug)
+        self.assertEqual(len(set(h1s.values())), len(h1s))
+
+    def test_pipe_title_puts_the_guest_in_the_headline(self):
+        h1 = self._h1s()["from-selling-ice-to-building-a-140-person-pet-care-business-scott-burnley"]
+        self.assertIn("Scott Burnley", h1)
+
+
+class EpisodeSchemaTests(unittest.TestCase):
+    def _ld(self, slug):
+        eps = load_episodes()
+        i = next(i for i, ep in enumerate(eps) if ep.get("slug") == slug)
+        html = build_page_html(i, eps[i], eps, len(eps))
+        block = re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S).group(1)
+        return json.loads(block)[0], html
+
+    def test_episode_links_to_the_shared_show_and_host_ids(self):
+        ep, _ = self._ld("alex-dixon")
+        self.assertEqual(ep["partOfSeries"]["@id"], "https://themakingofhostedbyjackpitts.com/#podcast")
+        self.assertEqual(ep["author"]["@id"], "https://themakingofhostedbyjackpitts.com/about#jack-pitts")
+
+    def test_guest_has_company_and_the_visible_line(self):
+        ep, html = self._ld("alex-dixon")
+        actor = ep["actor"][0]
+        self.assertEqual(actor["affiliation"]["name"], "Resorts World Las Vegas")
+        self.assertIn(actor["description"], html.replace("&#x27;", "'"))
+
+    def test_multi_guest_episode_carries_no_guest_sameas(self):
+        ep, _ = self._ld("how-four-veterans-built-four-branches-bourbon-rick-franco-mike-trott")
+        for actor in ep["actor"]:
+            self.assertNotIn("sameAs", actor)
+            self.assertNotIn("description", actor)
+
+
+class LlmsTxtTests(unittest.TestCase):
+    def setUp(self):
+        self.text = (Path(__file__).parent.parent / "llms.txt").read_text(encoding="utf-8")
+
+    def test_carries_the_confirmed_show_facts(self):
+        for fact in ("2.5 billion", "every few weeks", "/be-a-guest", "November 2025"):
+            self.assertIn(fact, self.text)
+
+    def test_episode_lines_say_who_the_guest_is(self):
+        from seo_urls import episode_slug
+        lines = self.text.split("## Episodes", 1)[1].strip().splitlines()
+        eps = load_episodes()
+        self.assertEqual(len(lines), len(eps))
+        for ep, line in zip(eps, lines):
+            self.assertNotIn("links above", line)
+            self.assertIn("The Making Of Hosted By Jack Pitts", line)
+            if episode_slug(ep) in GUEST_LINES:
+                self.assertIn(GUEST_LINES[episode_slug(ep)], line)
+
+    def test_does_not_claim_every_episode_is_one_on_one(self):
+        self.assertNotIn("one-on-one", self.text)
 
 
 if __name__ == "__main__":

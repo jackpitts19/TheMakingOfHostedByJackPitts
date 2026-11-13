@@ -124,6 +124,11 @@ def article_paths() -> list[str]:
     )
 
 
+# Marks an article that is published for search only: it is in the sitemap
+# and fully indexable, but site navigation and episode pages never link to it.
+UNLISTED_MARKER = "<!-- tmo:unlisted -->"
+
+
 def article_pages() -> list[tuple[str, str]]:
     """Every article as (path, title), title read from the file's own <h1>.
 
@@ -132,10 +137,15 @@ def article_pages() -> list[tuple[str, str]]:
     H1 is used, not the <title>, so link text matches the headline readers see
     on the article and the homepage (the <title> can be a shorter SEO variant).
     Falls back to the <title> when an article has no H1.
+
+    Unlisted articles (UNLISTED_MARKER in the file) are skipped: they stay
+    public, indexable, and in the sitemap, but no site page links to them.
     """
     pages: list[tuple[str, str]] = []
     for path in article_paths():
         html = source_file_for(path).read_text(encoding="utf-8")
+        if UNLISTED_MARKER in html:
+            continue
         title = _article_heading(html)
         if title:
             pages.append((path, title))

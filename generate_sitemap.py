@@ -37,7 +37,7 @@ SITEMAP_XML = ROOT / "sitemap.xml"
 
 # The privacy policy and terms carry their own "Last updated" date. Bump this
 # whenever either page changes so the sitemap lastmod stays truthful.
-LEGAL_PAGES_LASTMOD = {"/privacy": "2026-10-28", "/terms": "2026-10-28"}
+LEGAL_PAGES_LASTMOD = {"/privacy": "2026-11-13", "/terms": "2026-10-28"}
 
 
 def load_episodes() -> list[dict]:

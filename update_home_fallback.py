@@ -41,10 +41,11 @@ SHOW_LINKS = {
 }
 
 # Mirrors the TAG_LABELS map and pickPinned() order in index.html's render layer.
+# The corner numeral is the episode's issue number, as in paintCatalog().
 TAG_META = {
-    "press": {"corner": "II", "label": "As covered in the Riverside-Brookfield Landmark"},
-    "first": {"corner": "01", "label": "The first episode"},
-    "pick": {"corner": "", "label": "Editor's Pick"},
+    "press": {"label": "As covered in the Riverside-Brookfield Landmark"},
+    "first": {"label": "The first episode"},
+    "pick": {"label": "Editor's Pick"},
 }
 PIN_ORDER = ["press", "first"]
 
@@ -109,13 +110,12 @@ def build_catalog(all_eps: list[dict]) -> str:
     pins = [by_tag[t] for t in PIN_ORDER if t in by_tag]
     articles = []
     for ep in pins:
-        meta = TAG_META.get(ep.get("tag"), {"corner": "", "label": "Highlight"})
+        meta = TAG_META.get(ep.get("tag"), {"label": "Highlight"})
         href = page_href(ep)
-        corner = (
-            f'\n        <span class="pin-corner" aria-hidden="true">{meta["corner"]}</span>'
-            if meta["corner"]
-            else ""
-        )
+        # Issues count up from the oldest; all_eps is newest first.
+        issue = len(all_eps) - all_eps.index(ep)
+        corner = f'\n        <span class="pin-corner" aria-hidden="true">{pad(issue)}</span>'
+
         articles.append(
             f"""      <article class="pin">{corner}
         <div class="pin-tag">{esc(meta["label"])}</div>
@@ -132,7 +132,8 @@ def build_catalog(all_eps: list[dict]) -> str:
 
 
 def build_recent(all_eps: list[dict], total: int) -> str:
-    recent = all_eps[1:4]
+    # Four, not three: an even count fills the 2-column grid.
+    recent = all_eps[1:5]
     last_idx = len(recent) - 1
     cards = []
     for i, ep in enumerate(recent):

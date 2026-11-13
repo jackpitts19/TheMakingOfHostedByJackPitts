@@ -143,8 +143,9 @@ footer .socials a {
 }
 footer .socials a:hover { background: var(--orange); color: var(--ink); }
 footer .socials svg { width: 16px; height: 16px; }
-footer .footer-links { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px 24px; padding: 6px 0 0; }
+footer .footer-links { flex-basis: 100%; display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 0 20px; padding: 6px 0 0; }
 footer .footer-links a {
+  display: inline-block; padding: 12px 0;
   color: rgba(243,232,207,0.75); font-size: 13px; font-weight: 500;
   letter-spacing: 0.02em; text-decoration: none;
 }
@@ -167,7 +168,8 @@ CHROME_CSS = r"""
 }
 .topnav .wrap, footer .wrap { max-width: 1120px; padding: 0 28px; }
 .topnav .mark { font-size: 18px; letter-spacing: 0.02em; color: var(--ink); }
-.topnav .mark span { color: var(--orange); font-style: normal; font-weight: 700; margin-right: 0; }
+.topnav .mark span { color: var(--orange-dark); font-style: normal; font-weight: 700; margin-right: 0; }
+.topnav .mark { display: inline-block; padding: 4px 0; }
 .topnav-links { gap: 28px; font-size: 14px; font-weight: 500; letter-spacing: 0; }
 .topnav-links a[aria-current="page"] { font-weight: 700; text-underline-offset: 6px; }
 footer { padding: 50px 0 40px; margin-top: 60px; }
