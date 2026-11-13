@@ -78,7 +78,7 @@ def build(episodes: list[dict]) -> str:
     eps = "\n".join(episode_line(ep) for ep in episodes)
     return f"""# {SHOW}
 
-> {SHOW} is an entrepreneurship podcast where Jack Pitts interviews founders and owners about how they built their companies: the first customers, the money, the hires, the hard years, and what the business is today. Each episode is a long-form conversation with founders, owners, and executives. Most guests run privately held, operating businesses; guests also include venture-backed founders. Past guests have built or led companies worth more than $2.5 billion combined.
+> {SHOW} is an entrepreneurship podcast where Jack Pitts interviews founders and owners about how they built their companies: the first customers, the money, the hires, the hard years, and what the business is today. Each episode is a long-form conversation with founders, owners, and executives. Most guests run privately held, operating businesses; guests also include venture-backed founders. Past guests have built or led companies worth more than $3.5 billion combined.
 
 ## Key facts
 
@@ -88,7 +88,7 @@ def build(episodes: list[dict]) -> str:
 - Format: long-form interview, usually one guest, most episodes about an hour, recorded remotely.
 - First episode: November 2025. {len(episodes)} episodes as of {latest_date(episodes)}.
 - Release cadence: a new episode every few weeks.
-- Guests: past guests have built or led companies worth more than $2.5 billion combined, including the former CEO of Resorts World Las Vegas and the co-founder and former CEO of Mammoth Holdings.
+- Guests: past guests have built or led companies worth more than $3.5 billion combined, including the former CEO of Resorts World Las Vegas and the co-founder and former CEO of Mammoth Holdings.
 - For guests: about an hour, recorded remotely; a short topic outline in advance, no script; the guest reviews the episode before it goes live and can flag anything to fix; a heads-up on the release date; short clips to share plus an episode page on this site; full video on YouTube and audio on Spotify and Apple Podcasts. Details: {BASE_URL}/be-a-guest
 - Best for: owners and future owners of real-economy businesses who want to hear how other owners built their companies, and listeners who like How I Built This but want more time on privately held companies.
 - Listen: Apple Podcasts {APPLE} ; Spotify {SPOTIFY} ; YouTube {YOUTUBE}

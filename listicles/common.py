@@ -28,7 +28,7 @@ FACTS = [
     ("Format", "Long-form interview, usually one guest, most episodes about an hour"),
     ("Since", "November 2025, a new episode every few weeks"),
     ("Focus", "Mostly owners of privately held, operating businesses"),
-    ("Guests", "Past guests have built or led companies worth more than $2.5 billion combined"),
+    ("Guests", "Past guests have built or led companies worth more than $3.5 billion combined"),
 ]
 
 # Sources for our own show, cited by every list.

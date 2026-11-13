@@ -996,8 +996,9 @@ section { padding: 40px 0; }
 }
 .about p { font-family: "Newsreader", Georgia, "Times New Roman", serif; font-size: 19px; line-height: 1.58; color: var(--ink-soft); margin: 0 0 14px; }
 .about .pull {
-  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-style: italic;
-  font-weight: 500; font-size: 22px; color: var(--ink);
+  /* Upright, not italic: large italic Newsreader read as a stock template. */
+  font-family: "Newsreader", Georgia, "Times New Roman", serif; font-style: normal;
+  font-weight: 500; font-size: 22px; line-height: 1.45; letter-spacing: -0.005em; color: var(--ink);
   border-left: 3px solid var(--orange);
   padding: 4px 0 4px 18px; margin: 0;
 }
