@@ -37,6 +37,22 @@
 
 window.EPISODES = [
   {
+    "date": "2026-11-19",
+    "dateLabel": "November 19, 2026",
+    "title": "58 Acquisitions, $2.5 Billion in Exits: Adam Coffey on Building Businesses",
+    "guest": "58 Acquisitions, $2.5 Billion in Exits",
+    "slug": "58-acquisitions-2-5-billion-in-exits",
+    "description": "Adam Coffey has spent over 25 years as a CEO, completed 58 acquisitions, and helped build companies that generated roughly $2.5 billion in exits. But his career started far from private equity. Adam grew up in Detroit as one of 10 kids, served in the U.S. Army, and spent a decade at GE during the Jack Welch era before going on to lead some of the country's largest private equity-backed businesses. Today, he's the Founding Partner of The Chairman Group, a four-time #1 bestselling author, and a coach to entrepreneurs and CEOs around the world. In this episode of The Making Of Hosted By Jack Pitts, Adam and Jack talk about buying and building businesses, what he learned during his time at GE, and why he believes business ownership is one of the best ways to build wealth. Adam also shares how one of his clients grew a business previously worth around $1.5 million to receiving a $31.7 million acquisition offer in just a few years. We also get into what he'd do if he were 23 again, why work ethic matters more to him than intelligence, the future of AI, and the opportunities he sees for the next generation of business owners. Adam even offered everyone listening a free copy of his latest book, The Opportunity Playbook , which covers how to find, finance, and buy a business. Just reach out to him on LinkedIn and ask for it. Connect with Adam: https://www.linkedin.com/in/adamecoffey/ The Chairman Group: https://www.chairmangroup.us/ Hosted by Jack Pitts.",
+    "duration": "58 min",
+    "guestLinkedIn": "",
+    "links": {
+      "spotify": "https://open.spotify.com/show/4vUJmF28QI4N7WViFmFofH",
+      "apple": "https://podcasts.apple.com/us/podcast/the-making-of-hosted-by-jack-pitts/id1853933144",
+      "youtube": "https://www.youtube.com/watch?v=HRwYW72o3YI"
+    },
+    "guid": "c1dba304-3ff9-4c63-937c-2f1ff81d2fd0"
+  },
+  {
     "date": "2026-10-29",
     "dateLabel": "October 29, 2026",
     "title": "Melissa Banko: The Reality of Building a Business and Raising a Family",
